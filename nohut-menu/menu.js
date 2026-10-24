@@ -93,22 +93,26 @@ function renderCategories(){
 }
 function renderMenu(){
  const tr=lang==='tr',current=categories.find(c=>c[0]===category);
- byId('sectionTitle').textContent=lang==='ar'?arabicMenu.categories[category]:current[tr?1:2];
- byId('sectionDescription').textContent=lang==='ar'?arabicMenu.descriptions[category]:descriptions[category][tr?0:1];
- byId('search').placeholder=lang==='ar'?(category==='drink'?'ابحث في المشروبات...':'ابحث في القائمة...'):category==='drink'?(tr?'İçeceklerde ara...':'Search drinks...'):(tr?'Menüde ara...':'Search menu...');
+ const searching=byId('search').value.trim().length>0;
+ byId('sectionTitle').textContent=searching?(lang==='ar'?'نتائج البحث':tr?'Arama sonuçları':'Search results'):(lang==='ar'?arabicMenu.categories[category]:current[tr?1:2]);
+ byId('sectionDescription').textContent=searching?(lang==='ar'?'نتائج من جميع أقسام القائمة':tr?'Tüm menü kategorilerinden sonuçlar':'Results from all menu categories'):(lang==='ar'?arabicMenu.descriptions[category]:descriptions[category][tr?0:1]);
+ byId('search').placeholder=lang==='ar'?'ابحث في القائمة...':tr?'Menüde ara...':'Search menu...';
  byId('search').setAttribute('aria-label',lang==='ar'?'ابحث في القائمة':tr?'Menüde ara':'Search menu');
  const normalize=value=>String(value).toLocaleLowerCase('tr-TR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ı/g,'i').replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي');
  const query=normalize(byId('search').value.trim());
- let items=data.filter(item=>(category==='all'||category===item[0])&&normalize([item[1],item[2],item[4],item[5],...arabicMenu.items[item[1]],...(drinkDisplayNames[item[1]]||[])].join(' ')).includes(query));
- if(category==='drink')items=items.slice().sort((a,b)=>{
+ let items=data.filter(item=>(searching||category==='all'||category===item[0])&&normalize([item[1],item[2],item[4],item[5],...arabicMenu.items[item[1]],...(drinkDisplayNames[item[1]]||[])].join(' ')).includes(query));
+ if(!searching&&category==='drink')items=items.slice().sort((a,b)=>{
   const rank=item=>drinkOrder.includes(item[1])?drinkOrder.indexOf(item[1]):drinkOrder.length+data.indexOf(item);
   return rank(a)-rank(b);
  });
  byId('grid').innerHTML=items.map((item,index)=>{
   const displayName=menuName(item);
+  const categoryRow=categories.find(row=>row[0]===item[0]);
+  const categoryLabel=lang==='ar'?arabicMenu.categories[item[0]]:categoryRow[tr?1:2];
+  const categoryTag=searching?`<p class="dish-category">${escapeHtml(categoryLabel)}</p>`:'';
   const price=item[3]==null?'':`${escapeHtml(item[3])} TL`;
   const desc=item[0]==='drink'?'':`<p class="desc">${escapeHtml(menuDescription(item))}</p>`;
-  return `<article class="dish"><div class="art${restaurantPhotos[item[1]]?.startsWith('assets/meze-cutouts/')?' cutout-art':''}">${productVisual(item,index)}</div><div class="dish-text"><h3 class="name">${escapeHtml(displayName)}</h3><span class="price" dir="ltr">${price}</span>${desc}</div></article>`;
+  return `<article class="dish"><div class="art${restaurantPhotos[item[1]]?.startsWith('assets/meze-cutouts/')?' cutout-art':''}">${productVisual(item,index)}</div><div class="dish-text">${categoryTag}<h3 class="name">${escapeHtml(displayName)}</h3><span class="price" dir="ltr">${price}</span>${desc}</div></article>`;
  }).join('');
  byId('grid').querySelectorAll('img').forEach(image=>image.addEventListener('error',()=>{image.hidden=true;image.nextElementSibling.hidden=false;},{once:true}));
  byId('empty').hidden=items.length>0;
