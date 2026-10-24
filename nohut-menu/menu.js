@@ -23,6 +23,7 @@ const referencePhotos={
 const drinkOrder=Object.keys(referencePhotos);
 const drinkDisplayNames={'Büyük Ayran':['Eker Ayran (Büyük)','Eker Ayran (Large)'],'Küçük Ayran':['Eker Ayran (Küçük)','Eker Ayran (Small)'],'Doğanay Acılı Şalgam':['Doğanay Şalgam (Acı)','Doğanay Şalgam (Spicy)'],'Doğanay Acısız Şalgam':['Doğanay Şalgam (Acısız)','Doğanay Şalgam (Mild)']};
 const restaurantPhotos = {
+ "Kıymalı Sembusek (4 Adet)": "assets/products/tgo-9295371_1738157983821.jpg",
  "Nohut Özel Dürüm": "assets/products/ys-68085842.jpg",
  "Falafel Dürüm": "assets/products/ys-68085839.jpg",
  "Patatesli Patlıcanlı Falafel Dürüm": "assets/products/ys-76539202.jpg",

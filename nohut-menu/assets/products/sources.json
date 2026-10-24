@@ -262,5 +262,13 @@
     "page": "https://www.yemeksepeti.com/en/restaurant/q6kx/nohut-falafel",
     "source": "https://yemeksepeti.dhmedia.io/image/fd-tr/products/68085861.jpg?height=150&width=150",
     "downloaded_rendition": "https://yemeksepeti.dhmedia.io/image/fd-tr/products/68085861.jpg?height=640&width=640"
+  },
+  {
+    "menu_item": "Kıymalı Sembusek (4 Adet)",
+    "asset": "assets/products/tgo-9295371_1738157983821.jpg",
+    "provider": "Trendyol Go",
+    "page": "https://tgoyemek.com/restoranlar/316490",
+    "source": "https://cdn.tgoapps.com/mnresize/256/-/tgo2/spm/prod/meal/media/images/product/316490/9295371_1738157983821.jpg",
+    "downloaded_rendition": "https://cdn.tgoapps.com/mnresize/256/-/tgo2/spm/prod/meal/media/images/product/316490/9295371_1738157983821.jpg"
   }
 ]
