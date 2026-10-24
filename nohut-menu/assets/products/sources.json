@@ -25,19 +25,19 @@
   },
   {
     "menu_item": "Kibbe (3 Adet)",
-    "asset": "assets/products/tgo-9295352_1736863668147.jpg",
-    "provider": "Trendyol Go",
-    "page": "https://tgoyemek.com/restoranlar/316490",
-    "source": "https://cdn.tgoapps.com/mnresize/256/-/tgo2/spm/prod/meal/media/images/product/316490/9295352_1736863668147.jpg",
-    "downloaded_rendition": "https://cdn.tgoapps.com/mnresize/256/-/tgo2/spm/prod/meal/media/images/product/316490/9295352_1736863668147.jpg"
+    "asset": "assets/products/kibbe-6003492c.jpg",
+    "provider": "Restaurant photo selected by user",
+    "source_file": "6003492c-e9b9-462a-9ac2-51ee6bc5ef9a.jpg",
+    "page": "https://drive.google.com/file/d/1y__XHU8ICECVfbswtrDqXEitV-UJLkBN/view?usp=drivesdk",
+    "added_on": "2026-10-25"
   },
   {
     "menu_item": "Nohut Özel Tabağı",
-    "asset": "assets/products/ys-68085831.jpg",
-    "provider": "Yemeksepeti",
-    "page": "https://www.yemeksepeti.com/en/restaurant/q6kx/nohut-falafel",
-    "source": "https://yemeksepeti.dhmedia.io/image/fd-tr/Products/68085831.jpg?height=128&width=128",
-    "downloaded_rendition": "https://yemeksepeti.dhmedia.io/image/fd-tr/Products/68085831.jpg?height=640&width=640"
+    "asset": "assets/products/nohut-ozel-d953124a.jpg",
+    "provider": "Restaurant photo selected by user",
+    "source_file": "d953124a-6ac9-4ace-9c23-1c92c0dd056c.jpg",
+    "page": "https://drive.google.com/file/d/1QuLyxHcJy7uYhtF5EAQ_EpH3ZmXkTWWb/view?usp=drivesdk",
+    "added_on": "2026-10-25"
   },
   {
     "menu_item": "Sarma (6 Adet)",
@@ -65,10 +65,10 @@
   },
   {
     "menu_item": "Vegan Özel Tabağı",
-    "asset": "assets/products/instagram-vegan-ozel-tabagi.webp",
-    "provider": "Nohut Falafel Instagram",
-    "page": "https://www.instagram.com/p/DIqw2nfNnbn/",
-    "source": "https://scontent-iad3-1.cdninstagram.com/v/t51.75761-15/491627546_17877943935297272_4287599552995793269_n.webp?_nc_cat=104&ig_cache_key=MzYxNDkxNjUxMDQwMjExNTMwMw%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTQ0MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=F4gV7jznnV0Q7kNvwHUHa9Z&_nc_oc=Adpxr7YGIjEATnKR2XdJkza-rXrT2elH0bNrhodYngreNoleu-uxbx9oTMBhUq92HEg&_nc_zt=23&_nc_ht=scontent-iad3-1.cdninstagram.com&_nc_gid=sZ7BeKE6a2cGfP2AAYTL4A&_nc_ss=7ba8c&oh=00_AQPgtnNlX-gc5AValdBJWItxmgLlZrx1kyAcqXM9_-p9fA&oe=6AE2FC66",
+    "asset": "assets/products/vegan-ozel-69312e96.jpg",
+    "provider": "Restaurant photo selected by user",
+    "source_file": "69312e96-273f-48bc-8eeb-af83e23a67d4.jpg",
+    "page": "https://drive.google.com/file/d/13awbtcXYm3oAGtK5ONKGKm46wegAEQ32/view?usp=drivesdk",
     "added_on": "2026-10-25"
   },
   {
