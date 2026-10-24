@@ -28,16 +28,16 @@ const restaurantPhotos = {
  "Falafel Dürüm": "assets/products/ys-68085839.jpg",
  "Patatesli Patlıcanlı Falafel Dürüm": "assets/products/ys-76539202.jpg",
  "Kibbe (3 Adet)": "assets/products/kibbe-6003492c.jpg",
- "Nohut Özel Tabağı": "assets/products/nohut-ozel-d953124a.jpg",
+ "Nohut Özel Tabağı": "assets/platter-cutouts/nohut-ozel.png",
  "Sarma (6 Adet)": "assets/products/tgo-9295403_1738157981309.jpg",
  "Tereyağlı Fatte": "assets/products/tgo-9295446_1738157998385.jpg",
  "Patates Dürüm": "assets/products/ys-68085841.jpg",
- "Vegan Özel Tabağı": "assets/products/vegan-ozel-69312e96.jpg",
- "Beyrut Tabağı": "assets/products/beyrut-9c6b1b3a.jpg",
+ "Vegan Özel Tabağı": "assets/platter-cutouts/vegan-ozel.png",
+ "Beyrut Tabağı": "assets/platter-cutouts/beyrut-main.png",
  "Kuruyemişli Humus": "assets/meze-cutouts/kuruyemisli-humus.png",
  "Peynirli Sembusek (4 Adet)": "assets/products/ys-68085846.jpg",
- "Falafel Porsiyon": "assets/products/falafel-porsiyon-instagram-original.webp",
- "Bakla Tabağı": "assets/products/ys-68085833.jpg",
+ "Falafel Porsiyon": "assets/platter-cutouts/falafel-porsiyon.png",
+ "Bakla Tabağı": "assets/platter-cutouts/bakla.png",
  "Patlıcanlı Fatte": "assets/products/ys-68085836.jpg",
  "Tereyağında Kuruyemişli Fatte": "assets/products/ys-68085837.jpg",
  "Patatesli Falafel Dürüm": "assets/products/ys-72772393.jpg",
@@ -61,19 +61,21 @@ const restaurantPhotos = {
  "Su": "assets/products/ys-68085861.jpg"
 };
 const mezePlateGeometry={"Sade Humus":{"width":1254,"height":1254,"matrix":[0.7312,-0.000248,-0.000248,0.739627,42.369389,42.922908]},"Kuruyemişli Humus":{"width":1254,"height":1254,"matrix":[0.719352,-0.000638,-0.000638,0.722961,41.809196,51.435731]},"Babagannuş":{"width":1254,"height":1254,"matrix":[0.710531,0.000526,0.000526,0.713243,54.855174,52.317941]},"Pancarlı Humus":{"width":1254,"height":1254,"matrix":[0.74633,0.001627,0.001627,0.754575,32.269832,27.221773]},"Mütebbel":{"width":1254,"height":1254,"matrix":[0.703334,0.000529,0.000529,0.70583,58.431362,52.554385]},"Muhammara":{"width":1254,"height":1254,"matrix":[0.757604,-0.002332,-0.002332,0.753512,25.043649,26.179502]}};
+const platterPlateGeometry={"Nohut Özel Tabağı":{"width":1254,"height":1254,"matrix":[0.718182,-0.003145,-0.003145,0.712716,53.090195,57.978915]},"Vegan Özel Tabağı":{"width":1254,"height":1254,"matrix":[0.699812,-0.00037,-0.00037,0.702335,63.507687,61.131581]},"Falafel Porsiyon":{"width":1254,"height":1254,"matrix":[0.725014,0.002901,0.002901,0.718634,42.709828,40.724092]},"Bakla Tabağı":{"width":1254,"height":1254,"matrix":[0.712926,0.000184,0.000184,0.719855,53.095402,54.840502]},"beyrutMain":{"width":1254,"height":1254,"matrix":[0.700855,-0.002523,-0.002523,0.705824,62.399929,66.824682]},"beyrutSalad":{"width":1254,"height":1254,"matrix":[0.686487,-0.000358,-0.000358,0.679426,70.923657,70.085503]}};
+function isCutoutPhoto(source){return /^assets\/(?:meze|platter)-cutouts\//.test(source||"");}
+function plateImage(source,plate){return `<image href="${escapeHtml(source)}" width="${plate.width}" height="${plate.height}" transform="matrix(${plate.matrix.join(" ")})"/>`;}
 function menuName(item){
  return lang==='ar'?arabicMenu.items[item[1]][0]:(drinkDisplayNames[item[1]]?.[lang==='tr'?0:1]||item[lang==='tr'?1:2]);
 }
 function menuDescription(item){return lang==='ar'?arabicMenu.items[item[1]][1]:item[lang==='tr'?4:5];}
 function productVisual(item,index){
- const actualPhoto=restaurantPhotos[item[1]],isCutout=actualPhoto?.startsWith('assets/meze-cutouts/');
- const plate=mezePlateGeometry[item[1]];
- if(isCutout&&plate)return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="${escapeHtml(actualPhoto)}" width="${plate.width}" height="${plate.height}" transform="matrix(${plate.matrix.join(' ')})"/></svg>`;
- if(actualPhoto&&item[1]==='Falafel Porsiyon')return `<svg class="product-photo plate-only-photo" viewBox="140 245 1160 1160" role="img" aria-label="${escapeHtml(menuName(item))}"><defs><clipPath id="falafel-porsiyon-plate-clip"><path d="M699 328 722 290Q736 288 740 320C961 321 1110 446 1178 622Q1222 604 1233 642Q1240 662 1217 699C1266 928 1172 1187 992 1297C835 1388 541 1377 374 1228C245 1128 187 957 204 796L188 774 209 768C223 554 410 349 655 329Z"/></clipPath></defs><image href="${escapeHtml(actualPhoto)}" width="1440" height="1440" clip-path="url(#falafel-porsiyon-plate-clip)"/></svg>`;
+ const actualPhoto=restaurantPhotos[item[1]],isCutout=isCutoutPhoto(actualPhoto);
  if(actualPhoto&&item[1]==='Beyrut Tabağı'){
   const platesLabel=lang==='ar'?'طبقان':lang==='tr'?'2 tabak':'2 plates';
-  return `<svg class="product-photo plate-only-photo" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))} — ${platesLabel}"><defs><clipPath id="beyrut-main-plate-clip"><ellipse cx="675" cy="635" rx="620" ry="620"/><path d="M18 480 80 420 200 590 70 660 15 610Z"/></clipPath><clipPath id="beyrut-salad-plate-clip"><ellipse cx="1005" cy="1055" rx="840" ry="855"/></clipPath></defs><svg x="0" y="0" width="620" height="620" viewBox="0 0 1350 1350"><image href="${escapeHtml(actualPhoto)}" width="2048" height="1365" clip-path="url(#beyrut-main-plate-clip)"/></svg><svg x="400" y="400" width="600" height="600" viewBox="115 160 1780 1780"><image href="assets/products/beyrut-14e055b2.jpg" width="2000" height="1969" clip-path="url(#beyrut-salad-plate-clip)"/></svg></svg><span class="meal-plates-label">${platesLabel}</span>`;
+  return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))} — ${platesLabel}"><g transform="translate(340 340) scale(0.619047619) translate(-500 -500)">${plateImage(actualPhoto,platterPlateGeometry.beyrutMain)}</g><g transform="translate(680 680) scale(0.571428571) translate(-500 -500)">${plateImage('assets/platter-cutouts/beyrut-salad.png',platterPlateGeometry.beyrutSalad)}</g></svg><span class="meal-plates-label">${platesLabel}</span>`;
  }
+ const plate=mezePlateGeometry[item[1]]||platterPlateGeometry[item[1]];
+ if(isCutout&&plate)return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}">${plateImage(actualPhoto,plate)}</svg>`;
  if(actualPhoto&&item[1]==='Falafel Salatası')return `<svg class="product-photo" viewBox="260 375 920 920" role="img" aria-label="${escapeHtml(menuName(item))}"><defs><clipPath id="falafel-salad-photo-clip"><ellipse cx="720" cy="835" rx="423" ry="431"/></clipPath></defs><image href="${escapeHtml(actualPhoto)}" width="1440" height="1440" clip-path="url(#falafel-salad-photo-clip)"/></svg>`;
  if(actualPhoto)return `<img class="real-dish-image${isCutout?' meze-cutout':''}" src="${escapeHtml(actualPhoto)}" alt="${escapeHtml(menuName(item))}" loading="lazy" style="object-fit:${isCutout?'contain':'cover'};padding:${isCutout?'10px':'0'};position:absolute;inset:0"><span class="fallback-art" hidden aria-hidden="true">${pic(item[0],index)}</span>`;
  const crop=referencePhotos[item[1]];
@@ -118,7 +120,7 @@ function renderMenu(){
   const categoryTag=searching?`<p class="dish-category">${escapeHtml(categoryLabel)}</p>`:'';
   const price=item[3]==null?'':`${escapeHtml(item[3])} TL`;
   const desc=item[0]==='drink'?'':`<p class="desc">${escapeHtml(menuDescription(item))}</p>`;
-  return `<article class="dish"><div class="art${restaurantPhotos[item[1]]?.startsWith('assets/meze-cutouts/')?' cutout-art':''}">${productVisual(item,index)}</div><div class="dish-text">${categoryTag}<h3 class="name">${escapeHtml(displayName)}</h3><span class="price" dir="ltr">${price}</span>${desc}</div></article>`;
+  return `<article class="dish"><div class="art${isCutoutPhoto(restaurantPhotos[item[1]])?' cutout-art':''}">${productVisual(item,index)}</div><div class="dish-text">${categoryTag}<h3 class="name">${escapeHtml(displayName)}</h3><span class="price" dir="ltr">${price}</span>${desc}</div></article>`;
  }).join('');
  byId('grid').querySelectorAll('img').forEach(image=>image.addEventListener('error',()=>{image.hidden=true;image.nextElementSibling.hidden=false;},{once:true}));
  byId('empty').hidden=items.length>0;

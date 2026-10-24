@@ -1,0 +1,84 @@
+{
+  "created_on": "2026-10-25",
+  "method": "AI-assisted cutouts from restaurant photographs; food and plate appearance retained, background removed, perspective aligned through SVG geometry.",
+  "canvas": {
+    "width": 1000,
+    "height": 1000,
+    "plate_diameter": 840,
+    "center": [
+      500,
+      500
+    ],
+    "background": "CSS --card",
+    "shadow": "Shared meze-cutout CSS shadow"
+  },
+  "items": [
+    {
+      "menu_item": "Nohut Özel Tabağı",
+      "asset": "assets/platter-cutouts/nohut-ozel.png",
+      "provider": "Restaurant photo selected by user",
+      "source_file": "d953124a-6ac9-4ace-9c23-1c92c0dd056c.jpg",
+      "page": "https://drive.google.com/file/d/1QuLyxHcJy7uYhtF5EAQ_EpH3ZmXkTWWb/view?usp=drivesdk",
+      "added_on": "2026-10-25",
+      "original_asset": "assets/products/nohut-ozel-d953124a.jpg",
+      "display_crop": "Transparent plate cutout, perspective aligned to a centered 840px circle on a 1000px cream canvas.",
+      "edit_method": "AI-assisted background extraction and perspective normalization from the restaurant source photo."
+    },
+    {
+      "menu_item": "Vegan Özel Tabağı",
+      "asset": "assets/platter-cutouts/vegan-ozel.png",
+      "provider": "Restaurant photo selected by user",
+      "source_file": "69312e96-273f-48bc-8eeb-af83e23a67d4.jpg",
+      "page": "https://drive.google.com/file/d/13awbtcXYm3oAGtK5ONKGKm46wegAEQ32/view?usp=drivesdk",
+      "added_on": "2026-10-25",
+      "original_asset": "assets/products/vegan-ozel-69312e96.jpg",
+      "display_crop": "Transparent plate cutout, perspective aligned to a centered 840px circle on a 1000px cream canvas.",
+      "edit_method": "AI-assisted background extraction and perspective normalization from the restaurant source photo."
+    },
+    {
+      "menu_item": "Beyrut Tabağı",
+      "asset": "assets/platter-cutouts/beyrut-main.png",
+      "provider": "Restaurant photographs selected by user",
+      "companion_asset": "assets/platter-cutouts/beyrut-salad.png",
+      "sources": [
+        {
+          "source_file": "14e055b2-9209-4f86-8c4e-1790bd09983f.jpg",
+          "page": "https://drive.google.com/file/d/1JdTyqSFm52TIadb6RJiyM50T2c5rWq94/view?usp=drivesdk",
+          "asset": "assets/products/beyrut-14e055b2.jpg"
+        },
+        {
+          "source_file": "9c6b1b3a-75e9-4165-a7f4-21cf37eff51f.jpg",
+          "page": "https://drive.google.com/file/d/1QWO3EEEV0SY3bL6Lt_l2Z1aWtTZoy5TJ/view?usp=drivesdk",
+          "asset": "assets/products/beyrut-9c6b1b3a.jpg"
+        }
+      ],
+      "display_crop": "Both actual plates shown together: main at upper left, salad at lower right, on the shared cream canvas.",
+      "updated_on": "2026-10-25",
+      "original_asset": "assets/products/beyrut-9c6b1b3a.jpg",
+      "edit_method": "AI-assisted background extraction and perspective normalization from the restaurant source photo.",
+      "original_companion_asset": "assets/products/beyrut-14e055b2.jpg"
+    },
+    {
+      "menu_item": "Falafel Porsiyon",
+      "asset": "assets/platter-cutouts/falafel-porsiyon.png",
+      "provider": "Nohut Falafel Instagram",
+      "page": "https://www.instagram.com/p/DBTwCvINAIg/",
+      "source": "https://instagram.faus1-1.fna.fbcdn.net/v/t51.82787-15/626403037_18042255389722087_5279416169996072339_n.webp?_nc_cat=107&ig_cache_key=MzQ4MjMzODIzMTE2MjUwMzcxMg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTQ0MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=FVAK_9MoOPoQ7kNvwGaA8g9&_nc_oc=Adr-6b4sYR0bNHC5oWkyzvUdvYNgvS4DtSz_hcSRMV5HubsiRu7ZzpHrj9MBjMmTAlY&_nc_zt=23&_nc_ht=instagram.faus1-1.fna&_nc_gid=tdr_QI1Lpuxp910OMuRZNA&_nc_ss=7ba8c&oh=00_AQN1ZzTCEcfI3mDoNHAtOqyE47J6q2YDOONUXK2-JiQUlQ&oe=6AE2E5A4",
+      "display_crop": "Transparent plate cutout, perspective aligned to a centered 840px circle on a 1000px cream canvas.",
+      "updated_on": "2026-10-25",
+      "original_asset": "assets/products/falafel-porsiyon-instagram-original.webp",
+      "edit_method": "AI-assisted background extraction and perspective normalization from the restaurant source photo."
+    },
+    {
+      "menu_item": "Bakla Tabağı",
+      "asset": "assets/platter-cutouts/bakla.png",
+      "provider": "Yemeksepeti",
+      "page": "https://www.yemeksepeti.com/en/restaurant/q6kx/nohut-falafel",
+      "source": "https://yemeksepeti.dhmedia.io/image/fd-tr/products/68085833.jpg?height=150&width=150",
+      "downloaded_rendition": "https://yemeksepeti.dhmedia.io/image/fd-tr/products/68085833.jpg?height=640&width=640",
+      "original_asset": "assets/products/ys-68085833.jpg",
+      "display_crop": "Transparent plate cutout, perspective aligned to a centered 840px circle on a 1000px cream canvas.",
+      "edit_method": "AI-assisted background extraction and perspective normalization from the restaurant source photo."
+    }
+  ]
+}
