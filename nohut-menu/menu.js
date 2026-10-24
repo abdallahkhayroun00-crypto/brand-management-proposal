@@ -24,14 +24,14 @@ const drinkOrder=Object.keys(referencePhotos);
 const drinkDisplayNames={'Büyük Ayran':['Eker Ayran (Büyük)','Eker Ayran (Large)'],'Küçük Ayran':['Eker Ayran (Küçük)','Eker Ayran (Small)'],'Doğanay Acılı Şalgam':['Doğanay Şalgam (Acı)','Doğanay Şalgam (Spicy)'],'Doğanay Acısız Şalgam':['Doğanay Şalgam (Acısız)','Doğanay Şalgam (Mild)']};
 const restaurantPhotos = {
  "Kıymalı Sembusek (4 Adet)": "assets/side-cutouts/sides.png",
- "Nohut Özel Dürüm": "assets/products/ys-68085842.jpg",
- "Falafel Dürüm": "assets/products/ys-68085839.jpg",
- "Patatesli Patlıcanlı Falafel Dürüm": "assets/products/ys-76539202.jpg",
+ "Nohut Özel Dürüm": "assets/wrap-cutouts/wraps.png",
+ "Falafel Dürüm": "assets/wrap-cutouts/wraps.png",
+ "Patatesli Patlıcanlı Falafel Dürüm": "assets/wrap-cutouts/wraps.png",
  "Kibbe (3 Adet)": "assets/products/kibbe-6003492c.jpg",
  "Nohut Özel Tabağı": "assets/platter-cutouts/nohut-ozel.png",
  "Sarma (6 Adet)": "assets/products/tgo-9295403_1738157981309.jpg",
  "Tereyağlı Fatte": "assets/products/tgo-9295446_1738157998385.jpg",
- "Patates Dürüm": "assets/products/ys-68085841.jpg",
+ "Patates Dürüm": "assets/wrap-cutouts/wraps.png",
  "Vegan Özel Tabağı": "assets/platter-cutouts/vegan-ozel.png",
  "Beyrut Tabağı": "assets/platter-cutouts/beyrut-main.png",
  "Kuruyemişli Humus": "assets/meze-cutouts/kuruyemisli-humus.png",
@@ -40,7 +40,7 @@ const restaurantPhotos = {
  "Bakla Tabağı": "assets/platter-cutouts/bakla.png",
  "Patlıcanlı Fatte": "assets/products/ys-68085836.jpg",
  "Tereyağında Kuruyemişli Fatte": "assets/products/ys-68085837.jpg",
- "Patatesli Falafel Dürüm": "assets/products/ys-72772393.jpg",
+ "Patatesli Falafel Dürüm": "assets/wrap-cutouts/wraps.png",
  "Ispanaklı Sembusek (4 Adet)": "assets/side-cutouts/sides.png",
  "Patates Kızartması": "assets/side-cutouts/sides.png",
  "Sade Humus": "assets/meze-cutouts/sade-humus-top.png",
@@ -62,7 +62,7 @@ const restaurantPhotos = {
 };
 const mezePlateGeometry={"Sade Humus":{"width":1254,"height":1254,"matrix":[0.7312,-0.000248,-0.000248,0.739627,42.369389,42.922908]},"Kuruyemişli Humus":{"width":1254,"height":1254,"matrix":[0.719352,-0.000638,-0.000638,0.722961,41.809196,51.435731]},"Babagannuş":{"width":1254,"height":1254,"matrix":[0.710531,0.000526,0.000526,0.713243,54.855174,52.317941]},"Pancarlı Humus":{"width":1254,"height":1254,"matrix":[0.74633,0.001627,0.001627,0.754575,32.269832,27.221773]},"Mütebbel":{"width":1254,"height":1254,"matrix":[0.703334,0.000529,0.000529,0.70583,58.431362,52.554385]},"Muhammara":{"width":1254,"height":1254,"matrix":[0.757604,-0.002332,-0.002332,0.753512,25.043649,26.179502]}};
 const platterPlateGeometry={"Nohut Özel Tabağı":{"width":1254,"height":1254,"matrix":[0.718182,-0.003145,-0.003145,0.712716,53.090195,57.978915]},"Vegan Özel Tabağı":{"width":1254,"height":1254,"matrix":[0.699812,-0.00037,-0.00037,0.702335,63.507687,61.131581]},"Falafel Porsiyon":{"width":1254,"height":1254,"matrix":[0.725014,0.002901,0.002901,0.718634,42.709828,40.724092]},"Bakla Tabağı":{"width":1254,"height":1254,"matrix":[0.712926,0.000184,0.000184,0.719855,53.095402,54.840502]},"beyrutMain":{"width":1254,"height":1254,"matrix":[0.700855,-0.002523,-0.002523,0.705824,62.399929,66.824682]},"beyrutSalad":{"width":1254,"height":1254,"matrix":[0.686487,-0.000358,-0.000358,0.679426,70.923657,70.085503]}};
-function isCutoutPhoto(source){return /^assets\/(?:meze|platter|salad|side)-cutouts\//.test(source||"");}
+function isCutoutPhoto(source){return /^assets\/(?:meze|platter|salad|side|wrap)-cutouts\//.test(source||"");}
 function plateImage(source,plate){return `<image href="${escapeHtml(source)}" width="${plate.width}" height="${plate.height}" transform="matrix(${plate.matrix.join(" ")})"/>`;}
 function menuName(item){
  return lang==='ar'?arabicMenu.items[item[1]][0]:(drinkDisplayNames[item[1]]?.[lang==='tr'?0:1]||item[lang==='tr'?1:2]);
@@ -93,8 +93,20 @@ function sideProductVisual(item,source){
  return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}"><svg x="65" y="65" width="870" height="870" viewBox="${crop}" preserveAspectRatio="${isFries?'xMidYMid meet':'none'}" overflow="hidden">${defs}<image href="${escapeHtml(source)}" width="${plate.width}" height="${plate.height}"${clip}/></svg></svg>`;
 }
 
+
+// Main wrap photographs share the same canvas; real open and folded forms are retained.
+const wrapPhotoCrops={
+ "Falafel Dürüm":[20,65,480,435],
+ "Patates Dürüm":[516,127,506,356],
+ "Nohut Özel Dürüm":[1015,34,512,479],
+ "Patatesli Patlıcanlı Falafel Dürüm":[4,545,545,456],
+ "Patatesli Falafel Dürüm":[546,538,500,460]
+};
+
 function productVisual(item,index){
  const actualPhoto=restaurantPhotos[item[1]],isCutout=isMenuCutout(item);
+ const wrapCrop=wrapPhotoCrops[item[1]];
+ if(isCutout&&wrapCrop)return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}"><svg x="65" y="65" width="870" height="870" viewBox="${wrapCrop.join(' ')}" preserveAspectRatio="xMidYMid meet" overflow="hidden"><image href="${escapeHtml(actualPhoto)}" width="1536" height="1024"/></svg></svg>`;
  const sideVisual=sideProductVisual(item,actualPhoto);if(sideVisual)return sideVisual;
  if(actualPhoto&&item[1]==='Beyrut Tabağı'){
   const platesLabel=lang==='ar'?'طبقان':lang==='tr'?'2 tabak':'2 plates';

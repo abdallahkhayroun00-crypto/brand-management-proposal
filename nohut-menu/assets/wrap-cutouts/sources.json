@@ -1,0 +1,59 @@
+{
+  "updated_on": "2026-10-25",
+  "method": "AI-assisted background extraction from original restaurant photographs. Main wraps isolated; serving plates, tables, and loose side items removed. Original open and folded sandwich forms retained. Shared transparent PNG atlas with proportionate SVG framing.",
+  "width": 1536,
+  "height": 1024,
+  "items": [
+    {
+      "name": "Falafel Dürüm",
+      "original": "assets/products/ys-68085839.jpg",
+      "crop": [
+        20,
+        65,
+        480,
+        435
+      ]
+    },
+    {
+      "name": "Patates Dürüm",
+      "original": "assets/products/ys-68085841.jpg",
+      "crop": [
+        516,
+        127,
+        506,
+        356
+      ]
+    },
+    {
+      "name": "Nohut Özel Dürüm",
+      "original": "assets/products/ys-68085842.jpg",
+      "crop": [
+        1015,
+        34,
+        512,
+        479
+      ]
+    },
+    {
+      "name": "Patatesli Patlıcanlı Falafel Dürüm",
+      "original": "assets/products/ys-76539202.jpg",
+      "crop": [
+        4,
+        545,
+        545,
+        456
+      ]
+    },
+    {
+      "name": "Patatesli Falafel Dürüm",
+      "original": "assets/products/ys-72772393.jpg",
+      "crop": [
+        546,
+        538,
+        500,
+        460
+      ]
+    }
+  ],
+  "prices_names_and_descriptions_unchanged": true
+}
