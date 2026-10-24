@@ -55,23 +55,23 @@ const data=[
 ];
 
 const photoMap = {
-  "Büyük Ayran": "https://www.konumdayim2.com/img/menu/eker_ayran.png",
-  "Küçük Ayran": "https://static.ticimax.cloud/62343/uploads/urunresimleri/buyuk/eker-bardak-ayran-200-ml-4b23bc.jpg",
-  "Niğde Gazozu": "https://146510178.cdn6.editmysite.com/uploads/1/4/6/5/146510178/RU2HHGVFPDI7KUVAANTU6PO3.jpeg",
-  "Çamlıca Gazoz": "https://images.migrosone.com/sanalmarket/product/08035801/08035801-37619a-1650x1650.jpg",
-  "Beypazarı Maden Suyu": "https://static.ticimax.cloud/62343/uploads/urunresimleri/buyuk/beypazari-sade-maden-suyu-200ml-17db2f.jpg",
-  "Beypazarı Mandalina Aromalı Maden Suyu": "https://www.bakkal.eu/cdn/shop/files/Beypazar-Maden-Suyu-Aromal-Cam-i-e-0-2-L-Mandalina-43400068235531.jpg?v=1742250194",
-  "Şişe Cola Turka": "https://commons.wikimedia.org/wiki/Special:FilePath/Cola_Turka_bottle_and_glass.jpg?width=500",
-  "Kutu Cola Turka": "https://static.ticimax.cloud/cdn-cgi/image/width%3D-%2Cquality%3D99/11108/uploads/urunresimleri/buyuk/cola-turka-330-ml-9e1a.jpg",
-  "Doğanay Acılı Şalgam": "https://bilgemar.com/Resim/Minik/1500x1500_thumb_8693354001285.png",
-  "Doğanay Acısız Şalgam": "https://img-bizimtoptan.mncdn.com/mnresize/550/550/Content/Images/Originals/3288540_0.jpeg",
-  "Didi Limon Aromalı Soğuk Çay": "https://ardenmarket.com.tr/media/catalog/product/cache/5a2e5a0d3f45b67571c69c65e0a1d6e1/d/i/didi-limon-250ml.jpg",
-  "Didi Çilek Aromalı Soğuk Çay": "https://images.migrosone.com/sanalmarket/product/08050859/8050859-f93f16-1650x1650.jpg",
-  "Didi Şeftali Aromalı Soğuk Çay": "https://ardenmarket.com.tr/media/catalog/product/cache/ce320e98947e5c83f08a8e256dc8423e/d/i/didi-seftali-250ml.jpg",
-  "Sarıyer Portakal Aromalı Gazoz": "https://nebilcdn.blob.core.windows.net/sehzadenew/0017961_sariyer-gazoz-330-ml-portakal.jpg",
-  "Sarıyer Mandalina Aromalı Gazoz": "https://www.sariyermarket.com/images/thumbs/0047791_sariyer-gazoz-mandalina-330ml.jpeg",
-  "Su": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/Cold_drinking_water_bottle_transparent.png/250px-Cold_drinking_water_bottle_transparent.png",
-  "Çay": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Turkish_tea_glass.jpg/330px-Turkish_tea_glass.jpg"
+  "Büyük Ayran": "assets/drinks/eker-large.png",
+  "Küçük Ayran": "assets/drinks/eker-small.png",
+  "Niğde Gazozu": "assets/drinks/nigde.jpg",
+  "Çamlıca Gazoz": "assets/drinks/camlica.jpg",
+  "Beypazarı Maden Suyu": "assets/drinks/beypazari-plain.png",
+  "Beypazarı Mandalina Aromalı Maden Suyu": "assets/drinks/beypazari-mandarin.png",
+  "Şişe Cola Turka": "assets/drinks/cola-bottle.jpg",
+  "Kutu Cola Turka": "assets/drinks/cola-can.jpg",
+  "Doğanay Acılı Şalgam": "assets/drinks/doganay-spicy.png",
+  "Doğanay Acısız Şalgam": "assets/drinks/doganay-mild.png",
+  "Didi Limon Aromalı Soğuk Çay": "assets/drinks/didi-lemon.jpg",
+  "Didi Çilek Aromalı Soğuk Çay": "assets/drinks/didi-strawberry.jpg",
+  "Didi Şeftali Aromalı Soğuk Çay": "assets/drinks/didi-peach.jpg",
+  "Sarıyer Portakal Aromalı Gazoz": "assets/drinks/sariyer-orange.jpg",
+  "Sarıyer Mandalina Aromalı Gazoz": "assets/drinks/sariyer-mandarin.jpg",
+  "Su": "assets/drinks/water.jpg",
+  "Çay": "assets/drinks/tea.png"
 };
 
 function pic(type,index){let seeds=[['#946129','#aa7938'],['#6a8b4e','#839f63'],['#b4873d','#dbad57']];let s=seeds[index%3];let green='<path d="M110 58q-14-24-3-35 18 10 13 31M115 54q13-27 28-21-4 23-28 25" fill="#558455"/>';let bowl='<ellipse cx="118" cy="95" rx="75" ry="57" fill="#a18c6b" opacity=".16"/><ellipse cx="110" cy="91" rx="75" ry="57" fill="#faf5e7" stroke="#d2c9b5" stroke-width="4"/>';

@@ -51,14 +51,14 @@ const restaurantPhotos = {
  "Tabbule": "assets/salad-cutouts/salads.png",
  "Fettuş": "assets/salad-cutouts/salads.png",
  "Falafel Salatası": "assets/salad-cutouts/salads.png",
- "Kutu Cola Turka": "assets/products/ys-68085857.jpg",
- "Şişe Cola Turka": "assets/products/ys-68085858.jpg",
- "Niğde Gazozu": "assets/products/ys-75005278.jpg",
- "Doğanay Acılı Şalgam": "assets/products/ys-69711494.jpg",
- "Doğanay Acısız Şalgam": "assets/products/ys-69712096.jpg",
- "Küçük Ayran": "assets/products/ys-68085859.jpg",
- "Beypazarı Maden Suyu": "assets/products/ys-68085860.jpg",
- "Su": "assets/products/ys-68085861.jpg"
+ "Kutu Cola Turka": "assets/drinks/cola-can.jpg",
+ "Şişe Cola Turka": "assets/drinks/cola-bottle.jpg",
+ "Niğde Gazozu": "assets/drinks/nigde.jpg",
+ "Doğanay Acılı Şalgam": "assets/drinks/doganay-spicy.png",
+ "Doğanay Acısız Şalgam": "assets/drinks/doganay-mild.png",
+ "Küçük Ayran": "assets/drinks/eker-small.png",
+ "Beypazarı Maden Suyu": "assets/drinks/beypazari-plain.png",
+ "Su": "assets/drinks/water.jpg"
 };
 const mezePlateGeometry={"Sade Humus":{"width":1254,"height":1254,"matrix":[0.7312,-0.000248,-0.000248,0.739627,42.369389,42.922908]},"Kuruyemişli Humus":{"width":1254,"height":1254,"matrix":[0.719352,-0.000638,-0.000638,0.722961,41.809196,51.435731]},"Babagannuş":{"width":1254,"height":1254,"matrix":[0.710531,0.000526,0.000526,0.713243,54.855174,52.317941]},"Pancarlı Humus":{"width":1254,"height":1254,"matrix":[0.74633,0.001627,0.001627,0.754575,32.269832,27.221773]},"Mütebbel":{"width":1254,"height":1254,"matrix":[0.703334,0.000529,0.000529,0.70583,58.431362,52.554385]},"Muhammara":{"width":1254,"height":1254,"matrix":[0.757604,-0.002332,-0.002332,0.753512,25.043649,26.179502]}};
 const platterPlateGeometry={"Nohut Özel Tabağı":{"width":1254,"height":1254,"matrix":[0.718182,-0.003145,-0.003145,0.712716,53.090195,57.978915]},"Vegan Özel Tabağı":{"width":1254,"height":1254,"matrix":[0.699812,-0.00037,-0.00037,0.702335,63.507687,61.131581]},"Falafel Porsiyon":{"width":1254,"height":1254,"matrix":[0.725014,0.002901,0.002901,0.718634,42.709828,40.724092]},"Bakla Tabağı":{"width":1254,"height":1254,"matrix":[0.712926,0.000184,0.000184,0.719855,53.095402,54.840502]},"beyrutMain":{"width":1254,"height":1254,"matrix":[0.700855,-0.002523,-0.002523,0.705824,62.399929,66.824682]},"beyrutSalad":{"width":1254,"height":1254,"matrix":[0.686487,-0.000358,-0.000358,0.679426,70.923657,70.085503]}};
@@ -82,7 +82,7 @@ const sidePhotoCrops={
  "Peynirli Sembusek (4 Adet)":{width:1254,height:1254,crop:[15,8,1230,1230]},
  "Patates Kızartması":{width:1536,height:1024,crop:[1080,493,365,480]}
 };
-function isMenuCutout(item){return isCutoutPhoto(restaurantPhotos[item[1]])||Boolean(originalSidePlates[item[1]]);}
+function isMenuCutout(item){return item[0]==='drink'||isCutoutPhoto(restaurantPhotos[item[1]])||Boolean(originalSidePlates[item[1]]);}
 function sideProductVisual(item,source){
  const original=originalSidePlates[item[1]],plate=original||sidePhotoCrops[item[1]];
  if(!plate)return null;
@@ -103,7 +103,241 @@ const wrapPhotoCrops={
  "Patatesli Falafel Dürüm":[546,538,500,460]
 };
 
+
+// Actual product packshots share the cream canvas and one baseline.
+// Large and small Eker use distinct, verified SKUs rather than a reused image.
+const drinkProducts={
+ "Büyük Ayran": {
+  "source": "assets/drinks/eker-large.png",
+  "width": 250,
+  "height": 250,
+  "crop": [
+   30,
+   15,
+   197,
+   208
+  ],
+  "displayHeight": 660,
+  "transparent": true
+ },
+ "Küçük Ayran": {
+  "source": "assets/drinks/eker-small.png",
+  "width": 1000,
+  "height": 1000,
+  "crop": [
+   209,
+   97,
+   596,
+   813
+  ],
+  "displayHeight": 520,
+  "transparent": false
+ },
+ "Niğde Gazozu": {
+  "source": "assets/drinks/nigde.jpg",
+  "width": 640,
+  "height": 640,
+  "crop": [
+   233,
+   29,
+   182,
+   563
+  ],
+  "displayHeight": 820,
+  "transparent": false
+ },
+ "Çamlıca Gazoz": {
+  "source": "assets/drinks/camlica.jpg",
+  "width": 1650,
+  "height": 1650,
+  "crop": [
+   597,
+   61,
+   454,
+   1527
+  ],
+  "displayHeight": 820,
+  "transparent": false
+ },
+ "Beypazarı Maden Suyu": {
+  "source": "assets/drinks/beypazari-plain.png",
+  "width": 440,
+  "height": 586,
+  "crop": [
+   125,
+   -9,
+   207,
+   604
+  ],
+  "displayHeight": 800,
+  "transparent": true
+ },
+ "Beypazarı Mandalina Aromalı Maden Suyu": {
+  "source": "assets/drinks/beypazari-mandarin.png",
+  "width": 440,
+  "height": 586,
+  "crop": [
+   124,
+   -9,
+   207,
+   603
+  ],
+  "displayHeight": 800,
+  "transparent": true
+ },
+ "Şişe Cola Turka": {
+  "source": "assets/drinks/cola-bottle.jpg",
+  "width": 640,
+  "height": 640,
+  "crop": [
+   239,
+   56,
+   162,
+   530
+  ],
+  "displayHeight": 820,
+  "transparent": false
+ },
+ "Kutu Cola Turka": {
+  "source": "assets/drinks/cola-can.jpg",
+  "width": 1000,
+  "height": 1000,
+  "crop": [
+   313,
+   210,
+   372,
+   656
+  ],
+  "displayHeight": 740,
+  "transparent": false
+ },
+ "Doğanay Acılı Şalgam": {
+  "source": "assets/drinks/doganay-spicy.png",
+  "width": 960,
+  "height": 1440,
+  "crop": [
+   355,
+   502,
+   262,
+   829
+  ],
+  "displayHeight": 800,
+  "transparent": true
+ },
+ "Doğanay Acısız Şalgam": {
+  "source": "assets/drinks/doganay-mild.png",
+  "width": 960,
+  "height": 1440,
+  "crop": [
+   346,
+   496,
+   264,
+   836
+  ],
+  "displayHeight": 800,
+  "transparent": true
+ },
+ "Didi Limon Aromalı Soğuk Çay": {
+  "source": "assets/drinks/didi-lemon.jpg",
+  "width": 1000,
+  "height": 1000,
+  "crop": [
+   332,
+   75,
+   327,
+   842
+  ],
+  "displayHeight": 760,
+  "transparent": false
+ },
+ "Didi Çilek Aromalı Soğuk Çay": {
+  "source": "assets/drinks/didi-strawberry.jpg",
+  "width": 1650,
+  "height": 1650,
+  "crop": [
+   513,
+   53,
+   634,
+   1539
+  ],
+  "displayHeight": 760,
+  "transparent": false
+ },
+ "Didi Şeftali Aromalı Soğuk Çay": {
+  "source": "assets/drinks/didi-peach.jpg",
+  "width": 700,
+  "height": 700,
+  "crop": [
+   232,
+   49,
+   232,
+   595
+  ],
+  "displayHeight": 760,
+  "transparent": false
+ },
+ "Sarıyer Portakal Aromalı Gazoz": {
+  "source": "assets/drinks/sariyer-orange.jpg",
+  "width": 510,
+  "height": 510,
+  "crop": [
+   173,
+   55,
+   165,
+   401
+  ],
+  "displayHeight": 760,
+  "transparent": false
+ },
+ "Sarıyer Mandalina Aromalı Gazoz": {
+  "source": "assets/drinks/sariyer-mandarin.jpg",
+  "width": 650,
+  "height": 650,
+  "crop": [
+   196,
+   8,
+   260,
+   634
+  ],
+  "displayHeight": 760,
+  "transparent": false
+ },
+ "Su": {
+  "source": "assets/drinks/water.jpg",
+  "width": 640,
+  "height": 640,
+  "crop": [
+   249,
+   115,
+   135,
+   450
+  ],
+  "displayHeight": 800,
+  "transparent": false
+ },
+ "Çay": {
+  "source": "assets/drinks/tea.png",
+  "width": 1254,
+  "height": 1254,
+  "crop": [
+   75,
+   93,
+   1104,
+   1095
+  ],
+  "displayHeight": 700,
+  "transparent": true
+ }
+};
+function drinkProductVisual(item){
+ const product=drinkProducts[item[1]];if(!product)return '';
+ const height=product.displayHeight,width=height*product.crop[2]/product.crop[3],x=(1000-width)/2,y=900-height;
+ const shadowId='drink-shadow-'+data.indexOf(item);
+ return `<svg class="drink-product" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}"><defs><filter id="${shadowId}" x="-50%" y="-100%" width="200%" height="300%"><feGaussianBlur stdDeviation="13"/></filter></defs><ellipse cx="500" cy="914" rx="${Math.max(58,width*.34)}" ry="15" fill="#43331d" opacity=".10" filter="url(#${shadowId})"/><svg x="${x}" y="${y}" width="${width}" height="${height}" viewBox="${product.crop.join(' ')}" preserveAspectRatio="xMidYMid meet" overflow="hidden"><image href="${escapeHtml(product.source)}" width="${product.width}" height="${product.height}"/></svg></svg>`;
+}
+
 function productVisual(item,index){
+ if(item[0]==='drink')return drinkProductVisual(item);
  const actualPhoto=restaurantPhotos[item[1]],isCutout=isMenuCutout(item);
  const wrapCrop=wrapPhotoCrops[item[1]];
  if(isCutout&&wrapCrop)return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}"><svg x="65" y="65" width="870" height="870" viewBox="${wrapCrop.join(' ')}" preserveAspectRatio="xMidYMid meet" overflow="hidden"><image href="${escapeHtml(actualPhoto)}" width="1536" height="1024"/></svg></svg>`;

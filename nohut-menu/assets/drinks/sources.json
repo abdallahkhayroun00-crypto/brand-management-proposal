@@ -1,0 +1,272 @@
+{
+  "updated_on": "2026-10-25",
+  "method": "Unmodified manufacturer/retailer product photographs normalized in SVG on the shared cream canvas; white photo backdrops blend into that canvas. Packaging labels are preserved. Tea is an AI-generated unbranded menu illustration.",
+  "eker_large": {
+    "volume_ml": 295,
+    "verification_page": "https://www.eker.com/urundetay/Ayran/10105.png"
+  },
+  "eker_small": {
+    "volume_ml": 170,
+    "barcode": "8691316521079",
+    "verification_page": "https://www.eker.com/urundetay/Ayran/eker25.2.png",
+    "photo_page": "https://www.alali.ge/en/rdzis-natsarmi/ayran/eker-airani-170ml20ts/131"
+  },
+  "items": [
+    {
+      "name": "Büyük Ayran",
+      "source": "assets/drinks/eker-large.png",
+      "width": 250,
+      "height": 250,
+      "crop": [
+        30,
+        15,
+        197,
+        208
+      ],
+      "displayHeight": 660,
+      "transparent": true,
+      "original": "https://cdn.eker.com/10105.png"
+    },
+    {
+      "name": "Küçük Ayran",
+      "source": "assets/drinks/eker-small.png",
+      "width": 1000,
+      "height": 1000,
+      "crop": [
+        209,
+        97,
+        596,
+        813
+      ],
+      "displayHeight": 520,
+      "transparent": false,
+      "original": "https://alali.ge/files/Products/eker/8691316521079.png"
+    },
+    {
+      "name": "Niğde Gazozu",
+      "source": "assets/drinks/nigde.jpg",
+      "width": 640,
+      "height": 640,
+      "crop": [
+        233,
+        29,
+        182,
+        563
+      ],
+      "displayHeight": 820,
+      "transparent": false,
+      "original": "https://raw.githubusercontent.com/abdallahkhayroun00-crypto/brand-management-proposal/main/nohut-menu/assets/products/ys-75005278.jpg"
+    },
+    {
+      "name": "Çamlıca Gazoz",
+      "source": "assets/drinks/camlica.jpg",
+      "width": 1650,
+      "height": 1650,
+      "crop": [
+        597,
+        61,
+        454,
+        1527
+      ],
+      "displayHeight": 820,
+      "transparent": false,
+      "original": "https://images.migrosone.com/sanalmarket/product/08035801/08035801-37619a-1650x1650.jpg"
+    },
+    {
+      "name": "Beypazarı Maden Suyu",
+      "source": "assets/drinks/beypazari-plain.png",
+      "width": 440,
+      "height": 586,
+      "crop": [
+        125,
+        -9,
+        207,
+        604
+      ],
+      "displayHeight": 800,
+      "transparent": true,
+      "original": "https://beypazarimadensuyu.com.tr/Content/BMS/images/urunler_yeni_sise/sade.png"
+    },
+    {
+      "name": "Beypazarı Mandalina Aromalı Maden Suyu",
+      "source": "assets/drinks/beypazari-mandarin.png",
+      "width": 440,
+      "height": 586,
+      "crop": [
+        124,
+        -9,
+        207,
+        603
+      ],
+      "displayHeight": 800,
+      "transparent": true,
+      "original": "https://beypazarimadensuyu.com.tr/Content/BMS/images/urunler_yeni_sise/mandalina.png"
+    },
+    {
+      "name": "Şişe Cola Turka",
+      "source": "assets/drinks/cola-bottle.jpg",
+      "width": 640,
+      "height": 640,
+      "crop": [
+        239,
+        56,
+        162,
+        530
+      ],
+      "displayHeight": 820,
+      "transparent": false,
+      "original": "https://raw.githubusercontent.com/abdallahkhayroun00-crypto/brand-management-proposal/main/nohut-menu/assets/products/ys-68085858.jpg"
+    },
+    {
+      "name": "Kutu Cola Turka",
+      "source": "assets/drinks/cola-can.jpg",
+      "width": 1000,
+      "height": 1000,
+      "crop": [
+        313,
+        210,
+        372,
+        656
+      ],
+      "displayHeight": 740,
+      "transparent": false,
+      "original": "https://static.ticimax.cloud/cdn-cgi/image/width%3D-%2Cquality%3D99/11108/uploads/urunresimleri/buyuk/cola-turka-330-ml-9e1a.jpg"
+    },
+    {
+      "name": "Doğanay Acılı Şalgam",
+      "source": "assets/drinks/doganay-spicy.png",
+      "width": 960,
+      "height": 1440,
+      "crop": [
+        355,
+        502,
+        262,
+        829
+      ],
+      "displayHeight": 800,
+      "transparent": true,
+      "original": "https://www.doganaygida.com.tr//Image/urunler/94487e40-84d7-4dca-8a5e-0ebfeffbb877.png"
+    },
+    {
+      "name": "Doğanay Acısız Şalgam",
+      "source": "assets/drinks/doganay-mild.png",
+      "width": 960,
+      "height": 1440,
+      "crop": [
+        346,
+        496,
+        264,
+        836
+      ],
+      "displayHeight": 800,
+      "transparent": true,
+      "original": "https://www.doganaygida.com.tr//Image/urunler/73eb9c1a-d85a-4b22-8645-f802931e7adf.png"
+    },
+    {
+      "name": "Didi Limon Aromalı Soğuk Çay",
+      "source": "assets/drinks/didi-lemon.jpg",
+      "width": 1000,
+      "height": 1000,
+      "crop": [
+        332,
+        75,
+        327,
+        842
+      ],
+      "displayHeight": 760,
+      "transparent": false,
+      "original": "https://ardenmarket.com.tr/media/catalog/product/cache/5a2e5a0d3f45b67571c69c65e0a1d6e1/d/i/didi-limon-250ml.jpg"
+    },
+    {
+      "name": "Didi Çilek Aromalı Soğuk Çay",
+      "source": "assets/drinks/didi-strawberry.jpg",
+      "width": 1650,
+      "height": 1650,
+      "crop": [
+        513,
+        53,
+        634,
+        1539
+      ],
+      "displayHeight": 760,
+      "transparent": false,
+      "original": "https://images.migrosone.com/sanalmarket/product/08050859/8050859-f93f16-1650x1650.jpg"
+    },
+    {
+      "name": "Didi Şeftali Aromalı Soğuk Çay",
+      "source": "assets/drinks/didi-peach.jpg",
+      "width": 700,
+      "height": 700,
+      "crop": [
+        232,
+        49,
+        232,
+        595
+      ],
+      "displayHeight": 760,
+      "transparent": false,
+      "original": "https://ardenmarket.com.tr/media/catalog/product/cache/ce320e98947e5c83f08a8e256dc8423e/d/i/didi-seftali-250ml.jpg"
+    },
+    {
+      "name": "Sarıyer Portakal Aromalı Gazoz",
+      "source": "assets/drinks/sariyer-orange.jpg",
+      "width": 510,
+      "height": 510,
+      "crop": [
+        173,
+        55,
+        165,
+        401
+      ],
+      "displayHeight": 760,
+      "transparent": false,
+      "original": "https://nebilcdn.blob.core.windows.net/sehzadenew/0017961_sariyer-gazoz-330-ml-portakal.jpg"
+    },
+    {
+      "name": "Sarıyer Mandalina Aromalı Gazoz",
+      "source": "assets/drinks/sariyer-mandarin.jpg",
+      "width": 650,
+      "height": 650,
+      "crop": [
+        196,
+        8,
+        260,
+        634
+      ],
+      "displayHeight": 760,
+      "transparent": false,
+      "original": "https://www.sariyermarket.com/images/thumbs/0047791_sariyer-gazoz-mandalina-330ml.jpeg"
+    },
+    {
+      "name": "Su",
+      "source": "assets/drinks/water.jpg",
+      "width": 640,
+      "height": 640,
+      "crop": [
+        249,
+        115,
+        135,
+        450
+      ],
+      "displayHeight": 800,
+      "transparent": false,
+      "original": "https://raw.githubusercontent.com/abdallahkhayroun00-crypto/brand-management-proposal/main/nohut-menu/assets/products/ys-68085861.jpg"
+    },
+    {
+      "name": "Çay",
+      "source": "assets/drinks/tea.png",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        75,
+        93,
+        1104,
+        1095
+      ],
+      "displayHeight": 700,
+      "transparent": true,
+      "original": "AI-generated unbranded Turkish tea"
+    }
+  ],
+  "names_and_prices_unchanged": true
+}
