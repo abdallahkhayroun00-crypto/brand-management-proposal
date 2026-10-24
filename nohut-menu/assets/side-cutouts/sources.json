@@ -1,0 +1,18 @@
+{
+  "updated_on": "2026-10-25",
+  "method": "AI-assisted plate completion and background removal for sambousek; original kibbeh and sarma photographs retained and isolated with SVG clipping. Six side cards share the mezze canvas and scale.",
+  "sarama": {
+    "original": "assets/products/tgo-9295403_1738157981309.jpg",
+    "keep_original_eight_rolls": true,
+    "food_and_arrangement_unchanged": true,
+    "menu_text_and_prices_unchanged": true
+  },
+  "items": [
+    "Kibbe (3 Adet)",
+    "Kıymalı Sembusek (4 Adet)",
+    "Ispanaklı Sembusek (4 Adet)",
+    "Peynirli Sembusek (4 Adet)",
+    "Sarma (6 Adet)",
+    "Patates Kızartması"
+  ]
+}
