@@ -74,7 +74,7 @@ const saladPhotoCrops={"Falafel Salatası":[22,19,674,681],"Tabbule":[729,16,692
 // Sarma deliberately uses the original eight-roll photograph, per owner request.
 const originalSidePlates={
  "Kibbe (3 Adet)":{width:1920,height:1280,crop:[350,50,1160,1160],clip:'<ellipse cx="932" cy="642" rx="543" ry="544"/><path d="M755 70Q784 50 822 92L970 195 850 280 726 164Z"/><path d="M465 1015 505 897 650 956 609 1050Z"/><path d="M1390 714 1498 822 1440 877 1355 823Z"/>'},
- "Sarma (6 Adet)":{width:256,height:256,crop:[13,33,228,200],clip:'<ellipse cx="127" cy="133" rx="112" ry="98"/>'}
+ "Sarma (6 Adet)":{width:256,height:256,crop:[9,27,235,205],clip:'<ellipse cx="126.5" cy="129.5" rx="109" ry="94.5"/>'}
 };
 const sidePhotoCrops={
  "Kıymalı Sembusek (4 Adet)":{width:1536,height:1024,crop:[538,22,470,478]},
