@@ -169,11 +169,11 @@
   },
   {
     "menu_item": "Mütebbel",
-    "asset": "assets/products/ys-68085853.jpg",
-    "provider": "Yemeksepeti",
-    "page": "https://www.yemeksepeti.com/en/restaurant/q6kx/nohut-falafel",
-    "source": "https://yemeksepeti.dhmedia.io/image/fd-tr/Products/68085853.jpg?height=150&width=150",
-    "downloaded_rendition": "https://yemeksepeti.dhmedia.io/image/fd-tr/Products/68085853.jpg?height=640&width=640"
+    "asset": "assets/products/mutebbel.jpeg",
+    "provider": "Restaurant photo supplied by user",
+    "source_file": "Mutebbel.jpeg",
+    "confirmed_by": "Uploaded photo labels and accompanying restaurant message screenshot",
+    "added_on": "2026-10-24"
   },
   {
     "menu_item": "Tabbule",
@@ -270,5 +270,21 @@
     "page": "https://tgoyemek.com/restoranlar/316490",
     "source": "https://cdn.tgoapps.com/mnresize/256/-/tgo2/spm/prod/meal/media/images/product/316490/9295371_1738157983821.jpg",
     "downloaded_rendition": "https://cdn.tgoapps.com/mnresize/256/-/tgo2/spm/prod/meal/media/images/product/316490/9295371_1738157983821.jpg"
+  },
+  {
+    "menu_item": "Pancarlı Humus",
+    "asset": "assets/products/pancarli-humus.jpeg",
+    "provider": "Restaurant photo supplied by user",
+    "source_file": "Pancarlı humus.jpeg",
+    "confirmed_by": "Uploaded photo labels and accompanying restaurant message screenshot",
+    "added_on": "2026-10-24"
+  },
+  {
+    "menu_item": "Muhammara",
+    "asset": "assets/products/muhammara.jpeg",
+    "provider": "Restaurant photo supplied by user",
+    "source_file": "Muhammara.jpeg",
+    "confirmed_by": "Uploaded photo labels and accompanying restaurant message screenshot",
+    "added_on": "2026-10-24"
   }
 ]

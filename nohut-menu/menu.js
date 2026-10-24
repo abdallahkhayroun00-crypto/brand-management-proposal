@@ -45,7 +45,9 @@ const restaurantPhotos = {
  "Patates Kızartması": "assets/products/ys-72263052.jpg",
  "Sade Humus": "assets/products/ys-68085849.jpg",
  "Babagannuş": "assets/products/ys-68085852.jpg",
- "Mütebbel": "assets/products/ys-68085853.jpg",
+ "Mütebbel": "assets/products/mutebbel.jpeg",
+ "Pancarlı Humus": "assets/products/pancarli-humus.jpeg",
+ "Muhammara": "assets/products/muhammara.jpeg",
  "Tabbule": "assets/products/ys-68085854.jpg",
  "Fettuş": "assets/products/ys-68085855.jpg",
  "Falafel Salatası": "assets/products/ys-68085856.jpg",
@@ -64,7 +66,7 @@ function menuName(item){
 function menuDescription(item){return lang==='ar'?arabicMenu.items[item[1]][1]:item[lang==='tr'?4:5];}
 function productVisual(item,index){
  const actualPhoto=restaurantPhotos[item[1]];
- if(actualPhoto)return `<img class="real-dish-image" src="${escapeHtml(actualPhoto)}" alt="${escapeHtml(menuName(item))}" loading="lazy" style="object-fit:cover;padding:0"><span class="fallback-art" hidden aria-hidden="true">${pic(item[0],index)}</span>`;
+ if(actualPhoto)return `<img class="real-dish-image" src="${escapeHtml(actualPhoto)}" alt="${escapeHtml(menuName(item))}" loading="lazy" style="object-fit:cover;padding:0;position:absolute;inset:0"><span class="fallback-art" hidden aria-hidden="true">${pic(item[0],index)}</span>`;
  const crop=referencePhotos[item[1]];
  if(crop)return `<svg class="product-photo" viewBox="${crop.join(' ')}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="assets/menu-reference.jpeg" width="1230" height="1278"/></svg>`;
  const source=photoMap[item[1]],illustration=pic(item[0],index);
