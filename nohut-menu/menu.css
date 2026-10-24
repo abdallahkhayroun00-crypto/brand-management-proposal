@@ -34,7 +34,7 @@
 .reviews-title-line h2{margin:0;font-size:35px;line-height:1.2}
 .reviews-title-line svg{width:29px;height:32px;flex:0 0 auto}
 .reviews-heading>p{margin:8px 0 0;font-size:18px;color:#788371}
-.reviews-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.reviews-grid{display:grid;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:calc((100% - 36px)/3);gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;padding:3px 0 12px;-webkit-overflow-scrolling:touch}
 .review-card{min-width:0;margin:0;padding:23px 24px 19px;border:1px solid #e4dfcf;border-radius:18px;background:#fcfaf5;box-shadow:0 5px 17px #5b4a280b;display:flex;flex-direction:column}
 .review-card-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .review-platform{padding:5px 10px;border-radius:30px;font-size:13px;line-height:1.2;font-weight:600;border:1px solid #dedfd3;color:var(--green);background:#f3f4eb}
@@ -48,7 +48,35 @@
 .review-source{display:inline-flex;gap:5px;align-items:center;min-height:28px;color:var(--green);font-size:14px;font-weight:600;text-underline-offset:4px}
 .review-source:hover{text-decoration:underline}
 .reviews-note{text-align:center;color:#848c7c;font-size:13px;line-height:1.5;margin:19px 0 0}
-@media(max-width:999px){.reviews-grid{gap:12px}.review-card{padding:20px 18px 15px}.review-card blockquote{font-size:21px}.reviews-title-line h2{font-size:31px}}
-@media(max-width:700px){.reviews-section{padding:30px 13px}.reviews-grid{grid-template-columns:1fr;gap:13px}.reviews-title-line{gap:9px}.reviews-title-line h2{font-size:29px}.reviews-title-line svg{width:23px;height:27px}.reviews-heading>p{font-size:17px}.review-card{padding:20px}.review-card blockquote{margin:18px 0 22px;font-size:23px}.reviews-note{font-size:12px;text-align:left}}
+@media(max-width:999px){.reviews-grid{gap:12px;grid-auto-columns:calc((100% - 24px)/3)}.review-card{padding:20px 18px 15px}.review-card blockquote{font-size:21px}.reviews-title-line h2{font-size:31px}}
+@media(max-width:700px){.reviews-section{padding:30px 13px}.reviews-grid{grid-template-columns:none;grid-auto-columns:100%;gap:13px}.reviews-title-line{gap:9px}.reviews-title-line h2{font-size:29px}.reviews-title-line svg{width:23px;height:27px}.reviews-heading>p{font-size:17px}.review-card{padding:20px}.review-card blockquote{margin:18px 0 22px;font-size:23px}.reviews-note{font-size:12px;text-align:left}}
 
 .review-translation{display:block;margin-top:3px;font-size:12px;color:#89917e}
+
+.review-card{scroll-snap-align:start;scroll-snap-stop:normal}
+.reviews-grid::-webkit-scrollbar{display:none}
+.reviews-grid:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+.reviews-grid.is-dragging{cursor:grabbing;scroll-snap-type:none;user-select:none}
+.reviews-grid{cursor:grab}
+.review-source{cursor:pointer}
+.reviews-controls{display:flex;align-items:center;justify-content:center;gap:17px;margin-top:8px}
+.review-nav{display:grid;place-items:center;width:44px;height:44px;border:1px solid #d5d9c9;border-radius:50%;background:#fcfaf5;color:var(--green);font:24px/1 Arial,sans-serif;transition:background .15s,color .15s}
+.review-nav:hover:not(:disabled){background:var(--green);color:#fff}
+.review-nav:disabled{opacity:.3;cursor:default}
+.reviews-position{min-width:65px;text-align:center;font-size:15px;color:#718069;font-variant-numeric:tabular-nums}
+
+/* Arabic follows the same design with native right-to-left reading order. */
+.languages{direction:ltr}
+[dir=rtl] body{font-family:Tahoma,Arial,sans-serif}
+[dir=rtl] h2,[dir=rtl] .review-card blockquote{font-family:Tahoma,Arial,sans-serif}
+[dir=rtl] .hero h1{direction:ltr}
+[dir=rtl] .tagline{letter-spacing:0}
+[dir=rtl] .hero-description{line-height:1.5}
+[dir=rtl] .arrow{margin-left:0;margin-right:auto;transform:scaleX(-1)}
+[dir=rtl] .contact-strip a:not(:last-child):after,[dir=rtl] .category:not(:last-child):after{right:auto;left:0}
+[dir=rtl] .contact-strip a:first-child{border-radius:0 27px 27px 0}
+[dir=rtl] .contact-strip a:last-child{border-radius:27px 0 0 27px}
+[dir=rtl] footer>small{margin-left:0;margin-right:auto}
+[dir=rtl] .review-nav>span[aria-hidden]{transform:scaleX(-1)}
+[dir=rtl] .reviews-note{text-align:center}
+@media(max-width:700px){[dir=rtl] .reviews-title-line h2{font-size:26px}[dir=rtl] .reviews-note{text-align:right}}
