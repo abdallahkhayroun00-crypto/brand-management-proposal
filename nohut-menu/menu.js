@@ -23,6 +23,7 @@ const referencePhotos={
 const drinkOrder=Object.keys(referencePhotos);
 const drinkDisplayNames={'Büyük Ayran':['Eker Ayran (Büyük)','Eker Ayran (Large)'],'Küçük Ayran':['Eker Ayran (Küçük)','Eker Ayran (Small)'],'Doğanay Acılı Şalgam':['Doğanay Şalgam (Acı)','Doğanay Şalgam (Spicy)'],'Doğanay Acısız Şalgam':['Doğanay Şalgam (Acısız)','Doğanay Şalgam (Mild)']};
 const restaurantPhotos = {
+ "Tahinli Muhallebi": "assets/dessert-cutouts/tahinli-muhallebi.png",
  "Kıymalı Sembusek (4 Adet)": "assets/side-cutouts/sides.png",
  "Nohut Özel Dürüm": "assets/wrap-cutouts/wraps.png",
  "Falafel Dürüm": "assets/wrap-cutouts/wraps.png",
@@ -62,7 +63,7 @@ const restaurantPhotos = {
 };
 const mezePlateGeometry={"Sade Humus":{"width":1254,"height":1254,"matrix":[0.7312,-0.000248,-0.000248,0.739627,42.369389,42.922908]},"Kuruyemişli Humus":{"width":1254,"height":1254,"matrix":[0.719352,-0.000638,-0.000638,0.722961,41.809196,51.435731]},"Babagannuş":{"width":1254,"height":1254,"matrix":[0.710531,0.000526,0.000526,0.713243,54.855174,52.317941]},"Pancarlı Humus":{"width":1254,"height":1254,"matrix":[0.74633,0.001627,0.001627,0.754575,32.269832,27.221773]},"Mütebbel":{"width":1254,"height":1254,"matrix":[0.703334,0.000529,0.000529,0.70583,58.431362,52.554385]},"Muhammara":{"width":1254,"height":1254,"matrix":[0.757604,-0.002332,-0.002332,0.753512,25.043649,26.179502]}};
 const platterPlateGeometry={"Nohut Özel Tabağı":{"width":1254,"height":1254,"matrix":[0.718182,-0.003145,-0.003145,0.712716,53.090195,57.978915]},"Vegan Özel Tabağı":{"width":1254,"height":1254,"matrix":[0.699812,-0.00037,-0.00037,0.702335,63.507687,61.131581]},"Falafel Porsiyon":{"width":1254,"height":1254,"matrix":[0.725014,0.002901,0.002901,0.718634,42.709828,40.724092]},"Bakla Tabağı":{"width":1254,"height":1254,"matrix":[0.712926,0.000184,0.000184,0.719855,53.095402,54.840502]},"beyrutMain":{"width":1254,"height":1254,"matrix":[0.700855,-0.002523,-0.002523,0.705824,62.399929,66.824682]},"beyrutSalad":{"width":1254,"height":1254,"matrix":[0.686487,-0.000358,-0.000358,0.679426,70.923657,70.085503]}};
-function isCutoutPhoto(source){return /^assets\/(?:meze|platter|salad|side|wrap)-cutouts\//.test(source||"");}
+function isCutoutPhoto(source){return /^assets\/(?:meze|platter|salad|side|wrap|dessert)-cutouts\//.test(source||"");}
 function plateImage(source,plate){return `<image href="${escapeHtml(source)}" width="${plate.width}" height="${plate.height}" transform="matrix(${plate.matrix.join(" ")})"/>`;}
 function menuName(item){
  return lang==='ar'?arabicMenu.items[item[1]][0]:(drinkDisplayNames[item[1]]?.[lang==='tr'?0:1]||item[lang==='tr'?1:2]);
@@ -337,6 +338,7 @@ function drinkProductVisual(item){
 }
 
 function productVisual(item,index){
+ if(item[1]==='Tahinli Muhallebi')return `<svg class="meze-cutout" viewBox="0 0 1254 1254" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="${escapeHtml(restaurantPhotos[item[1]])}" width="1254" height="1254"/></svg>`;
  if(item[0]==='drink')return drinkProductVisual(item);
  const actualPhoto=restaurantPhotos[item[1]],isCutout=isMenuCutout(item);
  const wrapCrop=wrapPhotoCrops[item[1]];
