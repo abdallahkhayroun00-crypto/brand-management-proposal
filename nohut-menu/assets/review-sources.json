@@ -1,0 +1,42 @@
+{
+  "curated": true,
+  "note": "Selected positive excerpts; no aggregate ratings or review counts are implied. English copies are translations.",
+  "reviews": [
+    {
+      "platform": "Google Maps",
+      "platform_class": "google",
+      "author_tr": "E. Gündüz",
+      "author_en": "E. Gündüz",
+      "quote_tr": "Ürünler tazecik lezzetli.",
+      "quote_en": "The food is fresh and delicious.",
+      "source": "https://www.google.com/maps/place/Nohut+Falafel/@40.7650391,30.3602224,17z/data=!4m8!3m7!1s0x14ccb3cd4595bcab:0xd28ffffa342dbede!8m2!3d40.7650391!4d30.3602224!9m1!1b1!16s%2Fg%2F11wjq__p26?hl=fr&entry=ttu&g_ep=EgoyMDI2MTAyMC4wIKXMDSoASAFQAw%3D%3D",
+      "kind": "excerpt",
+      "verified_via": "Original Turkish review displayed in Google Maps",
+      "observed_on": "2026-10-24"
+    },
+    {
+      "platform": "Trendyol Go",
+      "platform_class": "trendyol",
+      "author_tr": "Trendyol Go müşterisi",
+      "author_en": "Trendyol Go customer",
+      "quote_tr": "Harikasınız. Her şey çok lezzetli",
+      "quote_en": "You're amazing. Everything is delicious.",
+      "source": "https://tgoyemek.com/restoranlar/316490",
+      "kind": "complete short review",
+      "verified_via": "Public Yorumlar dialog, review showing Lezzet 5 / Servis 5 / Teslimat 5",
+      "observed_on": "2026-10-24"
+    },
+    {
+      "platform": "Yemeksepeti",
+      "platform_class": "yemeksepeti",
+      "author_tr": "Yemeksepeti müşterisi",
+      "author_en": "Yemeksepeti customer",
+      "quote_tr": "Lezzetli ve doyurucuydu ellerinize sağlık.",
+      "quote_en": "Delicious and filling. Thank you!",
+      "source": "https://www.yemeksepeti.com/en/restaurant/q6kx/nohut-falafel/reviews",
+      "kind": "complete short review",
+      "verified_via": "Public review page, customer displayed as ...n",
+      "observed_on": "2026-10-24"
+    }
+  ]
+}

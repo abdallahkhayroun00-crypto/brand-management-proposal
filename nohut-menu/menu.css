@@ -24,3 +24,29 @@
   .contact-strip a{gap:10px;padding-left:clamp(12px,1.5vw,24px);padding-right:clamp(12px,1.5vw,24px)}
   .contact-strip .trendyol-logo{width:50px;height:42px}
 }
+
+/* A compact, source-linked selection of genuine customer feedback. */
+.reviews-section{padding:40px 2.8% 38px;background:#f0eee2;border-top:1px solid #e4dfcf}
+.reviews-inner{max-width:1400px;margin:0 auto}
+.reviews-heading{margin-bottom:24px}
+.reviews-eyebrow{font-size:12px;font-weight:600;letter-spacing:2px;color:var(--gold)}
+.reviews-title-line{display:flex;align-items:center;gap:15px;margin-top:7px;color:var(--green)}
+.reviews-title-line h2{margin:0;font-size:35px;line-height:1.2}
+.reviews-title-line svg{width:29px;height:32px;flex:0 0 auto}
+.reviews-heading>p{margin:8px 0 0;font-size:18px;color:#788371}
+.reviews-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.review-card{min-width:0;margin:0;padding:23px 24px 19px;border:1px solid #e4dfcf;border-radius:18px;background:#fcfaf5;box-shadow:0 5px 17px #5b4a280b;display:flex;flex-direction:column}
+.review-card-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.review-platform{padding:5px 10px;border-radius:30px;font-size:13px;line-height:1.2;font-weight:600;border:1px solid #dedfd3;color:var(--green);background:#f3f4eb}
+.review-platform.trendyol{color:#a25115;background:#fff2e5;border-color:#f1dec6}
+.review-platform.yemeksepeti{color:#bf2352;background:#fff0f4;border-color:#f1d6df}
+.review-quote-mark{font:48px/.7 Georgia,serif;color:var(--gold);transform:translateY(9px)}
+.review-card blockquote{margin:24px 0 27px;flex:1;color:var(--green);font-family:'Bree Serif',Georgia,serif;font-size:23px;line-height:1.4}
+.review-card blockquote p{margin:0;overflow-wrap:anywhere}
+.review-card figcaption{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:14px;border-top:1px solid #e9e5d9;font-size:15px}
+.review-author{color:#788371;overflow-wrap:anywhere}
+.review-source{display:inline-flex;gap:5px;align-items:center;min-height:28px;color:var(--green);font-size:14px;font-weight:600;text-underline-offset:4px}
+.review-source:hover{text-decoration:underline}
+.reviews-note{text-align:center;color:#848c7c;font-size:13px;line-height:1.5;margin:19px 0 0}
+@media(max-width:999px){.reviews-grid{gap:12px}.review-card{padding:20px 18px 15px}.review-card blockquote{font-size:21px}.reviews-title-line h2{font-size:31px}}
+@media(max-width:700px){.reviews-section{padding:30px 13px}.reviews-grid{grid-template-columns:1fr;gap:13px}.reviews-title-line{gap:9px}.reviews-title-line h2{font-size:29px}.reviews-title-line svg{width:23px;height:27px}.reviews-heading>p{font-size:17px}.review-card{padding:20px}.review-card blockquote{margin:18px 0 22px;font-size:23px}.reviews-note{font-size:12px;text-align:left}}
