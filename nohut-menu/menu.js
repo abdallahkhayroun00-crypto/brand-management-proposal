@@ -1,5 +1,5 @@
 'use strict';
-let lang='tr', category='drink';
+let lang='tr', category='wrap';
 const byId=id=>document.getElementById(id);
 const escapeHtml=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const categoryOrder=['all','wrap','plate','fatte','meze','salad','side','dessert','drink'];
@@ -22,7 +22,44 @@ const referencePhotos={
 };
 const drinkOrder=Object.keys(referencePhotos);
 const drinkDisplayNames={'Büyük Ayran':['Eker Ayran (Büyük)','Eker Ayran (Large)'],'Küçük Ayran':['Eker Ayran (Küçük)','Eker Ayran (Small)'],'Doğanay Acılı Şalgam':['Doğanay Şalgam (Acı)','Doğanay Şalgam (Spicy)'],'Doğanay Acısız Şalgam':['Doğanay Şalgam (Acısız)','Doğanay Şalgam (Mild)']};
+const restaurantPhotos = {
+ "Nohut Özel Dürüm": "assets/products/ys-68085842.jpg",
+ "Falafel Dürüm": "assets/products/ys-68085839.jpg",
+ "Patatesli Patlıcanlı Falafel Dürüm": "assets/products/ys-76539202.jpg",
+ "Kibbe (3 Adet)": "assets/products/tgo-9295352_1736863668147.jpg",
+ "Nohut Özel Tabağı": "assets/products/ys-68085831.jpg",
+ "Sarma (6 Adet)": "assets/products/tgo-9295403_1738157981309.jpg",
+ "Tereyağlı Fatte": "assets/products/tgo-9295446_1738157998385.jpg",
+ "Patates Dürüm": "assets/products/ys-68085841.jpg",
+ "Vegan Özel Tabağı": "assets/products/tgo-9295183_1738158104604.jpg",
+ "Beyrut Tabağı": "assets/products/ys-68085832.jpg",
+ "Kuruyemişli Humus": "assets/products/ys-68085851.jpg",
+ "Peynirli Sembusek (4 Adet)": "assets/products/ys-68085846.jpg",
+ "Falafel Porsiyon": "assets/products/ys-68085830.jpg",
+ "Bakla Tabağı": "assets/products/ys-68085833.jpg",
+ "Patlıcanlı Fatte": "assets/products/ys-68085836.jpg",
+ "Tereyağında Kuruyemişli Fatte": "assets/products/ys-68085837.jpg",
+ "Patatesli Falafel Dürüm": "assets/products/ys-72772393.jpg",
+ "Ispanaklı Sembusek (4 Adet)": "assets/products/ys-68085845.jpg",
+ "Patates Kızartması": "assets/products/ys-72263052.jpg",
+ "Sade Humus": "assets/products/ys-68085849.jpg",
+ "Babagannuş": "assets/products/ys-68085852.jpg",
+ "Mütebbel": "assets/products/ys-68085853.jpg",
+ "Tabbule": "assets/products/ys-68085854.jpg",
+ "Fettuş": "assets/products/ys-68085855.jpg",
+ "Falafel Salatası": "assets/products/ys-68085856.jpg",
+ "Kutu Cola Turka": "assets/products/ys-68085857.jpg",
+ "Şişe Cola Turka": "assets/products/ys-68085858.jpg",
+ "Niğde Gazozu": "assets/products/ys-75005278.jpg",
+ "Doğanay Acılı Şalgam": "assets/products/ys-69711494.jpg",
+ "Doğanay Acısız Şalgam": "assets/products/ys-69712096.jpg",
+ "Küçük Ayran": "assets/products/ys-68085859.jpg",
+ "Beypazarı Maden Suyu": "assets/products/ys-68085860.jpg",
+ "Su": "assets/products/ys-68085861.jpg"
+};
 function productVisual(item,index){
+ const actualPhoto=restaurantPhotos[item[1]];
+ if(actualPhoto)return `<img class="real-dish-image" src="${escapeHtml(actualPhoto)}" alt="${escapeHtml(lang==='tr'?item[1]:item[2])}" loading="lazy" style="object-fit:cover;padding:0"><span class="fallback-art" hidden aria-hidden="true">${pic(item[0],index)}</span>`;
  const crop=referencePhotos[item[1]];
  if(crop)return `<svg class="product-photo" viewBox="${crop.join(' ')}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${escapeHtml(lang==='tr'?item[1]:item[2])}"><image href="assets/menu-reference.jpeg" width="1230" height="1278"/></svg>`;
  const source=photoMap[item[1]],illustration=pic(item[0],index);
