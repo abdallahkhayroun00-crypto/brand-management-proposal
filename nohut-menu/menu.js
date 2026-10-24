@@ -48,9 +48,9 @@ const restaurantPhotos = {
  "Mütebbel": "assets/meze-cutouts/mutebbel.png",
  "Pancarlı Humus": "assets/meze-cutouts/pancarli-humus.png",
  "Muhammara": "assets/meze-cutouts/muhammara.png",
- "Tabbule": "assets/products/ys-68085854.jpg",
- "Fettuş": "assets/products/ys-68085855.jpg",
- "Falafel Salatası": "assets/products/instagram-falafel-salatasi.webp",
+ "Tabbule": "assets/salad-cutouts/salads.png",
+ "Fettuş": "assets/salad-cutouts/salads.png",
+ "Falafel Salatası": "assets/salad-cutouts/salads.png",
  "Kutu Cola Turka": "assets/products/ys-68085857.jpg",
  "Şişe Cola Turka": "assets/products/ys-68085858.jpg",
  "Niğde Gazozu": "assets/products/ys-75005278.jpg",
@@ -62,21 +62,23 @@ const restaurantPhotos = {
 };
 const mezePlateGeometry={"Sade Humus":{"width":1254,"height":1254,"matrix":[0.7312,-0.000248,-0.000248,0.739627,42.369389,42.922908]},"Kuruyemişli Humus":{"width":1254,"height":1254,"matrix":[0.719352,-0.000638,-0.000638,0.722961,41.809196,51.435731]},"Babagannuş":{"width":1254,"height":1254,"matrix":[0.710531,0.000526,0.000526,0.713243,54.855174,52.317941]},"Pancarlı Humus":{"width":1254,"height":1254,"matrix":[0.74633,0.001627,0.001627,0.754575,32.269832,27.221773]},"Mütebbel":{"width":1254,"height":1254,"matrix":[0.703334,0.000529,0.000529,0.70583,58.431362,52.554385]},"Muhammara":{"width":1254,"height":1254,"matrix":[0.757604,-0.002332,-0.002332,0.753512,25.043649,26.179502]}};
 const platterPlateGeometry={"Nohut Özel Tabağı":{"width":1254,"height":1254,"matrix":[0.718182,-0.003145,-0.003145,0.712716,53.090195,57.978915]},"Vegan Özel Tabağı":{"width":1254,"height":1254,"matrix":[0.699812,-0.00037,-0.00037,0.702335,63.507687,61.131581]},"Falafel Porsiyon":{"width":1254,"height":1254,"matrix":[0.725014,0.002901,0.002901,0.718634,42.709828,40.724092]},"Bakla Tabağı":{"width":1254,"height":1254,"matrix":[0.712926,0.000184,0.000184,0.719855,53.095402,54.840502]},"beyrutMain":{"width":1254,"height":1254,"matrix":[0.700855,-0.002523,-0.002523,0.705824,62.399929,66.824682]},"beyrutSalad":{"width":1254,"height":1254,"matrix":[0.686487,-0.000358,-0.000358,0.679426,70.923657,70.085503]}};
-function isCutoutPhoto(source){return /^assets\/(?:meze|platter)-cutouts\//.test(source||"");}
+function isCutoutPhoto(source){return /^assets\/(?:meze|platter|salad)-cutouts\//.test(source||"");}
 function plateImage(source,plate){return `<image href="${escapeHtml(source)}" width="${plate.width}" height="${plate.height}" transform="matrix(${plate.matrix.join(" ")})"/>`;}
 function menuName(item){
  return lang==='ar'?arabicMenu.items[item[1]][0]:(drinkDisplayNames[item[1]]?.[lang==='tr'?0:1]||item[lang==='tr'?1:2]);
 }
 function menuDescription(item){return lang==='ar'?arabicMenu.items[item[1]][1]:item[lang==='tr'?4:5];}
+const saladPhotoCrops={"Falafel Salatası":[22,19,674,681],"Tabbule":[729,16,692,691],"Fettuş":[1436,16,710,693]};
 function productVisual(item,index){
  const actualPhoto=restaurantPhotos[item[1]],isCutout=isCutoutPhoto(actualPhoto);
  if(actualPhoto&&item[1]==='Beyrut Tabağı'){
   const platesLabel=lang==='ar'?'طبقان':lang==='tr'?'2 tabak':'2 plates';
   return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))} — ${platesLabel}"><g transform="translate(340 340) scale(0.619047619) translate(-500 -500)">${plateImage(actualPhoto,platterPlateGeometry.beyrutMain)}</g><g transform="translate(680 680) scale(0.571428571) translate(-500 -500)">${plateImage('assets/platter-cutouts/beyrut-salad.png',platterPlateGeometry.beyrutSalad)}</g></svg><span class="meal-plates-label">${platesLabel}</span>`;
  }
+ const saladCrop=saladPhotoCrops[item[1]];
+ if(isCutout&&saladCrop)return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}"><svg x="80" y="80" width="840" height="840" viewBox="${saladCrop.join(' ')}" preserveAspectRatio="none" overflow="hidden"><image href="${escapeHtml(actualPhoto)}" width="2156" height="729"/></svg></svg>`;
  const plate=mezePlateGeometry[item[1]]||platterPlateGeometry[item[1]];
  if(isCutout&&plate)return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}">${plateImage(actualPhoto,plate)}</svg>`;
- if(actualPhoto&&item[1]==='Falafel Salatası')return `<svg class="product-photo" viewBox="260 375 920 920" role="img" aria-label="${escapeHtml(menuName(item))}"><defs><clipPath id="falafel-salad-photo-clip"><ellipse cx="720" cy="835" rx="423" ry="431"/></clipPath></defs><image href="${escapeHtml(actualPhoto)}" width="1440" height="1440" clip-path="url(#falafel-salad-photo-clip)"/></svg>`;
  if(actualPhoto)return `<img class="real-dish-image${isCutout?' meze-cutout':''}" src="${escapeHtml(actualPhoto)}" alt="${escapeHtml(menuName(item))}" loading="lazy" style="object-fit:${isCutout?'contain':'cover'};padding:${isCutout?'10px':'0'};position:absolute;inset:0"><span class="fallback-art" hidden aria-hidden="true">${pic(item[0],index)}</span>`;
  const crop=referencePhotos[item[1]];
  if(crop)return `<svg class="product-photo" viewBox="${crop.join(' ')}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="assets/menu-reference.jpeg" width="1230" height="1278"/></svg>`;

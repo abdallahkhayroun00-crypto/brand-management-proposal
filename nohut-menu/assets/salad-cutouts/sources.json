@@ -1,0 +1,36 @@
+{
+  "updated_on": "2026-10-25",
+  "method": "AI-assisted background removal and perspective alignment from the three original restaurant photos. Shared transparent sheet, individual SVG crops, same cream canvas and shadow as mezze.",
+  "items": [
+    {
+      "name": "Falafel Salatası",
+      "original": "assets/products/instagram-falafel-salatasi.webp",
+      "crop": [
+        22,
+        19,
+        674,
+        681
+      ]
+    },
+    {
+      "name": "Tabbule",
+      "original": "assets/products/ys-68085854.jpg",
+      "crop": [
+        729,
+        16,
+        692,
+        691
+      ]
+    },
+    {
+      "name": "Fettuş",
+      "original": "assets/products/ys-68085855.jpg",
+      "crop": [
+        1436,
+        16,
+        710,
+        693
+      ]
+    }
+  ]
+}
