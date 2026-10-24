@@ -19,12 +19,12 @@
   },
   {
     "name": "Babagannuş",
-    "asset": "assets/meze-cutouts/babagannus.png",
-    "original": "assets/products/ys-68085852.jpg",
-    "edit": "Remove surrounding table; retain full plate and food on transparent background.",
+    "asset": "assets/meze-cutouts/babagannus-updated.png",
+    "original": "assets/products/babagannus.jpeg",
+    "edit": "Replace with user-supplied Babaganuş.jpeg; isolate complete white plate on transparent alpha and straighten overhead perspective.",
     "tool": "Built-in imagegen",
-    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Babagannuş. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible.",
-    "layout": "SVG affine normalization: align plate center and give every plate the same circular diameter without clipping."
+    "prompt": "Preserve actual chunky red-brown eggplant salad, walnut garnish, central pomegranate and plain white plate; remove wooden tabletop; centered overhead cutout, no added ingredients.",
+    "layout": "SVG affine normalization: plate center (500,500), diameter 840 in the shared 1000x1000 viewBox, matching the five existing meze plates."
   },
   {
     "name": "Pancarlı Humus",

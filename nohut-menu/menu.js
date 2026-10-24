@@ -44,7 +44,7 @@ const restaurantPhotos = {
  "Ispanaklı Sembusek (4 Adet)": "assets/products/ys-68085845.jpg",
  "Patates Kızartması": "assets/products/ys-72263052.jpg",
  "Sade Humus": "assets/meze-cutouts/sade-humus-top.png",
- "Babagannuş": "assets/meze-cutouts/babagannus.png",
+ "Babagannuş": "assets/meze-cutouts/babagannus-updated.png",
  "Mütebbel": "assets/meze-cutouts/mutebbel.png",
  "Pancarlı Humus": "assets/meze-cutouts/pancarli-humus.png",
  "Muhammara": "assets/meze-cutouts/muhammara.png",
@@ -60,7 +60,7 @@ const restaurantPhotos = {
  "Beypazarı Maden Suyu": "assets/products/ys-68085860.jpg",
  "Su": "assets/products/ys-68085861.jpg"
 };
-const mezePlateGeometry={"Sade Humus":{"width":1254,"height":1254,"matrix":[0.7312,-0.000248,-0.000248,0.739627,42.369389,42.922908]},"Kuruyemişli Humus":{"width":1254,"height":1254,"matrix":[0.719352,-0.000638,-0.000638,0.722961,41.809196,51.435731]},"Babagannuş":{"width":1254,"height":1254,"matrix":[0.786963,-0.00082,-0.00082,0.822171,9.044054,-17.533472]},"Pancarlı Humus":{"width":1254,"height":1254,"matrix":[0.74633,0.001627,0.001627,0.754575,32.269832,27.221773]},"Mütebbel":{"width":1254,"height":1254,"matrix":[0.703334,0.000529,0.000529,0.70583,58.431362,52.554385]},"Muhammara":{"width":1254,"height":1254,"matrix":[0.757604,-0.002332,-0.002332,0.753512,25.043649,26.179502]}};
+const mezePlateGeometry={"Sade Humus":{"width":1254,"height":1254,"matrix":[0.7312,-0.000248,-0.000248,0.739627,42.369389,42.922908]},"Kuruyemişli Humus":{"width":1254,"height":1254,"matrix":[0.719352,-0.000638,-0.000638,0.722961,41.809196,51.435731]},"Babagannuş":{"width":1254,"height":1254,"matrix":[0.710531,0.000526,0.000526,0.713243,54.855174,52.317941]},"Pancarlı Humus":{"width":1254,"height":1254,"matrix":[0.74633,0.001627,0.001627,0.754575,32.269832,27.221773]},"Mütebbel":{"width":1254,"height":1254,"matrix":[0.703334,0.000529,0.000529,0.70583,58.431362,52.554385]},"Muhammara":{"width":1254,"height":1254,"matrix":[0.757604,-0.002332,-0.002332,0.753512,25.043649,26.179502]}};
 function menuName(item){
  return lang==='ar'?arabicMenu.items[item[1]][0]:(drinkDisplayNames[item[1]]?.[lang==='tr'?0:1]||item[lang==='tr'?1:2]);
 }
