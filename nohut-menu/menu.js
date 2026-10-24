@@ -32,7 +32,7 @@ const restaurantPhotos = {
  "Sarma (6 Adet)": "assets/products/tgo-9295403_1738157981309.jpg",
  "Tereyağlı Fatte": "assets/products/tgo-9295446_1738157998385.jpg",
  "Patates Dürüm": "assets/products/ys-68085841.jpg",
- "Vegan Özel Tabağı": "assets/products/tgo-9295183_1738158104604.jpg",
+ "Vegan Özel Tabağı": "assets/products/instagram-vegan-ozel-tabagi.webp",
  "Beyrut Tabağı": "assets/products/ys-68085832.jpg",
  "Kuruyemişli Humus": "assets/meze-cutouts/kuruyemisli-humus.png",
  "Peynirli Sembusek (4 Adet)": "assets/products/ys-68085846.jpg",
@@ -50,7 +50,7 @@ const restaurantPhotos = {
  "Muhammara": "assets/meze-cutouts/muhammara.png",
  "Tabbule": "assets/products/ys-68085854.jpg",
  "Fettuş": "assets/products/ys-68085855.jpg",
- "Falafel Salatası": "assets/products/ys-68085856.jpg",
+ "Falafel Salatası": "assets/products/instagram-falafel-salatasi.webp",
  "Kutu Cola Turka": "assets/products/ys-68085857.jpg",
  "Şişe Cola Turka": "assets/products/ys-68085858.jpg",
  "Niğde Gazozu": "assets/products/ys-75005278.jpg",
@@ -69,6 +69,7 @@ function productVisual(item,index){
  const actualPhoto=restaurantPhotos[item[1]],isCutout=actualPhoto?.startsWith('assets/meze-cutouts/');
  const plate=mezePlateGeometry[item[1]];
  if(isCutout&&plate)return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="${escapeHtml(actualPhoto)}" width="${plate.width}" height="${plate.height}" transform="matrix(${plate.matrix.join(' ')})"/></svg>`;
+ if(actualPhoto&&item[1]==='Falafel Salatası')return `<svg class="product-photo" viewBox="260 375 920 920" role="img" aria-label="${escapeHtml(menuName(item))}"><defs><clipPath id="falafel-salad-photo-clip"><ellipse cx="720" cy="835" rx="423" ry="431"/></clipPath></defs><image href="${escapeHtml(actualPhoto)}" width="1440" height="1440" clip-path="url(#falafel-salad-photo-clip)"/></svg>`;
  if(actualPhoto)return `<img class="real-dish-image${isCutout?' meze-cutout':''}" src="${escapeHtml(actualPhoto)}" alt="${escapeHtml(menuName(item))}" loading="lazy" style="object-fit:${isCutout?'contain':'cover'};padding:${isCutout?'10px':'0'};position:absolute;inset:0"><span class="fallback-art" hidden aria-hidden="true">${pic(item[0],index)}</span>`;
  const crop=referencePhotos[item[1]];
  if(crop)return `<svg class="product-photo" viewBox="${crop.join(' ')}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="assets/menu-reference.jpeg" width="1230" height="1278"/></svg>`;

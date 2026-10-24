@@ -65,11 +65,11 @@
   },
   {
     "menu_item": "Vegan Özel Tabağı",
-    "asset": "assets/products/tgo-9295183_1738158104604.jpg",
-    "provider": "Trendyol Go",
-    "page": "https://tgoyemek.com/restoranlar/316490",
-    "source": "https://cdn.tgoapps.com/mnresize/256/-/tgo2/spm/prod/meal/media/images/product/316490/9295183_1738158104604.jpg",
-    "downloaded_rendition": "https://cdn.tgoapps.com/mnresize/256/-/tgo2/spm/prod/meal/media/images/product/316490/9295183_1738158104604.jpg"
+    "asset": "assets/products/instagram-vegan-ozel-tabagi.webp",
+    "provider": "Nohut Falafel Instagram",
+    "page": "https://www.instagram.com/p/DIqw2nfNnbn/",
+    "source": "https://scontent-iad3-1.cdninstagram.com/v/t51.75761-15/491627546_17877943935297272_4287599552995793269_n.webp?_nc_cat=104&ig_cache_key=MzYxNDkxNjUxMDQwMjExNTMwMw%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTQ0MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=F4gV7jznnV0Q7kNvwHUHa9Z&_nc_oc=Adpxr7YGIjEATnKR2XdJkza-rXrT2elH0bNrhodYngreNoleu-uxbx9oTMBhUq92HEg&_nc_zt=23&_nc_ht=scontent-iad3-1.cdninstagram.com&_nc_gid=sZ7BeKE6a2cGfP2AAYTL4A&_nc_ss=7ba8c&oh=00_AQPgtnNlX-gc5AValdBJWItxmgLlZrx1kyAcqXM9_-p9fA&oe=6AE2FC66",
+    "added_on": "2026-10-25"
   },
   {
     "menu_item": "Beyrut Tabağı",
@@ -193,11 +193,12 @@
   },
   {
     "menu_item": "Falafel Salatası",
-    "asset": "assets/products/ys-68085856.jpg",
-    "provider": "Yemeksepeti",
-    "page": "https://www.yemeksepeti.com/en/restaurant/q6kx/nohut-falafel",
-    "source": "https://yemeksepeti.dhmedia.io/image/fd-tr/Products/68085856.jpg?height=150&width=150",
-    "downloaded_rendition": "https://yemeksepeti.dhmedia.io/image/fd-tr/Products/68085856.jpg?height=640&width=640"
+    "asset": "assets/products/instagram-falafel-salatasi.webp",
+    "provider": "Nohut Falafel Instagram",
+    "page": "https://www.instagram.com/p/DKO7FO9NSk6/",
+    "source": "https://scontent-atl3-1.cdninstagram.com/v/t51.75761-15/502419615_17882590404297272_1353082980563041526_n.webp?_nc_cat=108&ig_cache_key=MzY0MzEwODk5Mjk5MDEyODQ0Mg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTQ0MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=_yL-paac_mwQ7kNvwEIJbit&_nc_oc=AdqwpENMr8t_-EWoGWDDn0wregZTCIztV-g4XemA52Bli6gcL_IX7qZyFcGyRYcOhGs-8CE2_VkC7sLKXp87E4fF&_nc_zt=23&_nc_ht=scontent-atl3-1.cdninstagram.com&_nc_gid=Ob8RoXF8Lqvwn_0m4mUF3g&_nc_ss=7b689&oh=00_AQMj4eAr28oVOMJnU1vQSiv5qfylVGgTuI94GblVoAP-WQ&oe=6AE2D85E",
+    "added_on": "2026-10-25",
+    "display_crop": "SVG plate ellipse removes promotional text from the menu framing while preserving the original photo bytes."
   },
   {
     "menu_item": "Kutu Cola Turka",
