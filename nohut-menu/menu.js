@@ -23,6 +23,7 @@ const referencePhotos={
 const drinkOrder=Object.keys(referencePhotos);
 const drinkDisplayNames={'Büyük Ayran':['Eker Ayran (Büyük)','Eker Ayran (Large)'],'Küçük Ayran':['Eker Ayran (Küçük)','Eker Ayran (Small)'],'Doğanay Acılı Şalgam':['Doğanay Şalgam (Acı)','Doğanay Şalgam (Spicy)'],'Doğanay Acısız Şalgam':['Doğanay Şalgam (Acısız)','Doğanay Şalgam (Mild)']};
 const restaurantPhotos = {
+ "Şambali Tatlısı": "assets/dessert-cutouts/sambali.png",
  "Tahinli Muhallebi": "assets/dessert-cutouts/tahinli-muhallebi.png",
  "Kıymalı Sembusek (4 Adet)": "assets/side-cutouts/sides.png",
  "Nohut Özel Dürüm": "assets/wrap-cutouts/wraps.png",
@@ -338,6 +339,7 @@ function drinkProductVisual(item){
 }
 
 function productVisual(item,index){
+ if(item[1]==='Şambali Tatlısı')return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="${escapeHtml(restaurantPhotos[item[1]])}" width="1254" height="1254" transform="matrix(0.69536 0 0 0.71795 61.22 44.10)"/></svg>`;
  if(item[1]==='Tahinli Muhallebi')return `<svg class="meze-cutout" viewBox="0 0 1254 1254" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="${escapeHtml(restaurantPhotos[item[1]])}" width="1254" height="1254"/></svg>`;
  if(item[0]==='drink')return drinkProductVisual(item);
  const actualPhoto=restaurantPhotos[item[1]],isCutout=isMenuCutout(item);
