@@ -1,6 +1,6 @@
 {
   "curated": true,
-  "note": "Selected positive excerpts; no aggregate ratings or review counts are implied. English copies are translations.",
+  "note": "Selected positive excerpts; no aggregate ratings or review counts are implied. Translations are identified; original sources are linked.",
   "reviews": [
     {
       "platform": "Google Maps",
@@ -36,6 +36,46 @@
       "source": "https://www.yemeksepeti.com/en/restaurant/q6kx/nohut-falafel/reviews",
       "kind": "complete short review",
       "verified_via": "Public review page, customer displayed as ...n",
+      "observed_on": "2026-10-24"
+    },
+    {
+      "platform": "Google Maps",
+      "platform_class": "google",
+      "author_tr": "Temsi",
+      "author_en": "Temsi",
+      "quote_tr": "Çok iyi bir Lübnan restoranı.",
+      "quote_en": "A very good Lebanese restaurant.",
+      "quote_original": "Très bon restaurant libanais",
+      "original_language": "fr",
+      "source": "https://www.google.com/maps/place/Nohut+Falafel/@40.7650391,30.3602224,17z/data=!4m8!3m7!1s0x14ccb3cd4595bcab:0xd28ffffa342dbede!8m2!3d40.7650391!4d30.3602224!9m1!1b1!16s%2Fg%2F11wjq__p26?hl=fr&entry=ttu&g_ep=EgoyMDI2MTAyMC4wIKXMDSoASAFQAw%3D%3D",
+      "kind": "complete short review, translated",
+      "verified_via": "Public Google Maps review by Temsi, original French text, 5 stars",
+      "observed_on": "2026-10-24"
+    },
+    {
+      "platform": "Trendyol Go",
+      "platform_class": "trendyol",
+      "author_tr": "Trendyol Go müşterisi",
+      "author_en": "Trendyol Go customer",
+      "quote_tr": "Elinize sağlık bayıldık",
+      "quote_en": "We loved it. Thank you!",
+      "original_language": "tr",
+      "source": "https://tgoyemek.com/restoranlar/316490",
+      "kind": "complete short review",
+      "verified_via": "Public Yorumlar dialog, review showing Lezzet 5 / Servis 5 / Teslimat 5, marked 4 Ay Önce",
+      "observed_on": "2026-10-24"
+    },
+    {
+      "platform": "Yemeksepeti",
+      "platform_class": "yemeksepeti",
+      "author_tr": "Yemeksepeti müşterisi",
+      "author_en": "Yemeksepeti customer",
+      "quote_tr": "her zaman taze ve lezzetli",
+      "quote_en": "Always fresh and delicious.",
+      "original_language": "tr",
+      "source": "https://www.yemeksepeti.com/en/restaurant/q6kx/nohut-falafel/reviews",
+      "kind": "complete short review",
+      "verified_via": "Public review page, customer displayed as ...z, marked 3 months ago",
       "observed_on": "2026-10-24"
     }
   ]

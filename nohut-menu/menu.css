@@ -50,3 +50,5 @@
 .reviews-note{text-align:center;color:#848c7c;font-size:13px;line-height:1.5;margin:19px 0 0}
 @media(max-width:999px){.reviews-grid{gap:12px}.review-card{padding:20px 18px 15px}.review-card blockquote{font-size:21px}.reviews-title-line h2{font-size:31px}}
 @media(max-width:700px){.reviews-section{padding:30px 13px}.reviews-grid{grid-template-columns:1fr;gap:13px}.reviews-title-line{gap:9px}.reviews-title-line h2{font-size:29px}.reviews-title-line svg{width:23px;height:27px}.reviews-heading>p{font-size:17px}.review-card{padding:20px}.review-card blockquote{margin:18px 0 22px;font-size:23px}.reviews-note{font-size:12px;text-align:left}}
+
+.review-translation{display:block;margin-top:3px;font-size:12px;color:#89917e}
