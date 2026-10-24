@@ -43,7 +43,7 @@ const restaurantPhotos = {
  "Patatesli Falafel Dürüm": "assets/products/ys-72772393.jpg",
  "Ispanaklı Sembusek (4 Adet)": "assets/products/ys-68085845.jpg",
  "Patates Kızartması": "assets/products/ys-72263052.jpg",
- "Sade Humus": "assets/meze-cutouts/sade-humus.png",
+ "Sade Humus": "assets/meze-cutouts/sade-humus-top.png",
  "Babagannuş": "assets/meze-cutouts/babagannus.png",
  "Mütebbel": "assets/meze-cutouts/mutebbel.png",
  "Pancarlı Humus": "assets/meze-cutouts/pancarli-humus.png",
@@ -60,12 +60,15 @@ const restaurantPhotos = {
  "Beypazarı Maden Suyu": "assets/products/ys-68085860.jpg",
  "Su": "assets/products/ys-68085861.jpg"
 };
+const mezePlateGeometry={"Sade Humus":{"width":1254,"height":1254,"matrix":[0.7312,-0.000248,-0.000248,0.739627,42.369389,42.922908]},"Kuruyemişli Humus":{"width":1254,"height":1254,"matrix":[0.719352,-0.000638,-0.000638,0.722961,41.809196,51.435731]},"Babagannuş":{"width":1254,"height":1254,"matrix":[0.786963,-0.00082,-0.00082,0.822171,9.044054,-17.533472]},"Pancarlı Humus":{"width":1254,"height":1254,"matrix":[0.74633,0.001627,0.001627,0.754575,32.269832,27.221773]},"Mütebbel":{"width":1254,"height":1254,"matrix":[0.703334,0.000529,0.000529,0.70583,58.431362,52.554385]},"Muhammara":{"width":1254,"height":1254,"matrix":[0.757604,-0.002332,-0.002332,0.753512,25.043649,26.179502]}};
 function menuName(item){
  return lang==='ar'?arabicMenu.items[item[1]][0]:(drinkDisplayNames[item[1]]?.[lang==='tr'?0:1]||item[lang==='tr'?1:2]);
 }
 function menuDescription(item){return lang==='ar'?arabicMenu.items[item[1]][1]:item[lang==='tr'?4:5];}
 function productVisual(item,index){
  const actualPhoto=restaurantPhotos[item[1]],isCutout=actualPhoto?.startsWith('assets/meze-cutouts/');
+ const plate=mezePlateGeometry[item[1]];
+ if(isCutout&&plate)return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="${escapeHtml(actualPhoto)}" width="${plate.width}" height="${plate.height}" transform="matrix(${plate.matrix.join(' ')})"/></svg>`;
  if(actualPhoto)return `<img class="real-dish-image${isCutout?' meze-cutout':''}" src="${escapeHtml(actualPhoto)}" alt="${escapeHtml(menuName(item))}" loading="lazy" style="object-fit:${isCutout?'contain':'cover'};padding:${isCutout?'10px':'0'};position:absolute;inset:0"><span class="fallback-art" hidden aria-hidden="true">${pic(item[0],index)}</span>`;
  const crop=referencePhotos[item[1]];
  if(crop)return `<svg class="product-photo" viewBox="${crop.join(' ')}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="assets/menu-reference.jpeg" width="1230" height="1278"/></svg>`;

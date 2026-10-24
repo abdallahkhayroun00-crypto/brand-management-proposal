@@ -1,11 +1,12 @@
 [
   {
     "name": "Sade Humus",
-    "asset": "assets/meze-cutouts/sade-humus.png",
+    "asset": "assets/meze-cutouts/sade-humus-top.png",
     "original": "assets/products/ys-68085849.jpg",
-    "edit": "Remove surrounding table; retain full plate and food on transparent background.",
+    "edit": "Correct Sade Humus to a vertical overhead view and isolate the plate on transparent alpha.",
     "tool": "Built-in imagegen",
-    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Sade Humus. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible."
+    "prompt": "Correct the original Sade Humus to a perfectly vertical overhead circular plate, preserving hummus, chickpeas, olive oil, pomegranate, paprika and its blue floral plate; second photo is only an overhead camera reference. Transparent background, entire plate centered, no new ingredients.",
+    "layout": "SVG affine normalization: align plate center and give every plate the same circular diameter without clipping."
   },
   {
     "name": "Kuruyemişli Humus",
@@ -13,7 +14,8 @@
     "original": "assets/products/ys-68085851.jpg",
     "edit": "Remove surrounding table; retain full plate and food on transparent background.",
     "tool": "Built-in imagegen",
-    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Kuruyemişli Humus. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible."
+    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Kuruyemişli Humus. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible.",
+    "layout": "SVG affine normalization: align plate center and give every plate the same circular diameter without clipping."
   },
   {
     "name": "Babagannuş",
@@ -21,7 +23,8 @@
     "original": "assets/products/ys-68085852.jpg",
     "edit": "Remove surrounding table; retain full plate and food on transparent background.",
     "tool": "Built-in imagegen",
-    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Babagannuş. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible."
+    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Babagannuş. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible.",
+    "layout": "SVG affine normalization: align plate center and give every plate the same circular diameter without clipping."
   },
   {
     "name": "Pancarlı Humus",
@@ -29,7 +32,8 @@
     "original": "assets/products/pancarli-humus.jpeg",
     "edit": "Remove surrounding table; retain full plate and food on transparent background.",
     "tool": "Built-in imagegen",
-    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Pancarlı Humus. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible."
+    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Pancarlı Humus. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible.",
+    "layout": "SVG affine normalization: align plate center and give every plate the same circular diameter without clipping."
   },
   {
     "name": "Mütebbel",
@@ -37,7 +41,8 @@
     "original": "assets/products/mutebbel.jpeg",
     "edit": "Remove surrounding table; retain full plate and food on transparent background.",
     "tool": "Built-in imagegen",
-    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Mütebbel. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible."
+    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Mütebbel. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible.",
+    "layout": "SVG affine normalization: align plate center and give every plate the same circular diameter without clipping."
   },
   {
     "name": "Muhammara",
@@ -45,6 +50,7 @@
     "original": "assets/products/muhammara.jpeg",
     "edit": "Remove surrounding table; retain full plate and food on transparent background.",
     "tool": "Built-in imagegen",
-    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Muhammara. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible."
+    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Muhammara. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible.",
+    "layout": "SVG affine normalization: align plate center and give every plate the same circular diameter without clipping."
   }
 ]
