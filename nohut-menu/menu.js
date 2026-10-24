@@ -33,10 +33,10 @@ const restaurantPhotos = {
  "Tereyağlı Fatte": "assets/products/tgo-9295446_1738157998385.jpg",
  "Patates Dürüm": "assets/products/ys-68085841.jpg",
  "Vegan Özel Tabağı": "assets/products/vegan-ozel-69312e96.jpg",
- "Beyrut Tabağı": "assets/products/ys-68085832.jpg",
+ "Beyrut Tabağı": "assets/products/beyrut-9c6b1b3a.jpg",
  "Kuruyemişli Humus": "assets/meze-cutouts/kuruyemisli-humus.png",
  "Peynirli Sembusek (4 Adet)": "assets/products/ys-68085846.jpg",
- "Falafel Porsiyon": "assets/products/ys-68085830.jpg",
+ "Falafel Porsiyon": "assets/products/falafel-porsiyon-instagram-original.webp",
  "Bakla Tabağı": "assets/products/ys-68085833.jpg",
  "Patlıcanlı Fatte": "assets/products/ys-68085836.jpg",
  "Tereyağında Kuruyemişli Fatte": "assets/products/ys-68085837.jpg",
@@ -69,6 +69,11 @@ function productVisual(item,index){
  const actualPhoto=restaurantPhotos[item[1]],isCutout=actualPhoto?.startsWith('assets/meze-cutouts/');
  const plate=mezePlateGeometry[item[1]];
  if(isCutout&&plate)return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="${escapeHtml(actualPhoto)}" width="${plate.width}" height="${plate.height}" transform="matrix(${plate.matrix.join(' ')})"/></svg>`;
+ if(actualPhoto&&item[1]==='Falafel Porsiyon')return `<svg class="product-photo plate-only-photo" viewBox="140 245 1160 1160" role="img" aria-label="${escapeHtml(menuName(item))}"><defs><clipPath id="falafel-porsiyon-plate-clip"><path d="M699 328 722 290Q736 288 740 320C961 321 1110 446 1178 622Q1222 604 1233 642Q1240 662 1217 699C1266 928 1172 1187 992 1297C835 1388 541 1377 374 1228C245 1128 187 957 204 796L188 774 209 768C223 554 410 349 655 329Z"/></clipPath></defs><image href="${escapeHtml(actualPhoto)}" width="1440" height="1440" clip-path="url(#falafel-porsiyon-plate-clip)"/></svg>`;
+ if(actualPhoto&&item[1]==='Beyrut Tabağı'){
+  const platesLabel=lang==='ar'?'طبقان':lang==='tr'?'2 tabak':'2 plates';
+  return `<svg class="product-photo plate-only-photo" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))} — ${platesLabel}"><defs><clipPath id="beyrut-main-plate-clip"><ellipse cx="675" cy="635" rx="620" ry="620"/><path d="M18 480 80 420 200 590 70 660 15 610Z"/></clipPath><clipPath id="beyrut-salad-plate-clip"><ellipse cx="1005" cy="1055" rx="840" ry="855"/></clipPath></defs><svg x="0" y="0" width="620" height="620" viewBox="0 0 1350 1350"><image href="${escapeHtml(actualPhoto)}" width="2048" height="1365" clip-path="url(#beyrut-main-plate-clip)"/></svg><svg x="400" y="400" width="600" height="600" viewBox="115 160 1780 1780"><image href="assets/products/beyrut-14e055b2.jpg" width="2000" height="1969" clip-path="url(#beyrut-salad-plate-clip)"/></svg></svg><span class="meal-plates-label">${platesLabel}</span>`;
+ }
  if(actualPhoto&&item[1]==='Falafel Salatası')return `<svg class="product-photo" viewBox="260 375 920 920" role="img" aria-label="${escapeHtml(menuName(item))}"><defs><clipPath id="falafel-salad-photo-clip"><ellipse cx="720" cy="835" rx="423" ry="431"/></clipPath></defs><image href="${escapeHtml(actualPhoto)}" width="1440" height="1440" clip-path="url(#falafel-salad-photo-clip)"/></svg>`;
  if(actualPhoto)return `<img class="real-dish-image${isCutout?' meze-cutout':''}" src="${escapeHtml(actualPhoto)}" alt="${escapeHtml(menuName(item))}" loading="lazy" style="object-fit:${isCutout?'contain':'cover'};padding:${isCutout?'10px':'0'};position:absolute;inset:0"><span class="fallback-art" hidden aria-hidden="true">${pic(item[0],index)}</span>`;
  const crop=referencePhotos[item[1]];

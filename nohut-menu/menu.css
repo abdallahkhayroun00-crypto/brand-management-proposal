@@ -111,3 +111,7 @@
  .contact-strip a:nth-child(n+4){min-height:62px;padding:8px 11px;gap:8px}
  [dir=rtl] .hero-description{line-height:1.6}
 }
+
+/* Original plate photographs, including both plates of the Beyrut meal. */
+.plate-only-photo{background:var(--card)}
+.meal-plates-label{position:absolute;inset-inline-start:9px;bottom:9px;padding:4px 9px;border-radius:20px;background:#fcfaf5ed;color:var(--green);font-size:13px;font-weight:600;line-height:1.5;border:1px solid #e0e5d5}
