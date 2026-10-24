@@ -80,3 +80,6 @@
 [dir=rtl] .review-nav>span[aria-hidden]{transform:scaleX(-1)}
 [dir=rtl] .reviews-note{text-align:center}
 @media(max-width:700px){[dir=rtl] .reviews-title-line h2{font-size:26px}[dir=rtl] .reviews-note{text-align:right}}
+
+.cutout-art{background:var(--card)}
+.meze-cutout{filter:drop-shadow(0 6px 5px #43331d20)}

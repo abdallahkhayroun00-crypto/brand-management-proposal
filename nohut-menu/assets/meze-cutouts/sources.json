@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Sade Humus",
+    "asset": "assets/meze-cutouts/sade-humus.png",
+    "original": "assets/products/ys-68085849.jpg",
+    "edit": "Remove surrounding table; retain full plate and food on transparent background.",
+    "tool": "Built-in imagegen",
+    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Sade Humus. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible."
+  },
+  {
+    "name": "Kuruyemişli Humus",
+    "asset": "assets/meze-cutouts/kuruyemisli-humus.png",
+    "original": "assets/products/ys-68085851.jpg",
+    "edit": "Remove surrounding table; retain full plate and food on transparent background.",
+    "tool": "Built-in imagegen",
+    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Kuruyemişli Humus. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible."
+  },
+  {
+    "name": "Babagannuş",
+    "asset": "assets/meze-cutouts/babagannus.png",
+    "original": "assets/products/ys-68085852.jpg",
+    "edit": "Remove surrounding table; retain full plate and food on transparent background.",
+    "tool": "Built-in imagegen",
+    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Babagannuş. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible."
+  },
+  {
+    "name": "Pancarlı Humus",
+    "asset": "assets/meze-cutouts/pancarli-humus.png",
+    "original": "assets/products/pancarli-humus.jpeg",
+    "edit": "Remove surrounding table; retain full plate and food on transparent background.",
+    "tool": "Built-in imagegen",
+    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Pancarlı Humus. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible."
+  },
+  {
+    "name": "Mütebbel",
+    "asset": "assets/meze-cutouts/mutebbel.png",
+    "original": "assets/products/mutebbel.jpeg",
+    "edit": "Remove surrounding table; retain full plate and food on transparent background.",
+    "tool": "Built-in imagegen",
+    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Mütebbel. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible."
+  },
+  {
+    "name": "Muhammara",
+    "asset": "assets/meze-cutouts/muhammara.png",
+    "original": "assets/products/muhammara.jpeg",
+    "edit": "Remove surrounding table; retain full plate and food on transparent background.",
+    "tool": "Built-in imagegen",
+    "prompt": "Use case: background-extraction. Edit target: the supplied restaurant photograph of Muhammara. Create a precise transparent PNG cutout of ONLY the existing full ceramic plate and the exact food on it. Remove the table and all surrounding background to real alpha transparency. Preserve the original food texture, portion, garnish, colors, plate pattern, rim, camera angle and perspective; do not redesign, beautify, invent or add ingredients. Keep the full plate inside a square canvas, centered, occupying about 88% of the canvas width/height with a consistent clear margin. No text, no watermark, no surface, no new background. The output is a production restaurant menu asset, not a mockup. Preserve the actual photograph as faithfully as possible."
+  }
+]

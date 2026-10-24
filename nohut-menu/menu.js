@@ -34,7 +34,7 @@ const restaurantPhotos = {
  "Patates Dürüm": "assets/products/ys-68085841.jpg",
  "Vegan Özel Tabağı": "assets/products/tgo-9295183_1738158104604.jpg",
  "Beyrut Tabağı": "assets/products/ys-68085832.jpg",
- "Kuruyemişli Humus": "assets/products/ys-68085851.jpg",
+ "Kuruyemişli Humus": "assets/meze-cutouts/kuruyemisli-humus.png",
  "Peynirli Sembusek (4 Adet)": "assets/products/ys-68085846.jpg",
  "Falafel Porsiyon": "assets/products/ys-68085830.jpg",
  "Bakla Tabağı": "assets/products/ys-68085833.jpg",
@@ -43,11 +43,11 @@ const restaurantPhotos = {
  "Patatesli Falafel Dürüm": "assets/products/ys-72772393.jpg",
  "Ispanaklı Sembusek (4 Adet)": "assets/products/ys-68085845.jpg",
  "Patates Kızartması": "assets/products/ys-72263052.jpg",
- "Sade Humus": "assets/products/ys-68085849.jpg",
- "Babagannuş": "assets/products/ys-68085852.jpg",
- "Mütebbel": "assets/products/mutebbel.jpeg",
- "Pancarlı Humus": "assets/products/pancarli-humus.jpeg",
- "Muhammara": "assets/products/muhammara.jpeg",
+ "Sade Humus": "assets/meze-cutouts/sade-humus.png",
+ "Babagannuş": "assets/meze-cutouts/babagannus.png",
+ "Mütebbel": "assets/meze-cutouts/mutebbel.png",
+ "Pancarlı Humus": "assets/meze-cutouts/pancarli-humus.png",
+ "Muhammara": "assets/meze-cutouts/muhammara.png",
  "Tabbule": "assets/products/ys-68085854.jpg",
  "Fettuş": "assets/products/ys-68085855.jpg",
  "Falafel Salatası": "assets/products/ys-68085856.jpg",
@@ -65,8 +65,8 @@ function menuName(item){
 }
 function menuDescription(item){return lang==='ar'?arabicMenu.items[item[1]][1]:item[lang==='tr'?4:5];}
 function productVisual(item,index){
- const actualPhoto=restaurantPhotos[item[1]];
- if(actualPhoto)return `<img class="real-dish-image" src="${escapeHtml(actualPhoto)}" alt="${escapeHtml(menuName(item))}" loading="lazy" style="object-fit:cover;padding:0;position:absolute;inset:0"><span class="fallback-art" hidden aria-hidden="true">${pic(item[0],index)}</span>`;
+ const actualPhoto=restaurantPhotos[item[1]],isCutout=actualPhoto?.startsWith('assets/meze-cutouts/');
+ if(actualPhoto)return `<img class="real-dish-image${isCutout?' meze-cutout':''}" src="${escapeHtml(actualPhoto)}" alt="${escapeHtml(menuName(item))}" loading="lazy" style="object-fit:${isCutout?'contain':'cover'};padding:${isCutout?'10px':'0'};position:absolute;inset:0"><span class="fallback-art" hidden aria-hidden="true">${pic(item[0],index)}</span>`;
  const crop=referencePhotos[item[1]];
  if(crop)return `<svg class="product-photo" viewBox="${crop.join(' ')}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="assets/menu-reference.jpeg" width="1230" height="1278"/></svg>`;
  const source=photoMap[item[1]],illustration=pic(item[0],index);
@@ -105,7 +105,7 @@ function renderMenu(){
   const displayName=menuName(item);
   const price=item[3]==null?'':`${escapeHtml(item[3])} TL`;
   const desc=item[0]==='drink'?'':`<p class="desc">${escapeHtml(menuDescription(item))}</p>`;
-  return `<article class="dish"><div class="art">${productVisual(item,index)}</div><div class="dish-text"><h3 class="name">${escapeHtml(displayName)}</h3><span class="price" dir="ltr">${price}</span>${desc}</div></article>`;
+  return `<article class="dish"><div class="art${restaurantPhotos[item[1]]?.startsWith('assets/meze-cutouts/')?' cutout-art':''}">${productVisual(item,index)}</div><div class="dish-text"><h3 class="name">${escapeHtml(displayName)}</h3><span class="price" dir="ltr">${price}</span>${desc}</div></article>`;
  }).join('');
  byId('grid').querySelectorAll('img').forEach(image=>image.addEventListener('error',()=>{image.hidden=true;image.nextElementSibling.hidden=false;},{once:true}));
  byId('empty').hidden=items.length>0;
