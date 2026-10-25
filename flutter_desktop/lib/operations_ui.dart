@@ -5,6 +5,7 @@ import 'pos_logic.dart';
 import 'pos_store.dart';
 import 'operations.dart';
 import 'platform_workflows.dart';
+import 'order_actions.dart';
 
 typedef EditState = bool Function(void Function(Json) change);
 
@@ -252,12 +253,13 @@ class OrderOperations extends StatelessWidget {
               ),
               if (['Hazırlanıyor', 'Hazır'].contains(o['serviceStatus']))
                 OutlinedButton(
-                  onPressed: () => edit(
-                    (s) => setLocalService(
-                      mutableOrder(s, id)!,
-                      o['serviceStatus'] == 'Hazır' ? 'Teslim Edildi' : 'Hazır',
-                    ),
-                  ),
+                  onPressed: () => edit((s) {
+                    if (o['serviceStatus'] == 'Hazır') {
+                      setLocalService(mutableOrder(s, id)!, 'Teslim Edildi');
+                    } else {
+                      requestOrderAction(s, id, 'ready', pcActor);
+                    }
+                  }),
                   child: Text(
                     o['serviceStatus'] == 'Hazır' ? 'Teslim Edildi' : 'Hazır',
                   ),
@@ -480,7 +482,9 @@ class StaffPanel extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       panelTitle('Personel Yönetimi'),
-      info('Telefonda çalışan adı seçilir. Prototipte şifre yok.'),
+      info(
+        'Kişisel QR ile cihaz etkinleştirilir. Kimlik oturumdan gelir; şifre yok.',
+      ),
       FilledButton(
         onPressed: () => change(context),
         child: const Text('Personel Ekle'),
@@ -908,7 +912,7 @@ class SettingsPanel extends StatelessWidget {
         '5 masa · Tek yazıcı · Telefon siparişleri Gel-Al · Kasa (PC) · Prototipte şifre yok.',
       ),
       info(
-        'Yemeksepeti / Trendyol Go: DEMO. Banka POS / ÖKC / fiziksel yazıcı bağlı değil. Gerçek API anahtarı girmeyin.',
+        'Banka POS / ÖKC / fiziksel yazıcı bağlı değil. Platform anahtarlarını yalnızca üstteki güvenli API alanına girin. DEMO siparişler gerçek API’ye gönderilmez.',
       ),
       for (final src in platformSources)
         ListTile(

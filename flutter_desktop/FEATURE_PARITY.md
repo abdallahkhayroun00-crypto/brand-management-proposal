@@ -1,5 +1,7 @@
 # HTML → native Windows feature parity audit
 
+**25 October 2026 security/API update:** see [INTEGRATIONS.md](INTEGRATIONS.md) for the new parity matrix, secure per-worker QR sessions and exact platform capability boundaries. This historical baseline is superseded on those points.
+
 Audit baseline: repository `main` commit `13d2518acfd47e8f6700879dada9bab90fd13274`, 25 October 2026.
 
 Sources read: `pos-demo/index.html` (including its extended platform and cash-book functions), `pos-demo/split-bill.html`, `pos-demo/PLATFORM_CONCEPT.md`, `pos-demo/LOCAL_SERVER_README.md`, and the original six Flutter library files and tests. The HTML demo and QR menu are retained. This document distinguishes implemented prototype workflows from real integrations and from physical-device acceptance.
@@ -61,13 +63,13 @@ Sources read: `pos-demo/index.html` (including its extended platform and cash-bo
 | 429 backoff / retry / stale ack | Missing | N/S: 10-sec example backoff, retries reissue trace IDs, status precondition prevents stale mutation | Request/backoff/stale-ack tests |
 | Missed platform order recovery | Missing | S: explicit test import using the same idempotent importer | No real paging/cursor polling adapter |
 | Platform settlements | Missing | N/S: separate gross/cancellation/commission/included-discount/net/payment-order records | Finance test, report/CSV; 15% is fictitious, no bank settlement |
-| Staff Chrome on local Wi-Fi | HTML snapshot client | N: embedded Dart server, dedicated asset-bundled mobile page, active-name selection, no phone cashier UI | Real HTTP tests; QR → physical phone on restaurant Wi-Fi is D |
+| Staff Chrome on local Wi-Fi | HTML snapshot client | N: embedded Dart server, dedicated asset-bundled mobile page, per-worker QR enrollment/session, no phone cashier UI | Real HTTP tests; QR → physical phone on restaurant Wi-Fi is D |
 | Shared SQLite | Optimistic snapshot | N: one laptop DB, WAL, FULL sync, busy timeout, BEGIN IMMEDIATE, PC revision CAS | Two SQLite connection tests and rollback tests |
 | Phone simultaneous submission | Whole-snapshot PUT | N: constrained order command, authoritative server catalog, revision conflict, merged table additions | Simultaneous HTTP test (one success + one 409), no financial snapshot writes |
 | Lost-response retry | Not idempotent | N: persisted request/result in same SQLite transaction; same ID/different payload rejected | Durable replay and transaction tests |
 | Offline state / acknowledgement | HTML concept | N: browser blocks unconfirmed submission, retains pending request and distinguishes success/error/conflict | Dedicated staff page; reconnect testing on actual phones is D |
 | Staff URL / QR / embedded assets | Separate site folder needed | N: private IPv4 discovery/selection, QR to `/personel`, all page/menu assets in Windows bundle | No Python or external site directory needed |
-| Prototype management separation | Remote HTML manager reachable | N: native PC manager only; server does not serve old manager HTML or accept PUT `/api/state` | HTTP test verifies PUT rejected; no password/authentication added |
+| Prototype management separation | Remote HTML manager reachable | N: native PC manager only; server does not serve old manager HTML or accept PUT `/api/state` | HTTP test verifies PUT rejected; no passwords; authenticated per-device sessions added |
 | SQLite backup | Missing | N: consistent `VACUUM INTO` backup even with WAL, refuses overwrite | Reopen-backup test |
 | Build/release verification | Analysis warnings ignored | Native runner committed; strict analysis, tests, HTML regression, Windows release, artifact + SHA-256 manifest | Actions workflow; successful run/artifact links recorded in PR |
 
@@ -75,7 +77,7 @@ Sources read: `pos-demo/index.html` (including its extended platform and cash-bo
 
 The persisted `state_snapshot` schema stays compatible with the existing prototype. Typed projections (`CheckLine`, `LedgerEntry`, `SaleEntry`, `PosSnapshot`, `WriteResult`) and validated domain commands enforce money and state transitions. This is a versioned aggregate, not a newly normalized accounting database. A snapshot allows the five-table prototype to update an order, its payments and its print jobs atomically. Retained history is not a tamper-proof accounting ledger.
 
-PC edits use revision-checked transactions. Phone writes use `/api/staff/orders` commands with persistent idempotency receipts. Two requests based on one revision cannot silently overwrite one another. On a 409 the phone keeps its cart, fetches current state and asks the operator to resubmit. On an uncertain network result it retries the *same* request ID. Phones cannot write payments, prices, employees or integrations. Read-only snapshot endpoints remain unauthenticated by prototype design; use trusted staff Wi-Fi only. No port forwarding or public deployment is part of this migration.
+PC edits use revision-checked transactions. Phone writes use `/api/staff/orders` commands with persistent idempotency receipts. Two requests based on one revision cannot silently overwrite one another. On a 409 the phone keeps its cart, fetches current state and asks the operator to resubmit. On an uncertain network result it retries the *same* request ID. Phones cannot write payments, prices, employees or integrations. Snapshot endpoints now require a valid worker session and expose only a kitchen projection; use trusted staff Wi-Fi only. No port forwarding or public deployment is part of this migration.
 
 Partial refunds are additive events under the original payment and are included at their refund timestamp in cash/report calculations. Legacy `reversed` records are still read. Closing a check and refunding an old check do not change the occupant of a physical table. Local product cancellations retain a void record and a correction batch; platform cancellations retain a financial adjustment rather than creating restaurant cash refunds.
 
@@ -85,4 +87,4 @@ Automated native screen checks run at 1600×900 and 1280×720 with populated ord
 
 Before declaring restaurant deployment accepted, test the release ZIP on the actual Windows laptop with two real Chrome phones: scan the chosen Wi-Fi QR, submit concurrently, disconnect/reconnect during submission, verify order IDs and totals in the PC, and restart the PC app to check persistence. Inspect cash and CSV using restaurant test scenarios. Check Windows Firewall private-network access manually. Do not run the older Python server on the same port.
 
-Actual Yemeksepeti/TGO credentials, approved account capabilities, authenticated event/poll adapters, bank POS/ÖKC, fiscal invoices and the single physical printer are **not connected**. Their verification requires accounts/devices and is outside a simulated prototype. Prototype role selection is not authentication; HTTP is not encrypted. No credentials should be entered into this source or simulation UI. The original HTML demo must remain until operator parity/device acceptance is signed off.
+Actual Yemeksepeti/TGO credentials, approved account capabilities, end-to-end verified event/poll accounts, bank POS/ÖKC, fiscal invoices and the single physical printer are **not connected**. Their verification requires accounts/devices and is outside a simulated prototype. Staff sessions now authenticate devices; HTTP is still not encrypted. No credentials should be entered into this source or simulation UI. The original HTML demo must remain until operator parity/device acceptance is signed off.

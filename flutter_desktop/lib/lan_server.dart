@@ -4,12 +4,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'staff_commands.dart';
 import 'pos_store.dart';
+import 'pos_logic.dart';
+import 'order_actions.dart';
 
 /// Native Flutter Windows HTTP server for employee phones. No Python process.
 class PosLanServer extends ChangeNotifier {
   PosLanServer(this.store, {this.port = 8787, String? staffHtml})
     : _staffHtml = staffHtml;
   final PosStore store;
+  late final StaffAuth auth = StaffAuth(store);
   HttpServer? _server;
   String? error;
   int port;
@@ -118,94 +121,172 @@ class PosLanServer extends ChangeNotifier {
     response.close();
   }
 
+  Future<Json> _body(HttpRequest request) async {
+    if (request.headers.contentType?.mimeType != 'application/json') {
+      throw const FormatException('JSON gerekli');
+    }
+    if (request.contentLength > 256 * 1024) {
+      throw const FormatException('İstek çok büyük');
+    }
+    final bytes = <int>[];
+    await for (final part in request) {
+      bytes.addAll(part);
+      if (bytes.length > 256 * 1024) {
+        throw const FormatException('İstek çok büyük');
+      }
+    }
+    final body = jsonDecode(utf8.decode(bytes));
+    if (body is! Map) throw const FormatException('Geçersiz istek');
+    return Map<String, dynamic>.from(body);
+  }
+
+  String? _cookie(HttpRequest r) =>
+      r.cookies.where((c) => c.name == 'nf_session').firstOrNull?.value;
   Future<void> _handle(HttpRequest request) async {
-    final uri = request.uri;
-    final resource = uri.path;
+    final resource = request.uri.path;
     if (request.method == 'GET' &&
         ['/', '/personel', '/personel/'].contains(resource)) {
       request.response.headers.contentType = ContentType.html;
       request.response.headers.set('Cache-Control', 'no-store');
+      request.response.headers.set('Referrer-Policy', 'no-referrer');
       request.response.headers.set('X-Content-Type-Options', 'nosniff');
+      request.response.headers.set(
+        'Content-Security-Policy',
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; form-action 'self'",
+      );
       request.response.write(_staffHtml);
       await request.response.close();
       return;
     }
     if (request.method == 'GET' && resource == '/api/health') {
-      _json(request.response, 200, {
-        'online': true,
-        'revision': store.read().revision,
-      });
+      _json(request.response, 200, {'online': true});
       return;
     }
-    if (request.method == 'GET' && resource == '/api/state') {
-      final current = store.read();
-      _json(request.response, 200, {
-        'revision': current.revision,
-        'state': current.data,
-      });
+    if (request.method == 'PUT' && resource == '/api/state') {
+      _json(request.response, 405, {'error': 'snapshot_writes_disabled'});
       return;
     }
-    if (request.method == 'GET' && resource == '/api/bootstrap') {
-      final current = store.read();
-      _json(request.response, 200, {
-        'online': true,
-        'revision': current.revision,
-        'state': current.data,
-        'ip': selectedIp,
-        'port': port,
-        'staffUrl': staffUrl,
-        'adminUrl': adminBrowserUrl,
-        'storage': 'SQLite (Flutter Desktop)',
-        'updatedAt': current.updatedAt,
-      });
-      return;
-    }
-    if (request.method == 'POST' && resource == '/api/staff/orders') {
-      // Reject browser requests from unrelated origins (prototype has no login).
-      final origin = request.headers.value('origin');
-      if (origin != null &&
-          Uri.tryParse(origin)?.authority != request.headers.value('host')) {
-        _json(request.response, 403, {'error': 'origin'});
-        return;
-      }
-      if (request.contentLength > 256 * 1024) {
-        _json(request.response, 413, {'error': 'payload_size'});
-        return;
-      }
-      final chunks = <int>[];
-      await for (final part in request) {
-        chunks.addAll(part);
-        if (chunks.length > 256 * 1024) {
-          _json(request.response, 413, {'error': 'payload_size'});
+    try {
+      if (request.method == 'POST') {
+        final origin = request.headers.value('origin');
+        if (origin != null &&
+            Uri.tryParse(origin)?.authority != request.headers.value('host')) {
+          _json(request.response, 403, {'error': 'origin'});
           return;
         }
       }
-      try {
-        final incoming = jsonDecode(utf8.decode(chunks));
-        if (incoming is! Map) throw const FormatException('Geçersiz istek');
-        final result = submitStaffOrder(
-          store,
-          Map<String, dynamic>.from(incoming),
+      if (request.method == 'POST' && resource == '/api/staff/enroll') {
+        final data = await _body(request);
+        final session = auth.activate(
+          '${data['token'] ?? ''}',
+          '${data['deviceName'] ?? 'Telefon'}',
         );
-        _json(request.response, 200, result);
-      } on StaffConflict {
-        _json(request.response, 409, {
-          'error': 'conflict',
-          'revision': store.read().revision,
+        request.response.cookies.add(
+          Cookie('nf_session', session.token)
+            ..httpOnly = true
+            ..sameSite = SameSite.strict
+            ..path = '/'
+            ..maxAge = 30 * 86400,
+        );
+        _json(request.response, 200, {
+          'ok': true,
+          'staff': session.principal.actor,
+          'csrf': session.principal.csrf,
         });
-      } on FormatException catch (e) {
-        _json(request.response, 422, {
-          'error': 'invalid_order',
-          'message': e.message,
-        });
+        return;
       }
-      return;
+      final principal = auth.authenticate(
+        _cookie(request),
+        csrf: request.headers.value('x-csrf-token'),
+        write: request.method != 'GET',
+      );
+      if (request.method == 'GET' &&
+          ['/api/bootstrap', '/api/state'].contains(resource)) {
+        auth.touch(principal);
+        final current = store.read();
+        _json(request.response, 200, {
+          'online': true,
+          'revision': current.revision,
+          'state': staffProjection(current.data),
+          'staff': principal.actor,
+          'csrf': principal.csrf,
+          'storage': 'SQLite (Flutter Desktop)',
+          'updatedAt': current.updatedAt,
+        });
+        return;
+      }
+      if (request.method == 'POST' && resource == '/api/staff/logout') {
+        auth.revoke(principal.sessionId);
+        request.response.cookies.add(
+          Cookie('nf_session', '')
+            ..path = '/'
+            ..maxAge = 0
+            ..httpOnly = true
+            ..sameSite = SameSite.strict,
+        );
+        _json(request.response, 200, {'ok': true});
+        return;
+      }
+      if (request.method == 'POST' &&
+          [
+            '/api/staff/orders',
+            '/api/staff/ready',
+            '/api/staff/retry',
+          ].contains(resource)) {
+        final data = await _body(request);
+        final allowed = resource.endsWith('/orders')
+            ? {
+                'requestId',
+                'expectedRevision',
+                'source',
+                'table',
+                'lines',
+                'pickupChannel',
+                'customer',
+              }
+            : resource.endsWith('/ready')
+            ? {'requestId', 'orderId'}
+            : {'requestId', 'operationId'};
+        if (data.keys.any((k) => !allowed.contains(k))) {
+          _json(request.response, 403, {
+            'error': 'forbidden_field',
+            'message': 'Bu işlem personel yetkisinde değil',
+          });
+          return;
+        }
+        final Json result;
+        if (resource.endsWith('/orders')) {
+          result = submitStaffOrder(
+            store,
+            data,
+            principal: principal,
+            auth: auth,
+          );
+        } else if (resource.endsWith('/ready')) {
+          result = submitStaffReady(store, auth, principal, data);
+        } else {
+          result = submitStaffRetry(store, auth, principal, data);
+        }
+        _json(request.response, 200, result);
+        return;
+      }
+      _json(request.response, 403, {'error': 'forbidden'});
+    } on StaffUnauthorized catch (e) {
+      _json(request.response, 401, {
+        'error': 'unauthorized',
+        'message': e.message,
+      });
+    } on StaffConflict {
+      _json(request.response, 409, {
+        'error': 'conflict',
+        'revision': store.read().revision,
+      });
+    } on FormatException catch (e) {
+      _json(request.response, 422, {
+        'error': 'invalid_request',
+        'message': e.message,
+      });
     }
-    if (request.method != 'GET') {
-      _json(request.response, 405, {'error': 'method_not_allowed'});
-      return;
-    }
-    _json(request.response, 404, {'error': 'not_found'});
   }
 
   @override

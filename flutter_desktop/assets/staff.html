@@ -5,7 +5,7 @@
 body{font:16px system-ui;background:#f5f7f1;color:#193f2c;margin:0;padding:16px;max-width:680px;margin-inline:auto}h1{font-size:24px}section{background:white;padding:16px;border-radius:16px;margin:12px 0}button,input,select,textarea{font:inherit;padding:10px;border:1px solid #b5c8b8;border-radius:8px;box-sizing:border-box}input,textarea{width:100%;margin:4px 0}button{background:#e8f2e7;color:#193f2c;cursor:pointer}button:disabled{opacity:.4}label{display:block;margin:8px 0}select{max-width:100%}.product{border-bottom:1px solid #dde7dc;padding:12px 0}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#notice{position:sticky;top:0;background:#fff1d9;padding:12px;border-radius:10px}#submit{width:100%;background:#193f2c;color:white}.qty{width:85px}.muted{font-size:13px;color:#607266}details{margin-top:8px}
 </style>
 <h1>NOHUT FALAFEL · Personel</h1><p id="notice" role="status">Laptopa bağlanılıyor…</p>
-<section><label>Çalışan <select id="staff"></select></label><p class="muted">Şifre yok. Kasa ve yönetim Windows PC üzerindedir.</p>
+<section id="activation" hidden><h2>Cihazı Etkinleştir</h2><p>Bu QR tek kullanımlık ve 10 dakika geçerlidir.</p><input id="device-name" value="Chrome Telefon" aria-label="Cihaz adı"><button id="activate">Bu Cihazı Etkinleştir</button></section><section><b id="staff-name">Personel oturumu bekleniyor</b> <button id="logout">Bu Cihazdan Çıkış</button><p class="muted">Şifre yok. Kimlik, yönetici tarafından verilen QR ve cihaz oturumundan alınır.</p>
 <div class="row"><label>Sipariş <select id="source"><option>Masa</option><option>Gel-Al</option></select></label>
 <label id="table-label">Masa <select id="table"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
 <label id="pickup-label" hidden>Gel-Al <select id="pickup"><option>Tezgahtan</option><option>Telefon</option></select></label></div>
@@ -17,17 +17,27 @@ body{font:16px system-ui;background:#f5f7f1;color:#193f2c;margin:0;padding:16px;
 <section><h2>Açık Siparişler</h2><div id="orders"></div></section>
 <script>
 'use strict';
-const $=id=>document.getElementById(id),cart=new Map();let state=null,revision=-1,busy=false,online=false;
+const $=id=>document.getElementById(id),cart=new Map();
+let state=null,revision=-1,busy=false,online=false,csrf='',employeeId=null;
+let pendingOwner=sessionStorage.getItem('nohut-pending-owner');
+function bindPending(){sessionStorage.setItem('nohut-pending-owner',String(employeeId))}
 let pending=JSON.parse(sessionStorage.getItem('nohut-pending')||'null');
+let pendingAction=JSON.parse(sessionStorage.getItem('nohut-pending-action')||'null');
+let enrollment=new URLSearchParams(location.hash.slice(1)).get('enroll');
+history.replaceState(null,'',location.pathname);
+const newId=()=>Date.now().toString(36)+'_'+Math.random().toString(36).slice(2);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>(n/100).toLocaleString('tr-TR',{minimumFractionDigits:2})+' ₺';
 function notice(text){$('notice').textContent=text}
-function controls(){ $('submit').disabled=!online||busy||!!pending||![...cart.values()].some(r=>r.qty>0);$('retry').hidden=!pending;$('retry').disabled=busy; }
+function controls(){ $('submit').disabled=!online||busy||!!pending||!!pendingAction||![...cart.values()].some(r=>r.qty>0);$('retry').hidden=!pending&&!pendingAction;$('retry').disabled=busy; }
 function render(){
- const selected=$('staff').value||localStorage.getItem('nohut-staff')||'';
- $('staff').innerHTML='<option value="">Adınızı seçin</option>'+state.employees.filter(e=>e.active).map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join('');$('staff').value=selected;
  renderMenu();
- $('orders').innerHTML=state.orders.filter(o=>!o.closed&&!o.cancelled&&['Masa','Gel-Al'].includes(o.source)).map(o=>`<p>#${o.id} · ${esc(o.source)} ${o.table??''} · ${esc(o.serviceStatus)} · ${o.batches.reduce((n,b)=>n+b.lines.filter(l=>!l.voided&&!l.correction).reduce((a,l)=>a+l.qty,0),0)} ürün</p>`).join('')||'<p>Açık sipariş yok.</p>';controls();
+ $('orders').innerHTML=state.orders.filter(o=>!o.closed&&!o.cancelled).map(o=>{
+ const platform=['Trendyol Go','Yemeksepeti'].includes(o.source), status=platform?o.demoRemoteStatus:o.serviceStatus;
+ const operations=o.operations||[],op=operations[0];
+ const ready=platform?status==='Picking':status==='Hazırlanıyor';
+ return `<article><h3>#${o.id} · ${esc(o.source)} ${o.table??''}</h3><p>${esc(status)} ${platform&&status==='Created'?' · PC kabulü bekleniyor':''}</p>${o.batches.flatMap(b=>b.lines).map(l=>`<p>${l.qty} × ${esc(l.name)} · ${esc(l.note)} · Çıkar: ${esc((l.removed||[]).join(', '))}</p>`).join('')}${op?`<p>İşlem: Sipariş Hazır · ${esc(op.actor)} · ${esc(op.at)}<br>Platform Senkronizasyonu: ${esc(op.status)} ${esc(op.error)}</p>`:''}${ready&&!o.kitchenReady&&!op?`<button data-ready="${o.id}" ${!online||busy?'disabled':''}>Sipariş Hazır</button>`:''}${op?.status==='Hata'?`<button data-retry="${esc(op.id)}" ${!online||busy?'disabled':''}>Hazır Bildirimini Yeniden Dene</button>`:''}</article>`;
+ }).join('')||'<p>Açık sipariş yok.</p>';controls();
 }
 function renderMenu(){
  const search=$('search').value.toLocaleLowerCase('tr-TR');
@@ -37,20 +47,34 @@ function renderMenu(){
 }
 function total(){let sum=0;for(const [id,row]of cart){const p=state.localMenu.find(p=>p.id===id);sum+=Math.round((p?.price||0)*100)*row.qty}$('total').textContent='Toplam '+money(sum);controls()}
 $('menu').addEventListener('input',e=>{const el=e.target,key=el.dataset.qty??el.dataset.note??el.dataset.removed;if(key==null)return;const id=Number(key),row=cart.get(id)||{productId:id,qty:0,note:'',removed:[]};if(el.dataset.qty!=null)row.qty=Number(el.value);if(el.dataset.note!=null)row.note=el.value;if(el.dataset.removed!=null)row.removed=el.value.split(',').map(s=>s.trim()).filter(Boolean);cart.set(id,row);total()});
-$('staff').onchange=()=>localStorage.setItem('nohut-staff',$('staff').value);
 $('source').onchange=()=>{$('table-label').hidden=$('source').value!=='Masa';$('pickup-label').hidden=$('source').value!=='Gel-Al';$('customer').hidden=$('source').value!=='Gel-Al'};
-$('search').oninput=renderMenu;
-async function refresh(){if(busy)return;try{const r=await fetch('/api/bootstrap',{cache:'no-store'});if(!r.ok)throw Error();const b=await r.json();state=b.state;revision=b.revision;online=true;render();if(!pending)notice('● Laptop SQLite bağlı · Kayıtlar güncel');else notice('Onayı bekleyen bir istek var. Aynı isteği yeniden deneyin.')}catch{online=false;notice('⛔ Laptop / Wi-Fi bağlantısı yok. Sipariş kaydedilemez.');controls()}}
-async function send(){if(!pending||busy)return;busy=true;notice('Kaydediliyor…');controls();try{
- const r=await fetch('/api/staff/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pending)});const b=await r.json();
- if(r.status===409){pending=null;sessionStorage.removeItem('nohut-pending');notice('Başka cihaz değişiklik yaptı. Sepet korundu; güncel veriyi alın ve yeniden gönderin.');online=false;return}
- if(!r.ok){pending=null;sessionStorage.removeItem('nohut-pending');notice(b.message||'İstek reddedildi');return}
- pending=null;sessionStorage.removeItem('nohut-pending');cart.clear();notice('✓ Laptop SQLite kaydı onaylandı · Sipariş #'+b.orderId);revision=b.revision;
- // Refresh separately so the confirmed order number remains visible.
- const next=await fetch('/api/bootstrap',{cache:'no-store'});if(next.ok){const data=await next.json();state=data.state;revision=data.revision;render()}
- }catch{online=false;notice('Onay alınamadı. Aynı isteği yeniden deneyin; çift sipariş oluşturulmaz.')}finally{busy=false;controls()}}
-$('submit').onclick=()=>{if(!$('staff').value){notice('Önce çalışan adınızı seçin');return}pending={requestId:Date.now().toString(36)+'_'+Math.random().toString(36).slice(2),expectedRevision:revision,staffId:Number($('staff').value),source:$('source').value,table:$('source').value==='Masa'?Number($('table').value):null,pickupChannel:$('pickup').value,customer:{name:$('customer-name').value,phone:$('customer-phone').value,time:$('customer-time').value},lines:[...cart.values()].filter(r=>r.qty>0)};sessionStorage.setItem('nohut-pending',JSON.stringify(pending));send()};
-$('retry').onclick=send;$('reload').onclick=refresh;
+$('search').oninput=()=>{if(state)renderMenu()};
+async function refresh(quiet=false){if(busy||enrollment)return;try{
+ const r=await fetch('/api/bootstrap',{cache:'no-store',credentials:'same-origin'});
+ if(r.status===401){online=false;state=null;$('menu').innerHTML='';$('orders').innerHTML='';$('staff-name').textContent='Oturum kapalı';notice('Erişim yok. Yönetici PC üzerinden yeni bir QR vermelidir.');controls();return}
+ if(!r.ok)throw Error();const b=await r.json();employeeId=b.staff.id;if((pending||pendingAction)&&pendingOwner!==String(employeeId)){pending=null;pendingAction=null;cart.clear();sessionStorage.removeItem('nohut-pending');sessionStorage.removeItem('nohut-pending-action');notice('Önceki personelin bekleyen isteği bu oturumdan gönderilmedi. Yönetici sipariş kaydını kontrol etmelidir.')}pendingOwner=String(employeeId);state=b.state;revision=b.revision;csrf=b.csrf;online=true;$('staff-name').textContent=b.staff.name;render();
+ if(!quiet)notice(pending||pendingAction?'Onayı bekleyen istek var. Aynı isteği yeniden deneyin.':'● Personel oturumu aktif · Laptop SQLite bağlı');
+ }catch{online=false;notice('⛔ Laptop / Wi-Fi bağlantısı yok. İşlemler durduruldu.');controls()}}
+async function post(url,payload){return fetch(url,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(payload)})}
+async function send(){if(!pending||busy)return;busy=true;notice('Kaydediliyor…');controls();let message='';try{
+ const r=await post('/api/staff/orders',pending),b=await r.json();
+ if(r.status===409){pending=null;sessionStorage.removeItem('nohut-pending');message='Başka cihaz değişiklik yaptı. Sepet korundu; güncel veriyi kontrol edip yeniden gönderin.';return}
+ if(!r.ok){pending=null;sessionStorage.removeItem('nohut-pending');message=b.message||'İstek reddedildi';return}
+ pending=null;sessionStorage.removeItem('nohut-pending');cart.clear();message='✓ SQLite kaydı onaylandı · Sipariş #'+b.orderId;
+ }catch{online=false;message='Onay alınamadı. Aynı isteği yeniden deneyin; çift sipariş oluşturulmaz.'}
+ finally{busy=false;if(online)await refresh(true);notice(message);controls()}}
+async function sendAction(){if(!pendingAction||busy)return;busy=true;controls();let message='';try{
+ const r=await post(pendingAction.url,pendingAction.payload),b=await r.json();
+ if(r.ok){message='✓ İşlem SQLite üzerinde kayıtlı. Platform sonucunu siparişte izleyin.';pendingAction=null;sessionStorage.removeItem('nohut-pending-action')}
+ else{message=b.message||'İşlem reddedildi';pendingAction=null;sessionStorage.removeItem('nohut-pending-action')}
+ }catch{online=false;message='İşlem onayı alınamadı. Aynı isteği yeniden deneyin.'}
+ finally{busy=false;if(online)await refresh(true);notice(message);controls()}}
+$('orders').addEventListener('click',e=>{const ready=e.target.dataset.ready,retry=e.target.dataset.retry;if((!ready&&!retry)||busy||!online||pendingAction)return;
+ bindPending();pendingAction={url:ready?'/api/staff/ready':'/api/staff/retry',payload:ready?{requestId:newId(),orderId:Number(ready)}:{requestId:newId(),operationId:retry}};sessionStorage.setItem('nohut-pending-action',JSON.stringify(pendingAction));sendAction()});
+$('submit').onclick=()=>{if(!online||busy||pending||pendingAction)return;bindPending();pending={requestId:newId(),expectedRevision:revision,source:$('source').value,table:$('source').value==='Masa'?Number($('table').value):null,pickupChannel:$('pickup').value,customer:{name:$('customer-name').value,phone:$('customer-phone').value,time:$('customer-time').value},lines:[...cart.values()].filter(r=>r.qty>0)};sessionStorage.setItem('nohut-pending',JSON.stringify(pending));send()};
+$('retry').onclick=()=>pendingAction?sendAction():send();$('reload').onclick=()=>refresh();
+$('activate').onclick=async()=>{if(!enrollment)return;try{const r=await post('/api/staff/enroll',{token:enrollment,deviceName:$('device-name').value}),b=await r.json();if(!r.ok){notice(b.message||'QR geçersiz');return}enrollment=null;$('activation').hidden=true;await refresh()}catch{notice('Cihaz etkinleştirilemedi. Laptop bağlantısını kontrol edin.')}};
+$('logout').onclick=async()=>{try{await post('/api/staff/logout',{});await refresh()}catch{notice('Laptop bağlantısı yok; oturum kapatma onayı alınamadı.')}};
 if(pending){for(const row of pending.lines||[])cart.set(row.productId,row);$('source').value=pending.source;$('table').value=String(pending.table||1);$('pickup').value=pending.pickupChannel||'Tezgahtan';$('customer-name').value=pending.customer?.name||'';$('customer-phone').value=pending.customer?.phone||'';$('customer-time').value=pending.customer?.time||'';$('source').onchange()}
-refresh();setInterval(refresh,5000);
+if(enrollment){$('activation').hidden=false;notice('Yönetici QR kodu · Bu cihazı bir kez etkinleştirin.')}else refresh();setInterval(()=>refresh(),5000);
 </script></html>

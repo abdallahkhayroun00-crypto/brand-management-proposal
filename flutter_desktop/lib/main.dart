@@ -11,6 +11,11 @@ import 'operations.dart';
 import 'operations_ui.dart';
 import 'platform_workflows.dart';
 import 'platform_ui.dart';
+import 'staff_qr_ui.dart';
+import 'platform_api.dart';
+import 'platform_runtime.dart';
+import 'platform_settings_ui.dart';
+import 'order_action_ui.dart';
 
 const dark = Color(0xff193f2c);
 const cream = Color(0xfff5f7f1);
@@ -54,9 +59,11 @@ class NohutFalafelApp extends StatelessWidget {
     super.key,
     this.databaseFile,
     this.startServer = true,
+    this.secretStore,
   });
   final String? databaseFile;
   final bool startServer;
+  final SecretStore? secretStore;
   @override
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
@@ -80,14 +87,24 @@ class NohutFalafelApp extends StatelessWidget {
         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       ),
     ),
-    home: ManagerDesktop(databaseFile: databaseFile, startServer: startServer),
+    home: ManagerDesktop(
+      databaseFile: databaseFile,
+      startServer: startServer,
+      secretStore: secretStore,
+    ),
   );
 }
 
 class ManagerDesktop extends StatefulWidget {
-  const ManagerDesktop({super.key, this.databaseFile, this.startServer = true});
+  const ManagerDesktop({
+    super.key,
+    this.databaseFile,
+    this.startServer = true,
+    this.secretStore,
+  });
   final String? databaseFile;
   final bool startServer;
+  final SecretStore? secretStore;
   @override
   State<ManagerDesktop> createState() => _ManagerDesktopState();
 }
@@ -95,6 +112,7 @@ class ManagerDesktop extends StatefulWidget {
 class _ManagerDesktopState extends State<ManagerDesktop> {
   late final PosStore store;
   late final PosLanServer lan;
+  late final PlatformRuntime runtime;
   List<Product> menu = const [];
   String page = 'dashboard';
   int? selectedTable, selectedOrder;
@@ -125,15 +143,27 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     super.initState();
     store = PosStore(databaseFile: widget.databaseFile);
     lan = PosLanServer(store);
+    runtime = PlatformRuntime(
+      store,
+      CredentialVault(widget.secretStore ?? WindowsSecretStore()),
+    );
+    store.addListener(_onStoreChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Menu initialization precedes staff order acceptance.
       unawaited(_startLan());
     });
   }
 
+  void _onStoreChange() {
+    if (widget.startServer) unawaited(runtime.runOnce());
+  }
+
   Future<void> _startLan() async {
     await _loadMenu();
-    if (mounted && widget.startServer) await lan.start();
+    if (mounted && widget.startServer) {
+      await lan.start();
+      runtime.start();
+    }
   }
 
   Future<void> _loadMenu() async {
@@ -163,6 +193,8 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
 
   @override
   void dispose() {
+    runtime.dispose();
+    store.removeListener(_onStoreChange);
     lan.dispose();
     store.dispose();
     super.dispose();
@@ -586,7 +618,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           const Padding(
             padding: EdgeInsets.fromLTRB(18, 0, 18, 24),
             child: Text(
-              'SQLite · Yalnızca güvenilir personel Wi-Fi\nBanka POS / ÖKC / API entegrasyonu yok',
+              'SQLite · Yalnızca güvenilir personel Wi-Fi\nBanka POS / ÖKC bağlı değil · API: Ayarlar',
               style: TextStyle(
                 color: Color(0xffa4c4af),
                 fontSize: 10,
@@ -1241,7 +1273,13 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     );
   }
 
-  Widget _online(Json db) => PlatformPanel(state: db, edit: _edit);
+  Widget _online(Json db) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      PlatformPanel(state: db, edit: _edit),
+      OrderActionLog(state: db, edit: _edit),
+    ],
+  );
 
   Widget _payments(Json db) {
     final locals = asMaps(db['orders'])
@@ -1315,7 +1353,13 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
 
   Widget _printer(Json db) => PrinterPanel(state: db, edit: _edit);
 
-  Widget _staff(Json db) => StaffPanel(state: db, edit: _edit);
+  Widget _staff(Json db) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      StaffPanel(state: db, edit: _edit),
+      StaffQrPanel(server: lan),
+    ],
+  );
 
   Widget _reports(Json db) => ReportsPanel(state: db, edit: _edit);
 
@@ -1441,7 +1485,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                       const Text(
                         '1. Laptop ve personel telefonları aynı Wi-Fi\n'
                         '2. Flutter uygulaması açık ve sunucu çalışır\n'
-                        '3. Personel QR kodunu tarar, adını seçer\n'
+                        '3. Personel → QR Yönetimi ile kişisel cihaz QR verilir\n'
                         '4. 5 masanın siparişleri ortak SQLite veritabanına kaydedilir\n'
                         '5. Kasa ve ödeme yalnızca laptopta',
                         style: TextStyle(height: 1.8, fontSize: 12),
@@ -1467,7 +1511,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                   child: Column(
                     children: [
                       const Text(
-                        'PERSONEL GİRİŞ QR',
+                        'ORTAK SUNUCU ADRESİ',
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
@@ -1534,14 +1578,19 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
         ),
         const SizedBox(height: 16),
         _notice(
-          'Gerçek fiziksel Windows laptopta test edilmelidir. Bu uygulama dış internete açılmamalıdır. QR menü sipariş vermek için değil, personel uygulamasını açmak içindir.',
+          'Gerçek fiziksel Windows laptopta test edilmelidir. Bu uygulama dış internete açılmamalıdır. Bu genel QR cihaz etkinleştirmez. İlk giriş için Personel → QR Yönetimi içindeki kişisel QR kullanılır.',
         ),
       ],
     );
   }
 
-  Widget _settings(Json db) =>
-      SettingsPanel(state: db, edit: _edit, store: store);
+  Widget _settings(Json db) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      PlatformConnectionsPanel(runtime: runtime),
+      SettingsPanel(state: db, edit: _edit, store: store),
+    ],
+  );
 
   Widget _notice(String text) => Container(
     padding: const EdgeInsets.all(15),

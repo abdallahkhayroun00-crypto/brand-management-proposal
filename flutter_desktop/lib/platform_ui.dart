@@ -3,6 +3,7 @@ import 'pos_logic.dart';
 import 'operations.dart';
 import 'operations_ui.dart';
 import 'platform_workflows.dart';
+import 'order_actions.dart';
 
 class PlatformPanel extends StatefulWidget {
   const PlatformPanel({super.key, required this.state, required this.edit});
@@ -53,16 +54,27 @@ class _PlatformPanelState extends State<PlatformPanel> {
       onChanged: (v) => setState(() => change(v!)),
     ),
   );
-  void request(String type, Object target, Json p) =>
-      edit((s) => queuePlatform(s, type, source, target, p));
+  void request(String type, Object target, Json p) => edit((s) {
+    if (['accept', 'ready'].contains(type)) {
+      requestOrderAction(
+        s,
+        int.parse('$target'),
+        type,
+        pcActor,
+        preparation: p['preparationTime'] as int? ?? 20,
+      );
+    } else {
+      queuePlatform(s, type, source, target, p);
+    }
+  });
   Json hub() => platformHub(copyJson(widget.state));
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      panelTitle('Online Siparişler · DEMO'),
+      panelTitle('Online Siparişler'),
       info(
-        'Gerçek platform API’si bağlı değil. Test istekleri Senkronizasyon ekranında açık sonuç bekler. Kurye ve tahsilat platforma aittir.',
+        'API bağlantıları Ayarlar üzerinden yapılandırılır. Siparişler dışındaki mağaza, menü, talep, yorum, fatura ve finans sekmeleri DEMO verisidir. DEMO işlemler API’ye gönderilmez. Kurye ve tahsilat platforma aittir.',
       ),
       dropdown(source, platformSources, (v) {
         source = v;
@@ -138,7 +150,7 @@ class _PlatformPanelState extends State<PlatformPanel> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   panelTitle(
-                    '#${o['id']} · ${o['platformPackageId']} · ${o['demoRemoteStatus']}',
+                    '#${o['id']} · ${o['platformPackageId']} · ${o['demoRemoteStatus']} · ${o['integrationMode'] ?? 'DEMO'}',
                   ),
                   Text(
                     'Toplam ${formatTry(orderTotalCents(o))} · ${o['platformDeliveryType']} · Tahsilat ${o['platformCollection']}',
@@ -175,10 +187,13 @@ class _PlatformPanelState extends State<PlatformPanel> {
                                       'Hazırlık süresi 1–180 dakika',
                                     );
                                   }
-                                  queuePlatform(s, 'accept', source, o['id'], {
-                                    'expected': 'Created',
-                                    'preparationTime': prep,
-                                  });
+                                  requestOrderAction(
+                                    s,
+                                    o['id'] as int,
+                                    'accept',
+                                    pcActor,
+                                    preparation: prep,
+                                  );
                                 });
                               }
                             })
@@ -186,6 +201,24 @@ class _PlatformPanelState extends State<PlatformPanel> {
                             info(
                               'Kabul Vendor App üzerinden gelen olayı bekler.',
                             ),
+                          button('Reddet', () async {
+                            final v = await askFields(
+                              context,
+                              'Siparişi Reddet',
+                              [('Neden: 621 / 622 / 623 / 627', '621')],
+                            );
+                            if (v != null) {
+                              edit(
+                                (s) => requestOrderAction(
+                                  s,
+                                  o['id'] as int,
+                                  'reject',
+                                  pcActor,
+                                  reason: parseInteger(v[0]),
+                                ),
+                              );
+                            }
+                          }),
                         ],
                       ),
                     if (o['demoRemoteStatus'] == 'Picking')
@@ -253,70 +286,76 @@ class _PlatformPanelState extends State<PlatformPanel> {
                           });
                         }
                       }),
-                    ExpansionTile(
-                      title: const Text('Test: Gelen Platform Olayları'),
-                      children: [
-                        Wrap(
-                          children: [
-                            for (final next in [
-                              'Picking',
-                              'Invoiced',
-                              'Shipped',
-                              'Delivered',
-                              'Cancelled',
-                            ])
-                              if (allowedRemote(
-                                    '${o['demoRemoteStatus']}',
-                                    next,
-                                  ) &&
-                                  o['demoRemoteStatus'] != next &&
-                                  !(next == 'Shipped' &&
-                                      o['platformPickup'] == true))
-                                button(
-                                  'Test: $next',
-                                  () => edit(
-                                    (s) => externalPlatformEvent(
-                                      s,
-                                      o['id'] as int,
+                    if (o['integrationMode'] == null ||
+                        o['integrationMode'] == 'demo')
+                      ExpansionTile(
+                        title: const Text('Test: Gelen Platform Olayları'),
+                        children: [
+                          Wrap(
+                            children: [
+                              for (final next in [
+                                'Picking',
+                                'Invoiced',
+                                'Shipped',
+                                'Delivered',
+                                'Cancelled',
+                              ])
+                                if (allowedRemote(
+                                      '${o['demoRemoteStatus']}',
                                       next,
+                                    ) &&
+                                    o['demoRemoteStatus'] != next &&
+                                    !(next == 'Shipped' &&
+                                        o['platformPickup'] == true))
+                                  button(
+                                    'Test: $next',
+                                    () => edit(
+                                      (s) => externalPlatformEvent(
+                                        s,
+                                        o['id'] as int,
+                                        next,
+                                      ),
+                                    ),
+                                  ),
+                              if (o['platformCollection'] != 'Collected')
+                                button(
+                                  'Test: Tahsilat Onayı',
+                                  () => edit(
+                                    (s) => platformCollected(
+                                      mutableOrder(s, o['id'] as int)!,
                                     ),
                                   ),
                                 ),
-                            if (o['platformCollection'] != 'Collected')
+                              if (source == 'Trendyol Go' &&
+                                  o['demoRemoteStatus'] == 'Delivered') ...[
+                                for (final type in [
+                                  'PAY_BACK',
+                                  'PRODUCT_RESEND',
+                                ])
+                                  button(
+                                    'Örnek Talep $type',
+                                    () => edit(
+                                      (s) =>
+                                          sampleClaim(s, o['id'] as int, type),
+                                    ),
+                                  ),
+                              ],
                               button(
-                                'Test: Tahsilat Onayı',
+                                'Test: Paketi Tekrar Al',
                                 () => edit(
-                                  (s) => platformCollected(
-                                    mutableOrder(s, o['id'] as int)!,
+                                  (s) => importPlatform(
+                                    s,
+                                    copyJson(
+                                      (o['platformSnapshot'] as Map)
+                                          .cast<String, dynamic>(),
+                                    ),
                                   ),
                                 ),
                               ),
-                            if (source == 'Trendyol Go' &&
-                                o['demoRemoteStatus'] == 'Delivered') ...[
-                              for (final type in ['PAY_BACK', 'PRODUCT_RESEND'])
-                                button(
-                                  'Örnek Talep $type',
-                                  () => edit(
-                                    (s) => sampleClaim(s, o['id'] as int, type),
-                                  ),
-                                ),
                             ],
-                            button(
-                              'Test: Paketi Tekrar Al',
-                              () => edit(
-                                (s) => importPlatform(
-                                  s,
-                                  copyJson(
-                                    (o['platformSnapshot'] as Map)
-                                        .cast<String, dynamic>(),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
                   ],
                   ExpansionTile(
                     title: const Text('Sipariş Geçmişi'),

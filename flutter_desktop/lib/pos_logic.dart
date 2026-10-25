@@ -191,6 +191,8 @@ void addOrderBatch(Json state, int orderId, List<Json> productLines) {
     'createdAt': DateTime.now().toUtc().toIso8601String(),
     'lines': productLines,
   });
+  order['serviceStatus'] = 'Hazırlanıyor';
+  order['kitchenReady'] = false;
   (order['events'] as List).add('${nowTime()} · Kasa (PC) · Ek sipariş');
   (state['printJobs'] as List).add({
     'orderId': orderId,
