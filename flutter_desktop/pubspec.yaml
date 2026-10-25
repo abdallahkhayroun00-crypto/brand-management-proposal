@@ -1,0 +1,22 @@
+name: nohut_falafel_desktop
+description: Nohut Falafel Windows POS desktop with local SQLite and employee QR LAN.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sqlite3: ^3.7.1
+  qr_flutter: ^4.1.0
+  path: ^1.9.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
