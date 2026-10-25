@@ -5,7 +5,7 @@
 | Workstream | Status |
 |---|---|
 | Brand visuals & two infographics | concept references supplied |
-| Product feature list (moods, games, restaurant reactions) | documented |
+| Product feature list (moods, guest interactions, PC-app reactions) | documented |
 | Electronics / selected exact components | **not finalized** |
 | CAD source / STEP | **not yet created** |
 | STL set validated with chosen hardware | **not yet created** |
@@ -18,14 +18,14 @@
 
 ## One complete version — final scope
 
-**Delivery policy: ONE complete Nohutçuk build.** There are no V1–V6 product releases. All features are planned for the same finished robot. The rows below are internal engineering work packages and their acceptance checks, **not versions**.
+**Delivery policy: ONE complete Nohutçuk build, with NO games.** There are no V1–V6 product releases. All remaining approved features are part of the same robot. The rows below are internal engineering work packages and their acceptance checks, **not versions**.
 
 | Work package (same release) | All required capabilities | Completion check |
 |---|---|---|
 | Personality & face | full eye expression library, blinking, emotional reactions, auto sleep, randomized idle, mood and affection modes | expressions respond to events correctly |
 | Guest interaction | proximity welcome, touch patterns, greetings in TR/EN/AR, safe servo nod/tilt, look/wave interaction and friendship mode | live guest tests, touch debounce, no repeated greetings |
-| Games & fun | all ten mini-games, eight funny behaviors, secret expressions and weekly/daily challenges | each game playable on chosen controls |
-| Restaurant connection | local PC notifications for orders, ready/delay/cancel, confirmed payments, admin settings, authorized delivery platform events | tested integration without payment dependencies or customer data |
+| Natural personality & fun reactions | eight funny behaviors, spontaneous face expressions, gentle guest response; **no games, leaderboards, competitions or timed challenges** | animations behave safely and do not interrupt service |
+| Restaurant connection | **only the Nohut Falafel PC management app** sends sanitized order/payment/status events via local Wi-Fi; it handles any marketplace/API integration itself | verify no direct robot ↔ marketplace/POS/API connection; no sensitive data or payment dependencies |
 | Social & events | photo, selfie, Instagram/Reels, QR menu card, Ramadan/Eid/New Year/birthday animations | tested interaction and branding |
 | Full physical build | unified modular body, final BOM, wired ESP32-S3, verified power, CAD/STEP/STL/3MF, printed and assembled parts | print-fit, electrical safety, movement and stability tests |
 | Documentation & package | full wiring, firmware, release files, assembly and maintenance guide, reference art | one consistent reproducible release archive |
@@ -62,7 +62,7 @@ Only real, verified artifacts should be put into engineering folders; do not cre
 
 1. Pick exact OLED (screen size, resolution, placement and supply).
 2. Pick ESP32-S3 module/form factor and firmware framework (Arduino or ESP-IDF).
-3. Choose capacitive sensor, range/proximity sensor, game buttons and audio solution.
+3. Choose capacitive touch sensor, proximity sensor and audio solution; optional worker control button is not a game input.
 4. Measure servo travel, torque, current and mounting screws.
 5. Decide line-powered USB-C versus battery; ensure adequate electrical safety.
 6. Freeze first CAD envelope and wall thickness; reconcile concept drawings.
