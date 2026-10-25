@@ -350,11 +350,11 @@ function productVisual(item,index){
  if(isCutout&&saladCrop)return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}"><svg x="80" y="80" width="840" height="840" viewBox="${saladCrop.join(' ')}" preserveAspectRatio="none" overflow="hidden"><image href="${escapeHtml(actualPhoto)}" width="2156" height="729"/></svg></svg>`;
  const plate=mezePlateGeometry[item[1]]||platterPlateGeometry[item[1]];
  if(isCutout&&plate)return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}">${plateImage(actualPhoto,plate)}</svg>`;
- if(actualPhoto)return `<img class="real-dish-image${isCutout?' meze-cutout':''}" src="${escapeHtml(actualPhoto)}" alt="${escapeHtml(menuName(item))}" loading="lazy" style="object-fit:${isCutout?'contain':'cover'};padding:${isCutout?'10px':'0'};position:absolute;inset:0"><span class="fallback-art" hidden aria-hidden="true">${pic(item[0],index)}</span>`;
+ if(actualPhoto)return `<img class="real-dish-image${isCutout?' meze-cutout':''}" src="${escapeHtml(actualPhoto)}" alt="${escapeHtml(menuName(item))}" loading="lazy" decoding="async" fetchpriority="low" style="object-fit:${isCutout?'contain':'cover'};padding:${isCutout?'10px':'0'};position:absolute;inset:0"><span class="fallback-art" hidden aria-hidden="true">${pic(item[0],index)}</span>`;
  const crop=referencePhotos[item[1]];
  if(crop)return `<svg class="product-photo" viewBox="${crop.join(' ')}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="assets/menu-reference.jpeg" width="1230" height="1278"/></svg>`;
  const source=photoMap[item[1]],illustration=pic(item[0],index);
- if(source)return `<img class="real-dish-image" src="${escapeHtml(source)}" alt="${escapeHtml(menuName(item))}" loading="lazy"><span class="fallback-art" hidden aria-hidden="true">${illustration}</span>`;
+ if(source)return `<img class="real-dish-image" src="${escapeHtml(source)}" alt="${escapeHtml(menuName(item))}" loading="lazy" decoding="async" fetchpriority="low"><span class="fallback-art" hidden aria-hidden="true">${illustration}</span>`;
  return `<span class="fallback-art" aria-hidden="true">${illustration}</span>`;
 }
 function renderCategories(){
