@@ -1,0 +1,29 @@
+name: Nohutçuk Simulator Checks
+
+on:
+  push:
+    paths:
+      - 'nohutcuk/**'
+      - '.github/workflows/nohutcuk-check.yml'
+  pull_request:
+    paths:
+      - 'nohutcuk/**'
+      - '.github/workflows/nohutcuk-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulator:
+    name: Syntax and reaction smoke tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: node --check nohutcuk/app.js
+      - name: Run simulated UI and reaction checks
+        run: node nohutcuk/tests/smoke.mjs
