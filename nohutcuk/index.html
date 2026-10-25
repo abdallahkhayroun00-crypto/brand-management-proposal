@@ -7,6 +7,7 @@
   <meta name="description" content="Nohutçuk — multicolor animated eye and reaction simulator for Nohut Falafel. Browser prototype, no physical robot required.">
   <title>Nohutçuk | Eye Studio</title>
   <link rel="stylesheet" href="./styles.css">
+  <script src="./audio.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
@@ -78,7 +79,7 @@
           <button type="button" data-action="dance">♫ Dance</button>
           <button type="button" data-action="photo">📸 Photo pose</button>
         </div>
-        <div class="note">Simulation only — no physical sensor, motor, audio module or POS connected. No real orders or payments are executed.</div>
+        <div class="note">Browser simulation: no real sensors, motors, or speaker hardware connected. Music is original synthesized audio.</div>
       </section>
       <aside class="control-panel card">
         <div class="panel-header">
@@ -88,7 +89,7 @@
         <div class="tabs" role="tablist" aria-label="Reaction categories">
           <button type="button" role="tab" data-tab="emotions" aria-selected="true">Emotions</button>
           <button type="button" role="tab" data-tab="interactions" aria-selected="false">Interactions</button>
-          <button type="button" role="tab" data-tab="restaurant" aria-selected="false">Restaurant</button>
+          <button type="button" role="tab" data-tab="sounds" aria-selected="false">Music & SFX</button>
           <button type="button" role="tab" data-tab="special" aria-selected="false">Special</button>
         </div>
         <div class="tab-panel" id="panel-emotions" role="tabpanel">
@@ -100,9 +101,22 @@
           <div class="action-grid" id="interactionGrid"></div>
           <div class="inline-stat">Friendship interactions <strong id="friendCount">0 / 4</strong></div>
         </div>
-        <div class="tab-panel" id="panel-restaurant" role="tabpanel" hidden>
-          <p class="panel-help">Safe demo events from our restaurant PC app only. Not connected to platform APIs.</p>
-          <div class="action-grid" id="restaurantGrid"></div>
+        <div class="tab-panel" id="panel-sounds" role="tabpanel" hidden>
+          <p class="panel-help">Four original Nohutçuk tunes + colorful emotion sound effects. Press Play to hear them. Nothing is uploaded.</p>
+          <div class="audio-status" aria-live="polite"><span class="audio-led"></span><span id="musicStatus">Choose a song to start listening 🎵</span><button type="button" id="stopMusic" class="stop-music">■ Stop</button></div>
+          <div class="song-grid">
+            <button type="button" class="song-button" data-song="theme"><span class="song-icon">🌿</span><strong>Nohutçuk Theme</strong><small>Playful little melody</small><b>▶ Play</b></button>
+            <button type="button" class="song-button" data-song="dance"><span class="song-icon">🎉</span><strong>Tiny Dance</strong><small>Cheerful upbeat rhythm</small><b>▶ Play</b></button>
+            <button type="button" class="song-button" data-song="lullaby"><span class="song-icon">🌙</span><strong>Sleepy Stars</strong><small>Gentle lullaby</small><b>▶ Play</b></button>
+            <button type="button" class="song-button" data-song="hello"><span class="song-icon">👋</span><strong>Happy Hello</strong><small>Friendly greeting tune</small><b>▶ Play</b></button>
+          </div>
+          <h3 class="sound-heading">Reaction sound effects <span>Tap to preview</span></h3>
+          <div id="sfxGrid" class="sfx-grid"></div>
+          <div class="local-audio"><label for="localAudioFile">🎧 Try your own music (MP3 / WAV / audio)</label>
+            <input id="localAudioFile" type="file" accept="audio/*">
+            <audio id="localAudioPlayer" controls preload="none" hidden></audio>
+            <small>Plays only in your browser. No file is uploaded or saved to GitHub.</small>
+          </div>
         </div>
         <div class="tab-panel" id="panel-special" role="tabpanel" hidden>
           <p class="panel-help">Social, festive and performance reactions. No games in the approved product scope.</p>
@@ -122,8 +136,9 @@
           <label class="switch-label"><input id="autoBlink" type="checkbox" checked><span>Natural blink & glance</span></label>
           <label class="switch-label"><input id="autoSleep" type="checkbox"><span>Sleep after 30 seconds idle</span></label>
           <label class="switch-label"><input id="voiceEnabled" type="checkbox"><span>Voice preview (browser speech)</span></label>
+          <label class="switch-label"><input id="effectsEnabled" type="checkbox"><span>Sound effects on reactions</span></label>
           <label class="switch-label"><input id="quietMode" type="checkbox"><span>Quiet mode (mute + reduce motion)</span></label>
-        </div>
+          <div class="audio-volume"><label for="volumeRange">🔊 Sound volume</label><strong id="volumeValue">50%</strong><input id="volumeRange" aria-label="Sound volume" type="range" min="0" max="100" step="5" value="50"></div>
       </aside>
     </div>
     <section class="bottom-grid">
@@ -135,7 +150,7 @@
         <div class="eyebrow">FROM SIMULATION TO REAL ROBOT</div><h2>Built for multicolor eyes.</h2>
         <p>These colorful expressions require a <strong>color display</strong> (for example an IPS TFT or color OLED). A monochrome OLED cannot show pink hearts, blue eyes and golden stars together.</p>
         <div class="info-tags"><span>HTML + CSS</span><span>SVG graphics</span><span>Vanilla JavaScript</span><span>ESP32-S3 next</span></div>
-        <p class="fine">This is a browser prototype. Exact display model, resolution, power, servo travel and firmware will be selected and validated before 3D printing.</p>
+        <p class="fine">Browser-only preview: audio and motions are simulated. Real speaker, display, sensors, power, servo limits and ESP32-S3 firmware require hardware testing.</p>
       </div>
     </section>
     <footer>🌱 Nohutçuk — Nohut Falafel mascot concept · <a href="./docs/FEATURES.md">Full features</a> · <a href="./docs/ROADMAP.md">Engineering checklist</a></footer>
