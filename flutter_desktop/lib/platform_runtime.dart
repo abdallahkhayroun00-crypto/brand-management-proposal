@@ -48,6 +48,7 @@ Json normalizeTgoMeal(Json raw, PlatformCredentials c) {
   }
   return {
     'source': 'Trendyol Go',
+    'integrationScope': c.scope,
     'packageId': raw['id'],
     'revision': version,
     'status': raw['packageStatus'],
@@ -111,6 +112,7 @@ Json normalizeYsRestaurant(Json raw, PlatformCredentials c, int eventRevision) {
   }
   return {
     'source': 'Yemeksepeti',
+    'integrationScope': c.scope,
     'packageId': raw['token'],
     'revision': eventRevision,
     'status': c.values['directApproved'] == true ? 'Created' : 'Picking',
@@ -186,7 +188,9 @@ class PlatformRuntime extends ChangeNotifier {
 
   Future<void> pollTgo(PlatformCredentials c) async {
     final state = store.read().data;
-    final cursor = state['platformCursors']?['Trendyol Go'] as int?;
+    final cursor = state['platformCursorScopes']?['Trendyol Go'] == c.scope
+        ? (state['platformCursors']?['Trendyol Go'] as int?)
+        : null;
     final end = DateTime.now().millisecondsSinceEpoch,
         start = (cursor ?? end - 24 * 3600000) - 60000;
     var page = 0;
@@ -219,6 +223,9 @@ class PlatformRuntime extends ChangeNotifier {
       final cursors =
           s.putIfAbsent('platformCursors', () => <String, dynamic>{}) as Map;
       cursors['Trendyol Go'] = end;
+      (s.putIfAbsent('platformCursorScopes', () => <String, dynamic>{})
+              as Map)['Trendyol Go'] =
+          c.scope;
     });
   }
 
@@ -228,8 +235,10 @@ class PlatformRuntime extends ChangeNotifier {
           'Webhook gateway ayarlanmamış; sipariş alma bağlı değil';
       return;
     }
-    final cursor =
-        store.read().data['platformCursors']?['Yemeksepeti'] as int? ?? 0;
+    final state = store.read().data;
+    final cursor = state['platformCursorScopes']?['Yemeksepeti'] == c.scope
+        ? ((state['platformCursors']?['Yemeksepeti'] as int?) ?? 0)
+        : 0;
     final url = Uri.parse(c.field('relayUrl'))
         .resolve('/v1/events')
         .replace(
@@ -280,6 +289,7 @@ class PlatformRuntime extends ChangeNotifier {
               .where(
                 (o) =>
                     o['source'] == 'Yemeksepeti' &&
+                    o['integrationScope'] == c.scope &&
                     o['providerRemoteOrderId'] == event['remoteOrderId'],
               )
               .firstOrNull;
@@ -305,6 +315,9 @@ class PlatformRuntime extends ChangeNotifier {
       final cursors =
           s.putIfAbsent('platformCursors', () => <String, dynamic>{}) as Map;
       cursors['Yemeksepeti'] = last;
+      (s.putIfAbsent('platformCursorScopes', () => <String, dynamic>{})
+              as Map)['Yemeksepeti'] =
+          c.scope;
       storeConfig(s, 'Yemeksepeti')['acceptFlow'] =
           c.values['directApproved'] == true ? 'direct' : 'indirect';
     });
@@ -340,7 +353,10 @@ class PlatformRuntime extends ChangeNotifier {
         edit((s) => finishOrderAction(s, '${j['id']}', 'Simüle edildi'));
         return;
       }
-      if (c.mode != j['mode'] || !c.configured || !c.confirmed) {
+      if (c.mode != j['mode'] ||
+          o['integrationScope'] != c.scope ||
+          !c.configured ||
+          !c.confirmed) {
         throw const IntegrationFailure(
           'Ortam / hesap bilgileri eşleşmiyor; gönderilmedi',
         );

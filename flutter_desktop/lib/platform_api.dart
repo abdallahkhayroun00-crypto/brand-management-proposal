@@ -28,6 +28,18 @@ class PlatformCredentials {
   String get mode => '${values['mode'] ?? 'off'}';
   String field(String key) => '${values[key] ?? ''}';
   bool get confirmed => values['programConfirmed'] == true;
+  String get scope => jsonEncode([
+    source,
+    mode,
+    if (source == 'Trendyol Go') ...[
+      field('supplierId'),
+      field('storeId'),
+    ] else ...[
+      field('chainCode'),
+      field('remoteId'),
+      field('platformKey'),
+    ],
+  ]);
   bool get configured {
     final fields = source == 'Trendyol Go'
         ? ['supplierId', 'storeId', 'apiKey', 'apiSecret', 'executorEmail']

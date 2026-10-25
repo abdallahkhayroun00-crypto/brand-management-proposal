@@ -152,7 +152,13 @@ class PosStore extends ChangeNotifier {
       }
       if (isPlatform(order) &&
           order['platformPackageId'] != null &&
-          !packages.add('${order['source']}:${order['platformPackageId']}')) {
+          !packages.add(
+            jsonEncode([
+              order['source'],
+              order['integrationScope'],
+              order['platformPackageId'],
+            ]),
+          )) {
         throw const FormatException('Duplicate platform package');
       }
       final batches = <int>{};

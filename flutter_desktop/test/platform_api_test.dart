@@ -356,6 +356,40 @@ void main() {
       folder.deleteSync(recursive: true);
     });
     test(
+      'environment/account scopes isolate imports, polling cursors and pending writes',
+      () async {
+        final stage = ys();
+        final other = PlatformCredentials('Yemeksepeti', {
+          ...stage.values,
+          'remoteId': 'OTHER_VENDOR',
+        });
+        final s = store.read().data;
+        final o = importPlatform(s, normalizeYsRestaurant(rawYs(), stage, 1))!;
+        o['integrationMode'] = 'stage';
+        o['demoRemoteStatus'] = 'Picking';
+        o['providerCallbacks'] = rawYs()['callbackUrls'];
+        requestOrderAction(s, o['id'] as int, 'ready', pcActor);
+        importPlatform(s, normalizeYsRestaurant(rawYs(), other, 1));
+        expect(s['orders'], hasLength(2));
+        s['platformCursors'] = {'Yemeksepeti': 999};
+        s['platformCursorScopes'] = {'Yemeksepeti': stage.scope};
+        store.replace(s, store.read().revision);
+        final relay = PlatformCredentials('Yemeksepeti', {
+          ...other.values,
+          'relayUrl': 'https://gateway.example.invalid',
+          'relayToken': 'TEST_RELAY',
+        });
+        transport.respond = (call) async => const ApiReply(200, {'events': []});
+        await runtime.pollYsRelay(relay);
+        expect(transport.calls.single.url.queryParameters['after'], '0');
+        transport.calls.clear();
+        await runtime.vault.save(other);
+        await runtime.runOnce();
+        expect(transport.calls, isEmpty);
+        expect(orderOperations(store.read().data).single['status'], 'Hata');
+      },
+    );
+    test(
       'demo ready never sends network requests and legacy simulation cannot alter live orders',
       () async {
         final s = store.read().data;

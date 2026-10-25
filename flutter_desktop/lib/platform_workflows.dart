@@ -276,6 +276,7 @@ Json? importPlatform(Json s, Json packet) {
       .where(
         (o) =>
             o['source'] == source &&
+            o['integrationScope'] == packet['integrationScope'] &&
             o['platformPackageId'] == packet['packageId'],
       )
       .firstOrNull;
@@ -354,6 +355,7 @@ Json? importPlatform(Json s, Json packet) {
       'events': <dynamic>[],
       'platformSnapshot': copyJson(packet),
       'platformPackageId': packet['packageId'],
+      'integrationScope': packet['integrationScope'],
       'platformCollection': 'Pending',
       'platformCancelledAmount': 0,
     };
