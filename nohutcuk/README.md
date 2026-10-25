@@ -3,22 +3,26 @@
 > **Status: concept & product requirements, not yet manufactured.** Nohutçuk is the friendly, modular, animated mascot for **Nohut Falafel**, designed to interact with guests, appear in social media, and eventually receive safe restaurant-event notifications.
 
 
-## 🌈 Multicolor Eye Studio — live browser simulator
+## 🌈 Multicolor Eye & Sound Studio — live browser simulator
 
-**Preview:** https://abdallahkhayroun00-crypto.github.io/brand-management-proposal/nohutcuk/
+**Live preview:** https://abdallahkhayroun00-crypto.github.io/brand-management-proposal/nohutcuk/
 
-The simulator is implemented in [index.html](index.html), [styles.css](styles.css), and [app.js](app.js), using **HTML, CSS, JavaScript and SVG** (no build step or external JS libraries).
+Built with [index.html](index.html), [styles.css](styles.css), [app.js](app.js), and the original [Web Audio synthesizer](audio.js) in HTML, CSS, JavaScript and SVG. No additional build tools or external song libraries are necessary.
 
-- All 20 documented face states: normal, happy, in love, shy, laughing, sad, angry, sleeping, surprised, thinking, cool, kissing, hungry, dizzy, bored, celebrating, hello, goodbye, confused and drama.
-- Multicolor eyes by emotion (aqua/blue, pink, amber, mint, purple), rainbow gradient mode and a custom color picker; the body follows the matte-black/green Nohut Falafel concept.
-- Adjustable reaction duration, blink interval, animation speed; natural blinking, pointer gaze, idle and optional automatic sleep.
-- Simulated proximity welcome with cooldown, single/double/triple/long touch, wave, friendship stages, photo/selfie, funny reactions, holidays, restaurant-PC notifications and speech preview in Turkish/English/Arabic when supported by the browser.
-- One-click automatic walkthrough of the 20 moods; action history. **No games**, following the approved scope.
-- **No external integrations or hardware control:** touch/proximity/payment/order buttons simulate events only. This prototype does not connect to marketplace APIs, POS, customer data, Wi-Fi robot hardware or servo motors.
+- **20 animated facial moods:** happy, shy, laughing, love, sleeping, surprised and 14 more, with neon cyan, pink, orange, green and purple; rainbow and custom color modes.
+- **Character interactions:** simulated touch, proximity welcome, waving, friendship, funny reactions, social modes and seasonal celebrations.
+- **Music & SFX tab** replaces the old restaurant/platform simulation tab. There are **no Yemeksepeti/Trendyol Go/Migros buttons** in the mascot's browser experience; the PC-system integration specification remains documented separately for future work.
+- **Four original synthesized tunes:** Nohutçuk Theme, Tiny Dance, Sleepy Stars and Happy Hello, plus 10 manually playable samples and optional reactive sounds for emotions.
+- **Audio controls:** Play / Stop, volume, effects opt-in, quiet mode, browser speech in Turkish/English/Arabic, and preview of your own local audio file without uploading it.
+- **No copyrighted tracks bundled:** Web Audio creates original playful instrument tones directly in the browser; for richer samples, use the local audio picker or later add licensed audio files.
+- **No physical hardware:** face, touch and head movement are browser previews, not actual sensors/servos. Browser audio only plays after user input; system voice availability varies by platform.
+- **No games:** the product's approved one-build scope remains unchanged.
 
-**Run locally:** open the nohutcuk/index.html file in a browser (or serve the repository root with python -m http.server 8000 and open http://localhost:8000/nohutcuk/). The browser UI is designed for desktop and mobile. Browser speech depends on installed voices and requires the user to enable it.
+**Run locally:** open nohutcuk/index.html in any modern browser, or serve the repository root using `python -m http.server 8000` and visit `http://localhost:8000/nohutcuk/`.
 
-**Hardware decision:** the reference images show multiple simultaneous luminous colors. A **monochrome OLED cannot reproduce them**. Choose and test a compatible color OLED or IPS/TFT display (exact panel and ESP32-S3 graphics stack TBD) *before* freezing the CAD face opening. SVG is a desktop preview; the final microcontroller renderer must be ported to its display resolution and firmware environment.
+**Run automated checks:** `node --check nohutcuk/app.js`, `node --check nohutcuk/audio.js`, `node nohutcuk/tests/smoke.mjs` and `node nohutcuk/tests/audio.mjs`; GitHub Actions also executes these checks.
+
+**Hardware requirement:** simultaneous multicolor eyes require an actual **color OLED or TFT/IPS display** rather than a monochrome OLED. Display hardware, speaker circuitry, ESP32-S3 firmware, power and mechanics need dedicated tests before the 3D print is approved.
 
 ## 🖨️ Published 3D CAD prototype files — GitHub verified
 
