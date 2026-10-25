@@ -194,7 +194,7 @@ class Handler(SimpleHTTPRequestHandler):
             if decoded == path:
                 break
             path = decoded
-        if "%" in path or "\\x00" in path or "\\\\" in path:
+        if "%" in path or chr(0) in path or chr(92) in path:
             self.send_error(403)
             return
         if path == "/":
