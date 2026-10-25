@@ -139,7 +139,7 @@
     if(options.bubble)bubble(options.bubble,options.duration||3000);
     if(options.say)say(options.say);
     if(options.log!==false)log(state.label+' → '+BY_ID[id].name);
-    const delay=Object.hasOwn(options,'duration')?options.duration:state.duration*1000/state.speed;
+    const delay=typeof options.duration==='number'?options.duration:state.duration*1000/state.speed;
     if(delay>0 && id!=='normal'){
       state.timeout=setTimeout(()=>{
         if(state.token===token)setMood('normal',{label:'Idle • Blink • Glance',duration:0,interactive:false,log:false});
@@ -259,7 +259,7 @@
     els.svg.style.color=color;
     document.documentElement.style.setProperty('--eye',color);
     document.documentElement.style.setProperty('--eye-glow',color+'66');
-    return palette==='rainbow'?'url(#rainbow)':color;
+    return color;
   }
   function draw(){
     const id=state.mood;
@@ -290,7 +290,7 @@
       '<g transform="translate('+xA.toFixed(1)+' '+y.toFixed(1)+')">'+eye(id,true)+'</g>'+
       '<g transform="translate('+xB.toFixed(1)+' '+y.toFixed(1)+')">'+eye(id,false)+'</g>'+
       '</g>';
-    els.face.innerHTML=sx+eyes+'</g>'+extras;
+    els.face.innerHTML=sx+(state.palette==='rainbow'?eyes.replaceAll('currentColor','url(#rainbow)'):eyes)+'</g>'+extras;
   }
 
   function buildButtons(target,entries,kind){
@@ -325,7 +325,7 @@
     const seq=++state.previewSequence;
     cycleButton.disabled=true;cycleButton.textContent='Playing all 20 expressions…';
     MOODS.forEach((m,i)=>setTimeout(()=>{
-      if(state.previewSequence!==seq)return;
+      if(state.previewSequence!==seq){cycleButton.disabled=false;cycleButton.textContent='▶ Preview all 20 emotions automatically';return;}
       setMood(m.id,{label:'All emotions preview '+(i+1)+' / '+MOODS.length,duration:0,interactive:false,log:false});
       if(i===MOODS.length-1)setTimeout(()=>{
         if(state.previewSequence===seq)setMood('normal',{label:'All 20 emotions previewed',duration:0,log:true,interactive:false});
