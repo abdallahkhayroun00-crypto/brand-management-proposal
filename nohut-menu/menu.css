@@ -118,3 +118,8 @@
 
 /* Packaged drinks: real labels, a shared cream canvas and aligned baselines. */
 .drink-product{display:block;width:100%;height:100%;mix-blend-mode:multiply}
+
+/* Trendyol Go logo replacement Oct 25: same square icon footprint as Yemeksepeti. */
+.contact-strip .trendyol-logo{width:39px;height:39px;display:block;object-fit:contain;border-radius:9px;mix-blend-mode:normal}
+@media(max-width:999px){.contact-strip .trendyol-logo{width:29px;height:29px;border-radius:7px}}
+@media(max-width:600px){.contact-strip .trendyol-logo{width:30px;height:30px}}
