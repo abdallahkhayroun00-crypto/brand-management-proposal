@@ -8,6 +8,7 @@ import 'package:nohut_falafel_desktop/lan_server.dart';
 import 'package:nohut_falafel_desktop/staff_commands.dart';
 import 'package:nohut_falafel_desktop/order_actions.dart';
 import 'package:nohut_falafel_desktop/platform_workflows.dart';
+import 'package:nohut_falafel_desktop/floor_plan.dart';
 
 void main() {
   late Directory folder;
@@ -32,6 +33,23 @@ void main() {
   });
   ActivatedSession activate(int id) =>
       auth.activate(auth.issue(id).token, 'Test Telefon');
+  test('staff floor matches all five PC tables and follows saved layout', () {
+    final s = store.read().data;
+    s['floorPositions'] = {
+      '3': {'x': .4, 'y': .5},
+      '5': {'x': 3, 'y': -1},
+    };
+    final pc = positionsFromJson(s['floorPositions']);
+    final phone = asMaps(staffProjection(s)['floorPlan']);
+    expect(phone.map((p) => p['number']).toList(), [1, 2, 3, 4, 5]);
+    for (final p in phone) {
+      final r = pc[p['number']]!;
+      expect(p['x'], closeTo(r.left, 1e-12));
+      expect(p['y'], closeTo(r.top, 1e-12));
+      expect(p['w'], closeTo(r.width, 1e-12));
+      expect(p['h'], closeTo(r.height, 1e-12));
+    }
+  });
   test(
     'new local batch has independent readiness while retries stay idempotent',
     () {
@@ -296,7 +314,11 @@ void main() {
         final boot = await call('GET', '/api/bootstrap');
         expect(boot.$1, 200);
         expect(boot.$2['staff']['name'], 'Mehmet');
-        expect((boot.$2['state'] as Map).keys.toSet(), {'orders', 'localMenu'});
+        expect((boot.$2['state'] as Map).keys.toSet(), {
+          'orders',
+          'localMenu',
+          'floorPlan',
+        });
         expect(
           (await call(
             'POST',

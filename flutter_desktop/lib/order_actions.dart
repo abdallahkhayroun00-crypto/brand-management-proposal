@@ -1,5 +1,6 @@
 import 'pos_logic.dart';
 import 'operations.dart';
+import 'floor_geometry.dart';
 
 const pcActor = <String, dynamic>{'kind': 'pc', 'name': 'Kasa (PC)'};
 List<Json> orderOperations(Json s) => asMaps(s['orderOperations']);
@@ -184,6 +185,7 @@ void finishOrderAction(
 }
 
 Json staffProjection(Json s) => {
+  'floorPlan': sharedFloor(s['floorPositions']),
   'localMenu': asMaps(s['localMenu']),
   'orders': [
     for (final o in asMaps(s['orders']))
@@ -191,6 +193,7 @@ Json staffProjection(Json s) => {
         'id': o['id'],
         'source': o['source'],
         'table': o['table'],
+        'tableReleased': o['tableReleased'] == true,
         'closed': o['closed'],
         'cancelled': o['cancelled'],
         'serviceStatus': o['serviceStatus'],

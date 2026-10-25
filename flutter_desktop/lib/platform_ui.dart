@@ -76,12 +76,13 @@ class _PlatformPanelState extends State<PlatformPanel> {
       info(
         'API bağlantıları Ayarlar üzerinden yapılandırılır. Siparişler dışındaki mağaza, menü, talep, yorum, fatura ve finans sekmeleri DEMO verisidir. DEMO işlemler API’ye gönderilmez. Kurye ve tahsilat platforma aittir.',
       ),
-      dropdown(source, platformSources, (v) {
-        source = v;
-        status = 'Tümü';
-        selectedMenu.clear();
-        selectedItems.clear();
-      }),
+      if (tab != 'Siparişler')
+        dropdown(source, platformSources, (v) {
+          source = v;
+          status = 'Tümü';
+          selectedMenu.clear();
+          selectedItems.clear();
+        }),
       if (source == 'Yemeksepeti')
         info(
           'Yemeksepeti restoran yönetim yetenekleri doğrulanmadı. Mağaza, menü, talep, yorum, fatura ve finans yazmaları kapalı.',
@@ -92,6 +93,13 @@ class _PlatformPanelState extends State<PlatformPanel> {
           for (final t in tabs)
             ChoiceChip(
               label: Text(t),
+              showCheckmark: false,
+              selectedColor: const Color(0xff183b2c),
+              labelStyle: TextStyle(
+                color: tab == t ? Colors.white : const Color(0xff213429),
+                fontWeight: FontWeight.w700,
+              ),
+              backgroundColor: Colors.white,
               selected: tab == t,
               onSelected: (_) => setState(() {
                 tab = t;
@@ -109,11 +117,42 @@ class _PlatformPanelState extends State<PlatformPanel> {
         'Değerlendirmeler' => reviews(),
         'Faturalar' => invoices(),
         'Senkronizasyon' => sync(),
-        _ => orders(),
+        _ => LayoutBuilder(
+          builder: (context, c) {
+            final columns = [
+              for (final provider in platformSources)
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: orders(provider: provider),
+                  ),
+                ),
+            ];
+            return c.maxWidth >= 900
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: columns[0]),
+                      const SizedBox(width: 16),
+                      Expanded(child: columns[1]),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      columns[0],
+                      const SizedBox(height: 16),
+                      columns[1],
+                    ],
+                  );
+          },
+        ),
       },
     ],
   );
-  Widget orders() {
+  Widget orders({String? provider}) {
+    final source = provider ?? this.source;
     final rows = asMaps(widget.state['orders'])
         .where(
           (o) =>
@@ -124,24 +163,92 @@ class _PlatformPanelState extends State<PlatformPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Wrap(
+        Row(
           children: [
-            dropdown(status, ['Tümü', ...remoteStates], (v) => status = v),
-            for (final kind in [
-              ('card', 'Online Kart'),
-              ('cod', 'Teslimatta'),
-              ('meal', 'Yemek Kartı'),
-              ('pickup', 'Platform Gel-Al'),
-            ])
-              button(
-                'Örnek ${kind.$2}',
-                () => edit(
-                  (s) => importPlatform(s, platformFixture(s, source, kind.$1)),
+            Expanded(
+              child: Text(
+                source,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
                 ),
               ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                color: const Color(0xffedf5e9),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Text(
+                '${rows.length} sipariş',
+                style: const TextStyle(fontSize: 12, color: Color(0xff42704a)),
+              ),
+            ),
           ],
         ),
-        if (rows.isEmpty) info('Bu filtrede platform siparişi yok.'),
+        const SizedBox(height: 8),
+        const Text(
+          'Kurye ve tahsilat platforma aittir.',
+          style: TextStyle(color: Color(0xff7c8b80), fontSize: 12),
+        ),
+        const SizedBox(height: 16),
+        dropdown(status, ['Tümü', ...remoteStates], (v) => status = v),
+        const SizedBox(height: 14),
+        if (rows.isEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 34, horizontal: 20),
+            decoration: BoxDecoration(
+              color: const Color(0xfff5f8f3),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Column(
+              children: [
+                Icon(
+                  Icons.receipt_long_outlined,
+                  color: Color(0xff9ab09f),
+                  size: 34,
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'Bu filtrede sipariş yok',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Yeni siparişler burada görünecek.',
+                  style: TextStyle(color: Color(0xff7c8b80), fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ExpansionTile(
+          title: const Text(
+            'Demo Sipariş Araçları',
+            style: TextStyle(fontSize: 12),
+          ),
+          children: [
+            Wrap(
+              children: [
+                for (final kind in [
+                  ('card', 'Online Kart'),
+                  ('cod', 'Teslimatta'),
+                  ('meal', 'Yemek Kartı'),
+                  ('pickup', 'Gel-Al'),
+                ])
+                  button(
+                    'Örnek ${kind.$2}',
+                    () => edit(
+                      (s) => importPlatform(
+                        s,
+                        platformFixture(s, source, kind.$1),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
         for (final o in rows.reversed)
           Card(
             child: Padding(
@@ -149,9 +256,46 @@ class _PlatformPanelState extends State<PlatformPanel> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  panelTitle(
-                    '#${o['id']} · ${o['platformPackageId']} · ${o['demoRemoteStatus']} · ${o['integrationMode'] ?? 'DEMO'}',
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'A${o['id']}',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xfffff3df),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                        child: Text(
+                          '${({'Created': 'Yeni', 'Picking': 'Hazırlanıyor', 'Invoiced': 'Hazır', 'Shipped': 'Kuryede', 'Delivered': 'Teslim Edildi'})[o['demoRemoteStatus']] ?? o['demoRemoteStatus']}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xffa37428),
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${o['platformPackageId']} · ${o['integrationMode'] ?? 'DEMO'}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xff7c8b80),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   Text(
                     'Toplam ${formatTry(orderTotalCents(o))} · ${o['platformDeliveryType']} · Tahsilat ${o['platformCollection']}',
                   ),

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'floor_plan.dart';
 import 'lan_server.dart';
 import 'pos_logic.dart';
@@ -17,8 +16,8 @@ import 'platform_runtime.dart';
 import 'platform_settings_ui.dart';
 import 'order_action_ui.dart';
 
-const dark = Color(0xff193f2c);
-const cream = Color(0xfff5f7f1);
+const dark = Color(0xff183b2c);
+const cream = Color(0xfff6f6f2);
 const emerald = Color(0xff3b7550);
 
 void main() {
@@ -72,7 +71,31 @@ class NohutFalafelApp extends StatelessWidget {
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(seedColor: dark, surface: cream),
       scaffoldBackgroundColor: cream,
+      dividerColor: const Color(0xffe3e9e6),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(0, 46),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(0, 44),
+          side: const BorderSide(color: Color(0xffd8e2dc)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
       fontFamily: 'Segoe UI',
+      textTheme: const TextTheme(
+        bodyMedium: TextStyle(fontSize: 13, color: Color(0xff213429)),
+        bodyLarge: TextStyle(fontSize: 14, color: Color(0xff213429)),
+        labelLarge: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+        titleMedium: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+      ),
       cardTheme: CardThemeData(
         color: Colors.white,
         elevation: 0,
@@ -82,7 +105,11 @@ class NohutFalafelApp extends StatelessWidget {
         ),
       ),
       inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
         isDense: true,
         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       ),
@@ -132,9 +159,8 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     ('online', Icons.delivery_dining_outlined, 'Online Siparişler'),
     ('payments', Icons.point_of_sale_outlined, 'Kasa & Ödemeler'),
     ('printer', Icons.print_outlined, 'Yazdırma Kuyruğu'),
-    ('staff', Icons.people_alt_outlined, 'Personel Yönetimi'),
+    ('staff', Icons.qr_code_rounded, 'Personel & QR'),
     ('reports', Icons.bar_chart_outlined, 'Raporlar'),
-    ('wifi', Icons.wifi_tethering_outlined, 'Personel Wi-Fi'),
     ('settings', Icons.settings_outlined, 'Ayarlar'),
   ];
 
@@ -452,7 +478,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
       return Scaffold(
         body: Row(
           children: [
-            SizedBox(width: condensed ? 74 : 235, child: _sidebar(condensed)),
+            SizedBox(width: condensed ? 74 : 255, child: _sidebar(condensed)),
             Expanded(
               child: Column(
                 children: [
@@ -494,13 +520,19 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                         const SizedBox(width: 8),
                         Text(
                           lan.running
-                              ? 'Local Server · AKTİF'
-                              : 'Local Server · KAPALI',
+                              ? 'Telefon bağlantısı açık'
+                              : 'Telefon bağlantısı kapalı',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
                             color: lan.running ? emerald : Colors.orange,
                           ),
+                        ),
+                        const SizedBox(width: 14),
+                        OutlinedButton.icon(
+                          onPressed: () => setState(() => page = 'staff'),
+                          icon: const Icon(Icons.qr_code_rounded, size: 18),
+                          label: const Text('Personel QR'),
                         ),
                         const SizedBox(width: 14),
                         const CircleAvatar(
@@ -539,7 +571,15 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           padding: const EdgeInsets.fromLTRB(14, 24, 14, 20),
           child: Row(
             children: [
-              const Icon(Icons.restaurant, color: Color(0xfff0d6a7), size: 30),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Image.asset(
+                  'assets/brand-logo.jpeg',
+                  width: 45,
+                  height: 45,
+                  fit: BoxFit.cover,
+                ),
+              ),
               if (!condensed) ...[
                 const SizedBox(width: 10),
                 const Expanded(
@@ -555,7 +595,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                         ),
                       ),
                       Text(
-                        'WINDOWS İŞLETME PANELİ',
+                        'İŞLETME SİSTEMİ',
                         style: TextStyle(
                           color: Color(0xffb4cebc),
                           fontSize: 9,
@@ -573,7 +613,31 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 9),
             children: [
-              for (final item in sections)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 18),
+                child: FilledButton(
+                  onPressed: () => _composer(),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xffdcead8),
+                    foregroundColor: dark,
+                  ),
+                  child: Text(condensed ? '+' : '+ Sipariş Al'),
+                ),
+              ),
+              for (final item in sections) ...[
+                if (!condensed && ['dashboard', 'staff'].contains(item.$1))
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 15, 14, 10),
+                    child: Text(
+                      item.$1 == 'dashboard' ? 'GÜNLÜK İŞLEMLER' : 'İŞLETME',
+                      style: const TextStyle(
+                        color: Color(0xff87ac94),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 3),
                   child: Tooltip(
@@ -611,6 +675,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                     ),
                   ),
                 ),
+              ],
             ],
           ),
         ),
@@ -618,7 +683,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           const Padding(
             padding: EdgeInsets.fromLTRB(18, 0, 18, 24),
             child: Text(
-              'SQLite · Yalnızca güvenilir personel Wi-Fi\nBanka POS / ÖKC bağlı değil · API: Ayarlar',
+              'Kasa (PC)\nNohut Falafel',
               style: TextStyle(
                 color: Color(0xffa4c4af),
                 fontSize: 10,
@@ -646,8 +711,6 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
         return _staff(db);
       case 'reports':
         return _reports(db);
-      case 'wifi':
-        return _wifi(db);
       case 'settings':
         return _settings(db);
       default:
@@ -770,7 +833,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                     ),
                     SizedBox(height: 6),
                     Text(
-                      'Windows Flutter · Lokal SQLite · Telefon siparişleri QR üzerinden',
+                      'Bugünün siparişleri, masaları ve ekibi tek yerde.',
                       style: TextStyle(color: Color(0xffbddec6), fontSize: 12),
                     ),
                   ],
@@ -1353,236 +1416,12 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
 
   Widget _printer(Json db) => PrinterPanel(state: db, edit: _edit);
 
-  Widget _staff(Json db) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      StaffPanel(state: db, edit: _edit),
-      StaffQrPanel(server: lan),
-    ],
+  Widget _staff(Json db) => StaffQrPanel(
+    server: lan,
+    editor: StaffPanel(state: db, edit: _edit),
   );
 
   Widget _reports(Json db) => ReportsPanel(state: db, edit: _edit);
-
-  Widget _wifi(Json db) {
-    final url = lan.staffUrl;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _sectionTitle(
-          'Personel Wi-Fi · Yerel Sunucu',
-          'Windows Flutter programı laptop üzerinde SQLite ve HTTP sunucusunu başlatır. Personel Chrome QR ile bağlanır.',
-        ),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            lan.running
-                                ? Icons.check_circle
-                                : Icons.error_outline,
-                            color: lan.running ? Colors.green : Colors.orange,
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            lan.running
-                                ? 'Local Server çalışıyor'
-                                : 'Local Server kapalı',
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Port: ${lan.port}',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'SQLite: ${store.filePath}',
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                      const SizedBox(height: 16),
-                      if (lan.addresses.isNotEmpty)
-                        DropdownButtonFormField<String>(
-                          isExpanded: true,
-                          initialValue:
-                              lan.selectedIp != null &&
-                                  lan.addresses.contains(lan.selectedIp)
-                              ? lan.selectedIp
-                              : lan.addresses.first,
-                          decoration: const InputDecoration(
-                            labelText: 'Laptopun Wi-Fi IPv4 adresi',
-                          ),
-                          items: lan.addresses
-                              .map(
-                                (ip) => DropdownMenuItem(
-                                  value: ip,
-                                  child: Text(ip),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (ip) {
-                            if (ip != null) lan.chooseIp(ip);
-                          },
-                        ),
-                      if (lan.error != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Text(
-                            lan.error!,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      if (!lan.available)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 11),
-                          child: Text(
-                            'Yerel ağ IPv4 bulunamadı. Telefon QR çalışmayabilir.',
-                            style: TextStyle(color: Colors.deepOrange),
-                          ),
-                        ),
-                      const SizedBox(height: 15),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          OutlinedButton.icon(
-                            onPressed: () => lan.discover(),
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('IP Yenile'),
-                          ),
-                          if (!lan.running)
-                            FilledButton(
-                              onPressed: () => lan.start(),
-                              child: const Text('Sunucuyu Başlat'),
-                            ),
-                          if (lan.running)
-                            OutlinedButton(
-                              onPressed: () => lan.stop(),
-                              child: const Text('Sunucuyu Durdur'),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'Bağlantı Mantığı',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        '1. Laptop ve personel telefonları aynı Wi-Fi\n'
-                        '2. Flutter uygulaması açık ve sunucu çalışır\n'
-                        '3. Personel → QR Yönetimi ile kişisel cihaz QR verilir\n'
-                        '4. 5 masanın siparişleri ortak SQLite veritabanına kaydedilir\n'
-                        '5. Kasa ve ödeme yalnızca laptopta',
-                        style: TextStyle(height: 1.8, fontSize: 12),
-                      ),
-                      const SizedBox(height: 11),
-                      const Text(
-                        'Şimdilik şifre yok. Misafir Wi-Fi, router izolasyonu ve internet port yönlendirme kullanmayın.',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.deepOrange,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(21),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'ORTAK SUNUCU ADRESİ',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 17),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(17),
-                          border: Border.all(color: const Color(0xffdce7da)),
-                        ),
-                        child: lan.running && lan.available
-                            ? QrImageView(
-                                data: url,
-                                size: 215,
-                                errorCorrectionLevel: QrErrorCorrectLevel.M,
-                              )
-                            : const SizedBox(
-                                height: 215,
-                                width: 215,
-                                child: Center(
-                                  child: Text(
-                                    'Wi-Fi IP bekleniyor',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                      ),
-                      const SizedBox(height: 13),
-                      SelectableText(
-                        lan.running ? url : 'Sunucu başlamadı',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 13),
-                      FilledButton.icon(
-                        onPressed: lan.running
-                            ? () {
-                                Clipboard.setData(ClipboardData(text: url));
-                                _notify('Personel URL kopyalandı');
-                              }
-                            : null,
-                        icon: const Icon(Icons.copy),
-                        label: const Text('Bağlantıyı Kopyala'),
-                      ),
-                      const SizedBox(height: 15),
-                      const Text(
-                        'Android Chrome · iPhone Safari',
-                        style: TextStyle(
-                          color: Color(0xff798e7b),
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _notice(
-          'Gerçek fiziksel Windows laptopta test edilmelidir. Bu uygulama dış internete açılmamalıdır. Bu genel QR cihaz etkinleştirmez. İlk giriş için Personel → QR Yönetimi içindeki kişisel QR kullanılır.',
-        ),
-      ],
-    );
-  }
 
   Widget _settings(Json db) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -144,6 +144,15 @@ class PosLanServer extends ChangeNotifier {
       r.cookies.where((c) => c.name == 'nf_session').firstOrNull?.value;
   Future<void> _handle(HttpRequest request) async {
     final resource = request.uri.path;
+    if (request.method == 'GET' && resource == '/brand-logo') {
+      final bytes = await rootBundle.load('assets/brand-logo.jpeg');
+      request.response.headers.contentType = ContentType('image', 'jpeg');
+      request.response.add(
+        bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
+      );
+      await request.response.close();
+      return;
+    }
     if (request.method == 'GET' &&
         ['/', '/personel', '/personel/'].contains(resource)) {
       request.response.headers.contentType = ContentType.html;

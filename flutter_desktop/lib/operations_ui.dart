@@ -78,9 +78,21 @@ Widget panelTitle(String text) => Padding(
     style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
   ),
 );
-Widget info(String text) => Padding(
-  padding: const EdgeInsets.symmetric(vertical: 12),
-  child: Text(text),
+Widget info(String text) => Container(
+  margin: const EdgeInsets.symmetric(vertical: 12),
+  padding: const EdgeInsets.all(15),
+  decoration: BoxDecoration(
+    color: const Color(0xfff2f6ee),
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Text(
+    text,
+    style: const TextStyle(
+      fontSize: 12,
+      height: 1.65,
+      color: Color(0xff627865),
+    ),
+  ),
 );
 
 class CashPanel extends StatelessWidget {

@@ -1,13 +1,11 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'pos_logic.dart';
+import 'floor_geometry.dart';
 
-const floorDefaults = <int, Rect>{
-  1: Rect.fromLTWH(.456, .130, .143, .135),
-  2: Rect.fromLTWH(.255, .165, .130, .113),
-  3: Rect.fromLTWH(.265, .424, .343, .174),
-  4: Rect.fromLTWH(.261, .710, .346, .178),
-  5: Rect.fromLTWH(.032, .676, .076, .148),
+final floorDefaults = <int, Rect>{
+  for (final e in floorGeometry.entries)
+    e.key: Rect.fromLTWH(e.value[0], e.value[1], e.value[2], e.value[3]),
 };
 
 Map<int, Rect> positionsFromJson(Object? value) {

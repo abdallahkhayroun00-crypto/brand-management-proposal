@@ -68,7 +68,7 @@ void main() {
           'Tüm Siparişler',
           'Kasa & Ödemeler',
           'Yazdırma Kuyruğu',
-          'Personel Yönetimi',
+          'Personel & QR',
           'Raporlar',
           'Ayarlar',
           'Online Siparişler',
@@ -78,6 +78,14 @@ void main() {
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull, reason: label);
           expect(find.text(label), findsAtLeastNWidgets(2));
+          if (label == 'Personel & QR') {
+            expect(find.text('Personel Wi-Fi'), findsNothing);
+            expect(
+              tester.getRect(find.text('Telefon Bağla · QR Oluştur')).bottom,
+              lessThan(size.height),
+            );
+            expect(find.text('Telefon Bağlantıları'), findsOneWidget);
+          }
         }
         for (final tab in [
           'Mağaza',
