@@ -126,6 +126,31 @@ test("LAN-simultaneous-updates-reject-stale-writer",async()=>{
  assert(first.alerts.concat(second.alerts).some(x=>x.includes("Başka bir cihaz")));
 });
 
+test("LAN-conflict-restores-submitted-cart-and-allows-safe-retry",async()=>{
+ let net=fakeLaptop();
+ let first=testApp(mainHtml,new Map(),"?panel=yonetici",new Map(),net);
+ let second=testApp(mainHtml,new Map(),"?panel=yonetici",new Map(),net);
+ await networkTick();
+ for(let [client,table] of [[first,"1"],[second,"2"]]){
+  client.click("pcOrder");client.click("workerTable",table);
+  client.click("product","0");client.click("cartSave");
+ }
+ first.click("cartSubmit");second.click("cartSubmit");
+ await networkTick();
+ assert.equal(net.state.orders.length,1);
+ let rejected=first.api.savedDraft?first:second;
+ assert(rejected.api.savedDraft,"A rejected order must restore the draft");
+ assert.equal(rejected.api.savedDraft.targetOrderId,null,"New order must not point to lost local ID");
+ assert.equal(rejected.api.savedDraft.cart.length,1);
+ assert(rejected.session.has(rejected.api.draftKey),"Draft must survive a reload");
+ assert(rejected.html.includes("Kaydedilmemiş taslak"));
+ rejected.click("resumeDraft");
+ assert.equal(rejected.api.ui.workerStep,"cart");
+ rejected.click("cartSubmit");
+ await networkTick();
+ assert.equal(net.state.orders.length,2,"Both tables should be saved only after an explicit retry");
+ assert.deepEqual(net.state.orders.map(o=>o.table).sort(),[1,2]);
+});
 test("floor-map-prototype-chair-count-and-order",()=>{let t=fresh();t.click("tab","tables");assert(t.html.includes('class="floor-door">KAPI</div>'));let a=[...t.html.matchAll(/class="floor-table table-(\d+)/g)].map(x=>Number(x[1]));assert.deepEqual(a,[2,1,3,4,5]);assert.equal((t.html.match(/class="floor-chair /g)||[]).length,16);assert(t.html.includes("Yerleşimi Düzenle"));assert(!t.html.includes('class="table-cards"'));assert(t.html.includes('class="floor-table table-2 occupied'));assert(t.html.includes('class="floor-table table-4 occupied'))});
 test("floor-map-edit-save-cancel-and-account-click",()=>{let t=fresh(),count=t.api.state.orders.length;t.click("tab","tables");t.click("floorAction","edit");assert(t.html.includes("Düzeni Kaydet"));t.click("table","3");assert.equal(t.api.state.orders.length,count);assert(!t.api.ui.tableChoice);t.click("floorAction","reset");t.click("floorAction","save");let saved=JSON.parse(t.storage.get("nohut-pos-floor-plan-v1"));assert.equal(saved[3].x,26.5);assert.equal(saved[5].y,67.6);t.click("table","3");assert.equal(t.api.ui.tableChoice,3);assert(t.html.includes("Masalara Dön"))});
 test("floor-map-existing-occupied-table-opens-checkout",()=>{let t=fresh();t.click("tab","tables");t.click("table","2");assert.equal(t.api.ui.selectedId,1200);assert(t.html.includes('id="table-account-panel"'));assert(t.html.includes("Kasa (PC)")||t.html.includes("YÖNETİCİ KASASI"))});
