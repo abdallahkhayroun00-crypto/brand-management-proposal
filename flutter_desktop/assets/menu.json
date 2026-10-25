@@ -1,0 +1,349 @@
+{
+  "source": "nohut-menu/menu-data.js",
+  "categories": [
+    {
+      "id": "all",
+      "name": "Tümü"
+    },
+    {
+      "id": "wrap",
+      "name": "Dürümler"
+    },
+    {
+      "id": "plate",
+      "name": "Porsiyonlar"
+    },
+    {
+      "id": "fatte",
+      "name": "Fatte"
+    },
+    {
+      "id": "meze",
+      "name": "Mezeler"
+    },
+    {
+      "id": "side",
+      "name": "Diğer"
+    },
+    {
+      "id": "salad",
+      "name": "Salatalar"
+    },
+    {
+      "id": "dessert",
+      "name": "Tatlı"
+    },
+    {
+      "id": "drink",
+      "name": "İçecekler"
+    }
+  ],
+  "products": [
+    {
+      "id": 0,
+      "category": "wrap",
+      "name": "Falafel Dürüm",
+      "price": 140
+    },
+    {
+      "id": 1,
+      "category": "wrap",
+      "name": "Patates Dürüm",
+      "price": 135
+    },
+    {
+      "id": 2,
+      "category": "wrap",
+      "name": "Nohut Özel Dürüm",
+      "price": 185
+    },
+    {
+      "id": 3,
+      "category": "wrap",
+      "name": "Patatesli Patlıcanlı Falafel Dürüm",
+      "price": 195
+    },
+    {
+      "id": 4,
+      "category": "wrap",
+      "name": "Patatesli Falafel Dürüm",
+      "price": 185
+    },
+    {
+      "id": 5,
+      "category": "plate",
+      "name": "Falafel Porsiyon",
+      "price": 200
+    },
+    {
+      "id": 6,
+      "category": "plate",
+      "name": "Vegan Özel Tabağı",
+      "price": 320
+    },
+    {
+      "id": 7,
+      "category": "plate",
+      "name": "Nohut Özel Tabağı",
+      "price": 350
+    },
+    {
+      "id": 8,
+      "category": "plate",
+      "name": "Beyrut Tabağı",
+      "price": 300
+    },
+    {
+      "id": 9,
+      "category": "plate",
+      "name": "Bakla Tabağı",
+      "price": 160
+    },
+    {
+      "id": 10,
+      "category": "plate",
+      "name": "Yoğurtlu Bakla Tabağı",
+      "price": 180
+    },
+    {
+      "id": 11,
+      "category": "fatte",
+      "name": "Tereyağlı Fatte",
+      "price": 250
+    },
+    {
+      "id": 12,
+      "category": "fatte",
+      "name": "Patlıcanlı Fatte",
+      "price": 260
+    },
+    {
+      "id": 13,
+      "category": "fatte",
+      "name": "Tereyağında Kuruyemişli Fatte",
+      "price": 280
+    },
+    {
+      "id": 14,
+      "category": "fatte",
+      "name": "Kavurmalı Fatte",
+      "price": 330
+    },
+    {
+      "id": 15,
+      "category": "meze",
+      "name": "Sade Humus",
+      "price": 160
+    },
+    {
+      "id": 16,
+      "category": "meze",
+      "name": "Kuruyemişli Humus",
+      "price": 250
+    },
+    {
+      "id": 17,
+      "category": "meze",
+      "name": "Pancarlı Humus",
+      "price": 180
+    },
+    {
+      "id": 18,
+      "category": "meze",
+      "name": "Mütebbel",
+      "price": 160
+    },
+    {
+      "id": 19,
+      "category": "meze",
+      "name": "Babagannuş",
+      "price": 170
+    },
+    {
+      "id": 20,
+      "category": "meze",
+      "name": "Muhammara",
+      "price": 160
+    },
+    {
+      "id": 21,
+      "category": "meze",
+      "name": "Karışık Meze Tabağı",
+      "price": 200
+    },
+    {
+      "id": 22,
+      "category": "side",
+      "name": "Kibbe (3 Adet)",
+      "price": 330
+    },
+    {
+      "id": 23,
+      "category": "side",
+      "name": "Kıymalı Sembusek (4 Adet)",
+      "price": 250
+    },
+    {
+      "id": 24,
+      "category": "side",
+      "name": "Ispanaklı Sembusek (4 Adet)",
+      "price": 180
+    },
+    {
+      "id": 25,
+      "category": "side",
+      "name": "Peynirli Sembusek (4 Adet)",
+      "price": 190
+    },
+    {
+      "id": 26,
+      "category": "side",
+      "name": "Sarma (6 Adet)",
+      "price": 180
+    },
+    {
+      "id": 27,
+      "category": "side",
+      "name": "Patates Kızartması",
+      "price": 150
+    },
+    {
+      "id": 28,
+      "category": "side",
+      "name": "Patlıcan Kızartması",
+      "price": 150
+    },
+    {
+      "id": 29,
+      "category": "salad",
+      "name": "Falafel Salatası",
+      "price": 200
+    },
+    {
+      "id": 30,
+      "category": "salad",
+      "name": "Tabbule",
+      "price": 165
+    },
+    {
+      "id": 31,
+      "category": "salad",
+      "name": "Fettuş",
+      "price": 185
+    },
+    {
+      "id": 32,
+      "category": "dessert",
+      "name": "Şambali Tatlısı",
+      "price": 70
+    },
+    {
+      "id": 33,
+      "category": "dessert",
+      "name": "Tahinli Muhallebi",
+      "price": 90
+    },
+    {
+      "id": 34,
+      "category": "drink",
+      "name": "Büyük Ayran",
+      "price": 40
+    },
+    {
+      "id": 35,
+      "category": "drink",
+      "name": "Küçük Ayran",
+      "price": 25
+    },
+    {
+      "id": 36,
+      "category": "drink",
+      "name": "Niğde Gazozu",
+      "price": 40
+    },
+    {
+      "id": 37,
+      "category": "drink",
+      "name": "Çamlıca Gazoz",
+      "price": null
+    },
+    {
+      "id": 38,
+      "category": "drink",
+      "name": "Beypazarı Maden Suyu",
+      "price": 30
+    },
+    {
+      "id": 39,
+      "category": "drink",
+      "name": "Beypazarı Mandalina Aromalı Maden Suyu",
+      "price": null
+    },
+    {
+      "id": 40,
+      "category": "drink",
+      "name": "Şişe Cola Turka",
+      "price": 35
+    },
+    {
+      "id": 41,
+      "category": "drink",
+      "name": "Kutu Cola Turka",
+      "price": 40
+    },
+    {
+      "id": 42,
+      "category": "drink",
+      "name": "Doğanay Acılı Şalgam",
+      "price": 35
+    },
+    {
+      "id": 43,
+      "category": "drink",
+      "name": "Doğanay Acısız Şalgam",
+      "price": 35
+    },
+    {
+      "id": 44,
+      "category": "drink",
+      "name": "Didi Limon Aromalı Soğuk Çay",
+      "price": null
+    },
+    {
+      "id": 45,
+      "category": "drink",
+      "name": "Didi Çilek Aromalı Soğuk Çay",
+      "price": null
+    },
+    {
+      "id": 46,
+      "category": "drink",
+      "name": "Didi Şeftali Aromalı Soğuk Çay",
+      "price": null
+    },
+    {
+      "id": 47,
+      "category": "drink",
+      "name": "Sarıyer Portakal Aromalı Gazoz",
+      "price": null
+    },
+    {
+      "id": 48,
+      "category": "drink",
+      "name": "Sarıyer Mandalina Aromalı Gazoz",
+      "price": null
+    },
+    {
+      "id": 49,
+      "category": "drink",
+      "name": "Su",
+      "price": 15
+    },
+    {
+      "id": 50,
+      "category": "drink",
+      "name": "Çay",
+      "price": 15
+    }
+  ]
+}
