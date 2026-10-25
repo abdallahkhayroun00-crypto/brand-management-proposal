@@ -123,3 +123,8 @@
 .contact-strip .trendyol-logo{width:39px;height:39px;display:block;object-fit:contain;border-radius:9px;mix-blend-mode:normal}
 @media(max-width:999px){.contact-strip .trendyol-logo{width:29px;height:29px;border-radius:7px}}
 @media(max-width:600px){.contact-strip .trendyol-logo{width:30px;height:30px}}
+
+/* Performance: skip painting distant menu cards while preserving their layout footprint. */
+@supports (content-visibility:auto){
+ #grid .dish{content-visibility:auto;contain-intrinsic-size:auto 390px}
+}
