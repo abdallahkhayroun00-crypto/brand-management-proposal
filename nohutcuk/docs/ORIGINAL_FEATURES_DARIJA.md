@@ -2,7 +2,7 @@
 
 > Archived working reference. The structured technical docs incorporate its requirements.
 >
-> **Latest decision:** one complete Nohutçuk version with all features. Any older V1–V6 staging language below is archived historical text, not the current release plan.
+> **Latest binding decisions (26 October 2026): ONE complete robot, NO GAMES. All restaurant events come exclusively from our Nohut Falafel PC application; Nohutçuk has NO direct marketplace or payment-terminal API connections.** The old mini-games, competitions and V1–V6 staging below are **superseded historical text only**, never implementation requirements. See the current README and FEATURES.md.
 
 BROOO 😂❤️🔥 دابا غادي نجمع ليك **جميع الخصائص ديال Nohutçuk**، من أبسط حركة ديال العينين حتى لروبوت ذكي كيتفاعل مع الزبائن، كيعاون العمال، ومربوط بنظام Nohut Falafel.
 
