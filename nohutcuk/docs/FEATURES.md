@@ -42,9 +42,9 @@ Optional: add nonrepeating random micro-animations to avoid mechanical monotony.
 - long press → closed eyes, relaxed gentle sound.
 Optional “one eye opens” idle response after petting ends.
 
-**Look at Me / Bana Bak** — proximity-only V1 can detect presence, not accurately track a face. Directional tracking or actual gesture recognition requires appropriate extra hardware (sensors/camera), explicit privacy design and testing.
+**Look at Me / Bana Bak** — a basic proximity sensor can detect presence, not accurately track a face. Directional tracking or actual gesture recognition requires appropriate extra hardware (sensors/camera), explicit privacy design and testing.
 
-**Wave / El Salla** — button- or proximity-assisted version for early builds, with optional real hand-gesture recognition only after adequate detection hardware is selected.
+**Wave / El Salla** — button- or proximity-assisted interaction can be implemented; real hand-gesture recognition within this same complete release requires suitable detection hardware, an explicit privacy design, and testing.
 
 **Friendship Mode / Arkadaşlık** — sequential interactions change scripted responses: first shy → second smile → third hearts → fourth short dance. Store temporary interaction count only; no guest identity required.
 
