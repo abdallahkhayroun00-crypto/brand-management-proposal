@@ -572,8 +572,8 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
         selected: selectedTable, onTable: _onTable,
         onMove: (n, delta) => setState(() {
           final r = draftFloor[n]!;
-          final left = (r.left + delta.dx).clamp(0.0, 1.0 - r.width);
-          final top = (r.top + delta.dy).clamp(0.0, 1.0 - r.height);
+          final left = (r.left + delta.dx).clamp(0.0, 1.0 - r.width).toDouble();
+          final top = (r.top + delta.dy).clamp(0.0, 1.0 - r.height).toDouble();
           draftFloor[n] = Rect.fromLTWH(left, top, r.width, r.height);
         })),
       const SizedBox(height: 17),
@@ -642,7 +642,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
             final received = asMaps(o['payments']).where((p) =>
               p['guestCheckId'] == guest['id'] && p['reversed'] != true)
               .fold<int>(0, (sum, p) => sum + cents(p['amount']));
-            final rest = (allocated - received).clamp(0, allocated);
+            final rest = (allocated - received).clamp(0, allocated).toInt();
             return ListTile(
               title: Text('${guest['name'] ?? 'Kişi'} · ${formatTry(allocated)}'),
               subtitle: Text('Kalan ${formatTry(rest)}'),
