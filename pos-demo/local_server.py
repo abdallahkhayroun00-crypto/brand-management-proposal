@@ -7,13 +7,14 @@ import argparse
 import ipaddress
 import json
 import logging
+import math
 import os
 from pathlib import Path
 import socket
 import sqlite3
 import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 import webbrowser
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -90,7 +91,7 @@ def validate_state(obj: object) -> dict:
     for key in ("orders", "employees", "printJobs"):
         if not isinstance(obj.get(key), list):
             raise ValueError(f"Missing state list: {key}")
-    if not isinstance(obj.get("nextId"), int) or obj["nextId"] < 1:
+    if type(obj.get("nextId")) is not int or obj["nextId"] < 1:
         raise ValueError("Invalid next order ID")
     orders = obj["orders"]
     if len(orders) > 50000 or len(obj["printJobs"]) > 100000:
@@ -103,6 +104,36 @@ def validate_state(obj: object) -> dict:
     if any(not isinstance(o.get("batches"), list) or not isinstance(o.get("payments"), list)
            for o in orders):
         raise ValueError("Invalid order batches/payments")
+    def money(value):
+        return type(value) in (int, float) and math.isfinite(value) and value >= 0
+
+    staff_ids = []
+    if len(obj["employees"]) > 1000:
+        raise ValueError("Employee limit exceeded")
+    for person in obj["employees"]:
+        if not isinstance(person, dict) or type(person.get("id")) is not int or person["id"] < 1:
+            raise ValueError("Invalid employee identifier")
+        if not isinstance(person.get("name"), str) or not person["name"].strip():
+            raise ValueError("Invalid employee name")
+        staff_ids.append(person["id"])
+    if len(staff_ids) != len(set(staff_ids)):
+        raise ValueError("Duplicate employee identifier")
+    for record in orders:
+        if record.get("source") == "Masa" and (type(record.get("table")) is not int or not 1 <= record["table"] <= 5):
+            raise ValueError("Table must be 1 through 5")
+        for batch in record["batches"]:
+            if not isinstance(batch, dict) or not isinstance(batch.get("lines"), list):
+                raise ValueError("Invalid kitchen batch")
+            for line in batch["lines"]:
+                if not isinstance(line, dict) or type(line.get("qty")) is not int or not 0 <= line["qty"] <= 999:
+                    raise ValueError("Invalid product quantity")
+                if not money(line.get("price")):
+                    raise ValueError("Invalid product price")
+        for payment in record["payments"]:
+            if not isinstance(payment, dict) or not money(payment.get("amount")):
+                raise ValueError("Invalid payment amount")
+            if payment.get("method") not in ("Nakit", "Kart", "Platform"):
+                raise ValueError("Invalid payment method")
     return obj
 
 
@@ -156,6 +187,16 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
+        # urllib's static file server percent-decodes URL components on its own.
+        # Inspect the decoded path as well so encoded source/data paths cannot bypass guards.
+        for _ in range(4):
+            decoded = unquote(path)
+            if decoded == path:
+                break
+            path = decoded
+        if "%" in path or "\\x00" in path or "\\\\" in path:
+            self.send_error(403)
+            return
         if path == "/":
             self.send_response(302)
             self.send_header("Location", "/pos-demo/?panel=yonetici")
@@ -181,7 +222,7 @@ class Handler(SimpleHTTPRequestHandler):
                                  "storage": "SQLite (laptop)"})
             return
         parts = Path(path.lstrip("/")).parts
-        if not parts or parts[0] not in ("pos-demo", "nohut-menu"):
+        if ".." in parts or not parts or parts[0] not in ("pos-demo", "nohut-menu"):
             self.send_error(404)
             return
         # Prevent serving SQLite files, source code, hidden files and test internals.
