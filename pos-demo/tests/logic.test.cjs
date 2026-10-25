@@ -79,6 +79,53 @@ function delivered(t,a,o){accept(t,a,o);a.updateOnline(o.id,'ready');ack(a);a.hu
 
 test("exactly-five-tables-PC-and-phone",()=>{let pc=fresh();pc.click("tab","tables");for(let n=1;n<=5;n++)assert(pc.html.includes("Masa "+n));assert(!pc.html.includes("Masa 6"));assert(!pc.html.includes("Masa 8"));let staff=testApp(mainHtml,undefined,"?personel=1");staff.elements.loginEmployee.value="2";staff.dispatch("submit",{id:"worker-demo-login"});for(let n=1;n<=5;n++)assert(staff.html.includes("Masa "+n));assert(!staff.html.includes("Masa 6"))});
 
+
+function fakeLaptop(){
+ const server={revision:0,state:{employees:[{id:1,name:"Ömer",role:"Yönetici",active:true},{id:2,name:"Mehmet",role:"Personel",active:true},{id:3,name:"Abdallah",role:"Personel",active:true}],orders:[],nextId:1200,printJobs:[]},staffUrl:"http://192.168.1.123:8787/pos-demo/?panel=personel"};
+ server.fetch=async function(url,opts={}){
+  const body=(state,code=200)=>({ok:code>=200&&code<300,status:code,json:async()=>JSON.parse(JSON.stringify(state))});
+  if(url==="/api/bootstrap")return body({online:true,revision:server.revision,state:server.state,ip:"192.168.1.123",port:8787,staffUrl:server.staffUrl});
+  if(url==="/api/state"&&opts.method!=="PUT")return body({revision:server.revision,state:server.state});
+  if(url==="/api/state"&&opts.method==="PUT"){
+   const packet=JSON.parse(opts.body);
+   if(packet.baseVersion!==server.revision)return body({error:"conflict",revision:server.revision,state:server.state},409);
+   server.revision++;server.state=packet.state;return body({ok:true,revision:server.revision});
+  }
+  return body({error:"not_found"},404);
+ };
+ return server;
+}
+async function networkTick(){for(let i=0;i<8;i++)await new Promise(done=>setImmediate(done))}
+test("local-laptop-bootstrap-has-no-fake-orders-and-worker-QR",async()=>{
+ let net=fakeLaptop(),pc=testApp(mainHtml,new Map(),"?panel=yonetici",new Map(),net);
+ await networkTick();assert.equal(pc.api.state.orders.length,0);assert.equal(pc.api.ui.mode,"admin");
+ assert(pc.html.includes("KONSEPT / TEST"));pc.click("wifiNav");assert(pc.html.includes("SQLite"));assert(pc.html.includes(net.staffUrl));
+});
+test("LAN-worker-phone-order-arrives-in-PC-when-synced",async()=>{
+ let net=fakeLaptop();
+ let pc=testApp(mainHtml,new Map(),"?panel=yonetici",new Map(),net);
+ let phone=testApp(mainHtml,new Map(),"?panel=personel",new Map(),net);
+ await networkTick();assert.equal(phone.api.ui.mode,"staff");assert(phone.elements.loginEmployee);
+ phone.elements.loginEmployee.value="2";phone.dispatch("submit",{id:"worker-demo-login"});
+ phone.click("workerTable","1");phone.click("product","0");phone.click("cartSave");phone.click("cartSubmit");
+ await networkTick();assert.equal(net.state.orders.length,1);assert.equal(net.state.orders[0].table,1);assert(net.revision>0);
+ assert(pc.intervals.length>0);pc.intervals[0].fn();await networkTick();
+ assert.equal(pc.api.openTable(1).id,1200);pc.click("tab","tables");assert(pc.html.includes("floor-table table-1 occupied"));
+});
+test("LAN-simultaneous-updates-reject-stale-writer",async()=>{
+ let net=fakeLaptop();
+ let first=testApp(mainHtml,new Map(),"?panel=yonetici",new Map(),net);
+ let second=testApp(mainHtml,new Map(),"?panel=yonetici",new Map(),net);
+ await networkTick();
+ for(let [client,table] of [[first,"1"],[second,"2"]]){
+  client.click("pcOrder");client.click("workerTable",table);client.click("product","0");client.click("cartSave");
+ }
+ first.click("cartSubmit");second.click("cartSubmit");
+ await networkTick();assert.equal(net.state.orders.length,1);
+ assert(net.state.orders[0].table===1||net.state.orders[0].table===2);
+ assert(first.alerts.concat(second.alerts).some(x=>x.includes("Başka bir cihaz")));
+});
+
 test("floor-map-prototype-chair-count-and-order",()=>{let t=fresh();t.click("tab","tables");assert(t.html.includes('class="floor-door">KAPI</div>'));let a=[...t.html.matchAll(/class="floor-table table-(\d+)/g)].map(x=>Number(x[1]));assert.deepEqual(a,[2,1,3,4,5]);assert.equal((t.html.match(/class="floor-chair /g)||[]).length,16);assert(t.html.includes("Yerleşimi Düzenle"));assert(!t.html.includes('class="table-cards"'));assert(t.html.includes('class="floor-table table-2 occupied'));assert(t.html.includes('class="floor-table table-4 occupied'))});
 test("floor-map-edit-save-cancel-and-account-click",()=>{let t=fresh(),count=t.api.state.orders.length;t.click("tab","tables");t.click("floorAction","edit");assert(t.html.includes("Düzeni Kaydet"));t.click("table","3");assert.equal(t.api.state.orders.length,count);assert(!t.api.ui.tableChoice);t.click("floorAction","reset");t.click("floorAction","save");let saved=JSON.parse(t.storage.get("nohut-pos-floor-plan-v1"));assert.equal(saved[3].x,26.5);assert.equal(saved[5].y,67.6);t.click("table","3");assert.equal(t.api.ui.tableChoice,3);assert(t.html.includes("Masalara Dön"))});
 test("floor-map-existing-occupied-table-opens-checkout",()=>{let t=fresh();t.click("tab","tables");t.click("table","2");assert.equal(t.api.ui.selectedId,1200);assert(t.html.includes('id="table-account-panel"'));assert(t.html.includes("Kasa (PC)")||t.html.includes("YÖNETİCİ KASASI"))});
