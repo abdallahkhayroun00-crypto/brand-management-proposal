@@ -1,0 +1,55 @@
+name: Build Flutter Windows POS
+
+on:
+  push:
+    paths:
+      - 'flutter_desktop/**'
+      - 'pos-demo/index.html'
+      - 'pos-demo/split-bill.html'
+      - 'pos-demo/vendor/**'
+      - 'nohut-menu/**'
+      - '.github/workflows/flutter-desktop-windows.yml'
+  workflow_dispatch:
+
+jobs:
+  windows-app:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Generate native Windows runner
+        working-directory: flutter_desktop
+        run: flutter create --platforms=windows --project-name=nohut_falafel_desktop .
+      - name: Install Dart packages
+        working-directory: flutter_desktop
+        run: flutter pub get
+      - name: Dart static analysis
+        working-directory: flutter_desktop
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - name: Unit tests
+        working-directory: flutter_desktop
+        run: flutter test
+      - name: Compile Windows desktop release
+        working-directory: flutter_desktop
+        run: flutter build windows --release
+      - name: Bundle employee web app and menu for offline LAN QR
+        shell: pwsh
+        run: |
+          $dest = 'flutter_desktop/build/windows/x64/runner/Release/site'
+          New-Item -ItemType Directory -Force -Path "$dest/pos-demo/vendor" | Out-Null
+          Copy-Item 'pos-demo/index.html' -Destination "$dest/pos-demo/index.html"
+          Copy-Item 'pos-demo/split-bill.html' -Destination "$dest/pos-demo/split-bill.html"
+          Copy-Item 'pos-demo/fis-onizleme.html' -Destination "$dest/pos-demo/fis-onizleme.html"
+          Copy-Item 'pos-demo/vendor/qrcode.min.js' -Destination "$dest/pos-demo/vendor/qrcode.min.js"
+          Copy-Item 'nohut-menu' -Destination "$dest/nohut-menu" -Recurse
+      - name: Upload Windows program (folder with exe and DLL files)
+        uses: actions/upload-artifact@v4
+        with:
+          name: NohutFalafel-Windows-Flutter
+          path: flutter_desktop/build/windows/x64/runner/Release/
+          if-no-files-found: error
+          retention-days: 14
