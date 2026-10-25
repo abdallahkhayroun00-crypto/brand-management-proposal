@@ -2,6 +2,24 @@
 
 > **Status: concept & product requirements, not yet manufactured.** Nohutçuk is the friendly, modular, animated mascot for **Nohut Falafel**, designed to interact with guests, appear in social media, and eventually receive safe restaurant-event notifications.
 
+
+## 🌈 Multicolor Eye Studio — live browser simulator
+
+**Preview:** https://abdallahkhayroun00-crypto.github.io/brand-management-proposal/nohutcuk/
+
+The simulator is implemented in [index.html](index.html), [styles.css](styles.css), and [app.js](app.js), using **HTML, CSS, JavaScript and SVG** (no build step or external JS libraries).
+
+- All 20 documented face states: normal, happy, in love, shy, laughing, sad, angry, sleeping, surprised, thinking, cool, kissing, hungry, dizzy, bored, celebrating, hello, goodbye, confused and drama.
+- Multicolor eyes by emotion (aqua/blue, pink, amber, mint, purple), rainbow gradient mode and a custom color picker; the body follows the matte-black/green Nohut Falafel concept.
+- Adjustable reaction duration, blink interval, animation speed; natural blinking, pointer gaze, idle and optional automatic sleep.
+- Simulated proximity welcome with cooldown, single/double/triple/long touch, wave, friendship stages, photo/selfie, funny reactions, holidays, restaurant-PC notifications and speech preview in Turkish/English/Arabic when supported by the browser.
+- One-click automatic walkthrough of the 20 moods; action history. **No games**, following the approved scope.
+- **No external integrations or hardware control:** touch/proximity/payment/order buttons simulate events only. This prototype does not connect to marketplace APIs, POS, customer data, Wi-Fi robot hardware or servo motors.
+
+**Run locally:** open the nohutcuk/index.html file in a browser (or serve the repository root with python -m http.server 8000 and open http://localhost:8000/nohutcuk/). The browser UI is designed for desktop and mobile. Browser speech depends on installed voices and requires the user to enable it.
+
+**Hardware decision:** the reference images show multiple simultaneous luminous colors. A **monochrome OLED cannot reproduce them**. Choose and test a compatible color OLED or IPS/TFT display (exact panel and ESP32-S3 graphics stack TBD) *before* freezing the CAD face opening. SVG is a desktop preview; the final microcontroller renderer must be ported to its display resolution and firmware environment.
+
 ## Project links
 
 - [Restaurant QR Menu](../nohut-menu/)
