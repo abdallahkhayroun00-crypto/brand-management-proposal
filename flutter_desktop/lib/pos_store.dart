@@ -121,7 +121,7 @@ class PosStore extends ChangeNotifier {
 
   @override
   void dispose() {
-    _db.dispose();
+    _db.close();
     super.dispose();
   }
 }
