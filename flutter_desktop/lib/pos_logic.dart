@@ -127,7 +127,7 @@ Json newLocalOrder({
 
 void addOrderBatch(Json state, int orderId, List<Json> productLines) {
   if (productLines.isEmpty) throw const FormatException('No products');
-  final order = asMaps(state['orders']).firstWhere((o) => o['id'] == orderId);
+  final order = mutableOrder(state, orderId) ?? (throw const FormatException('Sipariş bulunamadı'));
   if (order['closed'] == true || order['cancelled'] == true) {
     throw const FormatException('Hesap kapalı');
   }
