@@ -886,7 +886,7 @@ document.addEventListener("click",function(e){
 
 /* Live local-LAN mode. GitHub Pages remains a separately isolated visual demo. */
 var localClient={
- candidate:(function(){var loc=window.location||{};return loc.protocol==="http:"&&/^(?:localhost|127(?:\\.\\d+){3}|10(?:\\.\\d+){3}|192\\.168(?:\\.\\d+){2}|172\\.(?:1[6-9]|2\\d|3[01])(?:\\.\\d+){2})$/.test(loc.hostname||"")})(),
+ candidate:(function(){var loc=window.location||{};return loc.protocol==="http:"&&/^(?:localhost|127(?:\.\d+){3}|10(?:\.\d+){3}|192\.168(?:\.\d+){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d+){2})$/.test(loc.hostname||"")})(),
  active:false,ready:false,blocked:false,version:0,writeBusy:false,pending:null,updated:null,error:""
 };
 var localSaveOriginal=save;
