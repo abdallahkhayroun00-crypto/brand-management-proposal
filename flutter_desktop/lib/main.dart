@@ -382,7 +382,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     },
   );
 
-  Widget _sidebar(bool condensed) => ColoredBox(
+  Widget _sidebar(bool condensed) => Material(
     color: dark,
     child: Column(children: [
       Padding(
