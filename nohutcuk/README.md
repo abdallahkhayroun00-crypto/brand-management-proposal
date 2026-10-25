@@ -16,7 +16,7 @@
 
 Nohutçuk has three roles:
 
-1. **Friendly companion:** emotion-filled expressive OLED eyes, gentle servo movement, spoken greetings, touch/proximity interaction, mini-games and easter eggs.
+1. **Friendly companion:** emotion-filled expressive OLED eyes, gentle servo movement, spoken greetings, touch/proximity interaction and natural expressive behaviors.
 2. **Restaurant helper:** optional notifications for new/ready/delayed/cancelled orders and confirmed transactions; the restaurant POS remains the authoritative source.
 3. **Social-media mascot:** photo/selfie/reels modes, QR-menu companion and festive animations.
 
@@ -24,15 +24,13 @@ Nohutçuk has three roles:
 
 ## Core interaction loop
 
-`IDLE / SLEEP` → detect proximity (with cooldown) → wake, eye animation and “Hoş geldiiin!” → respond to touch and optional games → return to idle. Touch patterns: single = smile; double = shy; triple = hearts; long = calm/relax. Friendship-mode reactions progress from shy to happy, hearts and a small dance. Motion and speech remain optional/mutable with quiet mode.
+`IDLE / SLEEP` → detect proximity (with cooldown) → wake, eye animation and “Hoş geldiiin!” → respond to touch, show an expressive reaction and return to idle. Touch patterns: single = smile; double = shy; triple = hearts; long = calm/relax. Friendship-mode reactions progress from shy to happy, hearts and a small dance. Motion and speech remain optional/mutable with quiet mode.
 
 ## Feature inventory
 
 **Visual emotions:** Normal, Happy, In Love, Shy, Laughing, Sad, Angry, Sleeping, Surprised, Thinking, Cool, Kissing, Hungry, Dizzy, Bored, Celebrating, Hello, Goodbye, Confused and Drama. Initial functional proposal described 15 expressive emotions; the second visual reference adds states such as Normal, Hello, Goodbye, Confused and Drama.
 
-**Guest interactions:** Welcome, Pet Me, Look at Me, Wave, Friendship Mode, photo/selfie, daily secret expression and weekly reaction challenge.
-
-**Ten mini-games:** Taş Kağıt Makas; Guess My Mood; Reaction Challenge; Make Me Happy; Memory Game; Lucky Eyes; Follow the Rhythm; Don't Wake Me; Pet Challenge; Secret Expressions.
+**Guest interactions:** Welcome, Pet Me, Look at Me, Wave, Friendship Mode, photo/selfie and gentle greetings.
 
 **Funny behaviors:** Drama Mode, Don't Leave Me, Fake Sleeping, Dance Mode, Cool Mode, Shy Mode, Love Attack and Falafel Lover.
 
@@ -40,7 +38,7 @@ Nohutçuk has three roles:
 
 **Languages:** Turkish, English, Arabic voice samples; prerecorded audio is the preferred initial approach. Configurable language, volume, mute and quiet periods.
 
-**Smart behaviors:** Auto Sleep, Random Eye Movement, Mood System, Affection Level, Random Reactions, Energy Simulation, Quiet Mode, Secret Easter Eggs and Auto Recovery.
+**Smart behaviors:** Auto Sleep, Random Eye Movement, Mood System, Affection Level, Random Reactions, Energy Simulation, Quiet Mode, Surprise Expressions and Auto Recovery.
 
 For detailed trigger/response specifications and all feature descriptions, read [FEATURES.md](docs/FEATURES.md).
 
@@ -67,9 +65,9 @@ For detailed trigger/response specifications and all feature descriptions, read 
 **Nohutçuk has ONE intended complete release, not V1–V6.** This single release is meant to include the full approved scope, with no later-version dependency:
 
 - All face expressions, touch sensing, proximity welcome, greeting/voice, safe servo movement, look/wave interactions and friendship behavior.
-- All ten mini-games, scripted funny behaviors, mood/idle/quiet modes and hidden reactions.
+- Funny behaviors, mood/idle/quiet modes and surprise expressions. **No games, challenges, scores or game menus.**
 - Photo/selfie/Instagram/Reels and Ramadan/Eid/New Year/birthday modes.
-- Nohut Falafel's QR-menu companionship, plus secure local restaurant POS event notifications and manager controls (where an official integration is available).
+- Nohut Falafel QR-menu companionship, plus notifications from **our restaurant's PC management application** over local Wi-Fi. Nohutçuk never connects directly to Trendyol Go, Yemeksepeti, Migros Yemek, POS terminals or their APIs.
 - Modular printable body, 3D CAD/STL/3MF deliverables, electronics, wiring, firmware, assembly instructions and tests.
 - All intended configuration options, including Turkish/English/Arabic voice cues.
 
@@ -77,7 +75,7 @@ For detailed trigger/response specifications and all feature descriptions, read 
 
 ### Integration boundary
 
-The existing PC-based restaurant system is the authority for orders and payments. A local gateway publishes a **sanitized notification** to Nohutçuk on the restaurant Wi-Fi. The robot does not receive customer personal data, POS credentials or card data, and never authorizes financial events. Online delivery-platform integration is separate and subject to official API access. See [RESTAURANT_INTEGRATION.md](docs/RESTAURANT_INTEGRATION.md).
+**Single data source for the robot: the Nohut Falafel PC management app we are building.** The PC application processes and validates all order/payment events from its own database and authorized connections, then sends a **minimal, sanitized notification** to the robot via local Wi-Fi. The mascot itself has **no direct third-party API integrations**, does not poll marketplaces or POS devices, and never sees customer personal data, credentials or card details. It cannot authorize payments. The PC app continues normally if the mascot is offline. See [RESTAURANT_INTEGRATION.md](docs/RESTAURANT_INTEGRATION.md).
 
 ### Reference materials
 
