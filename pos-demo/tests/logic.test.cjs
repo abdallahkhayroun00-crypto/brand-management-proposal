@@ -151,6 +151,22 @@ test("LAN-conflict-restores-submitted-cart-and-allows-safe-retry",async()=>{
  assert.equal(net.state.orders.length,2,"Both tables should be saved only after an explicit retry");
  assert.deepEqual(net.state.orders.map(o=>o.table).sort(),[1,2]);
 });
+test("LAN-split-view-does-not-write-and-double-click-waits-for-ack",async()=>{
+ let net=fakeLaptop(),pc=testApp(mainHtml,new Map(),"?panel=yonetici",new Map(),net);
+ await networkTick();
+ pc.click("pcOrder");pc.click("workerTable","1");pc.click("product","0");pc.click("cartSave");pc.click("cartSubmit");
+ await networkTick();
+ assert.equal(net.state.orders.length,1);
+ let revision=net.revision;
+ let splitPanel=testApp(splitHtml,new Map(),"?order=1200",new Map(),net);
+ await networkTick();
+ assert.equal(net.revision,revision,"Simply opening split bill must not write a new snapshot");
+ assert(splitPanel.html.includes("Kişi 1"));
+ splitPanel.click("add");splitPanel.click("add");
+ await networkTick();
+ assert.equal(net.revision,revision+1,"Rapid double click must not queue a second write");
+ assert.equal(net.state.orders[0].guestChecks.length,3);
+});
 test("floor-map-prototype-chair-count-and-order",()=>{let t=fresh();t.click("tab","tables");assert(t.html.includes('class="floor-door">KAPI</div>'));let a=[...t.html.matchAll(/class="floor-table table-(\d+)/g)].map(x=>Number(x[1]));assert.deepEqual(a,[2,1,3,4,5]);assert.equal((t.html.match(/class="floor-chair /g)||[]).length,16);assert(t.html.includes("Yerleşimi Düzenle"));assert(!t.html.includes('class="table-cards"'));assert(t.html.includes('class="floor-table table-2 occupied'));assert(t.html.includes('class="floor-table table-4 occupied'))});
 test("floor-map-edit-save-cancel-and-account-click",()=>{let t=fresh(),count=t.api.state.orders.length;t.click("tab","tables");t.click("floorAction","edit");assert(t.html.includes("Düzeni Kaydet"));t.click("table","3");assert.equal(t.api.state.orders.length,count);assert(!t.api.ui.tableChoice);t.click("floorAction","reset");t.click("floorAction","save");let saved=JSON.parse(t.storage.get("nohut-pos-floor-plan-v1"));assert.equal(saved[3].x,26.5);assert.equal(saved[5].y,67.6);t.click("table","3");assert.equal(t.api.ui.tableChoice,3);assert(t.html.includes("Masalara Dön"))});
 test("floor-map-existing-occupied-table-opens-checkout",()=>{let t=fresh();t.click("tab","tables");t.click("table","2");assert.equal(t.api.ui.selectedId,1200);assert(t.html.includes('id="table-account-panel"'));assert(t.html.includes("Kasa (PC)")||t.html.includes("YÖNETİCİ KASASI"))});
