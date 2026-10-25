@@ -481,7 +481,102 @@ status=function(o){return isPlatform(o)?o.cancelled?'İptal':o.platformCollectio
 function hubHoursSchedule(hs){var out=Array.from({length:7},function(){return []});hs.forEach(function(h,day){if(!h.closed)(h.intervals||[]).forEach(function(i){out[(day+(i.dayOffset||0))%7].push({start:i.start,end:i.end})})});for(var day of out){day.sort(function(a,b){return a.start.localeCompare(b.start)});for(var i=1;i<day.length;i++)if(day[i].start<day[i-1].end)return null}return out}
 function hubPayment(o){return o.platformPaymentLabel||'Platform tahsilatı · yöntem doğrulanmadı'}
 function hubFixture(src,kind,key){var items=hub().menu[src].filter(function(p){return p.status==='ACTIVE'&&p.categoryStatus==='ACTIVE'});if(!items.length)return null;var p=items[0],n=key||hubId('PACKAGE');var unit=Math.round((p.price+10)*100)/100;return {packageId:n,orderId:'ORDER-'+n,orderCode:'A'+String(state.nextId).slice(-4),source:src,revision:1,status:'Created',createdAt:hubNow(),storePickupSelected:kind==='pickup',deliveryType:kind==='pickup'?'STORE':'GO',paymentType:kind==='cod'?'PAY_WITH_ON_DELIVERY':kind==='meal'?'MEAL_CARD':'PAY_WITH_CARD',collection:kind==='cod'?'Pending':'Collected',customerName:'DEMO MÜŞTERİ',address:'Platform kuryesi · adres maskeli',callCenterPhone:'DEMO-IVR',pinCode:'DEMO-1234',appName:hubConfig(src).migrated?'UberEats':src,pickupEtaState:'SUCCESS',etaMin:new Date(Date.now()+15*60000).toISOString(),etaMax:new Date(Date.now()+20*60000).toISOString(),items:[{packageItemId:n+'-1',productId:p.id,localId:p.localId,name:p.name,quantity:2,unitSellingPrice:unit,modifiers:['Standart sos'],removed:['Soğan'],note:'Sos ayrı olsun'}],discount:10,sellerDiscount:5,orderTotal:unit*2-10,note:'Bu sipariş tamamen örnektir.'}}
-function hubImport(packet){if(!packet||!HUB_SOURCES.includes(packet.source)||!packet.packageId||!Array.isArray(packet.items)||!packet.items.length)return false;var db=hub(),o=state.orders.find(function(x){return x.source===packet.source&&x.platformPackageId===packet.packageId});if(o){if(packet.revision<=(o.platformRevision||0))return false;if(['Delivered','Cancelled','UnSupplied'].includes(remoteState(o)))return false;if(!hubAllowedTransition(remoteState(o),packet.status))return false;o.platformRevision=packet.revision;o.demoRemoteStatus=packet.status;o.events.push(at()+' · Platform durum güncellemesi (demo): '+packet.status);save();return o}var items=packet.items.flatMap(function(i){return Array.from({length:i.quantity},function(_,index){return snapshotLine({productId:i.localId,name:i.name,productKey:i.name,qty:1,price:i.unitSellingPrice,removed:i.removed||[],note:(i.modifiers||[]).join(', ')+(i.note?' · '+i.note:''),packageItemId:i.packageItemId+'-'+index,remoteProductId:i.productId})})});o=newOrder(packet.source,null,'Platform',items,0,null,null);o.platformSnapshot=clone(packet);o.platformPackageId=packet.packageId;o.platformRevision=packet.revision;o.demoOrderId=packet.orderId;o.platformOrderCode=packet.orderCode;o.demoRemoteStatus=packet.status;o.platformPickup=packet.storePickupSelected;o.platformDeliveryType=packet.storePickupSelected?'GEL-AL':'Platform kuryesi';o.platformCollection=packet.collection;o.platformPaymentLabel=(packet.paymentType==='PAY_WITH_ON_DELIVERY'?'Teslimatta ödeme':packet.paymentType==='MEAL_CARD'?'Yemek kartı':'Online kart')+' · Tahsilat: platform'+(packet.collection==='Pending'?' · Bekleniyor':' · Tahsil edildi');o.platformCustomerName=packet.customerName;o.platformAddress=packet.address;o.platformNote=packet.note;o.platformOrderTotal=packet.orderTotal;o.platformCancelledAmount=0;if(packet.collection==='Collected')o.payments.push({method:'Platform',amount:packet.orderTotal,createdAt:hubNow(),by:packet.source,time:at()});db.seen.push(packet.source+':'+packet.packageId);hubConfig(packet.source).lastSync=hubNow();hubConfig(packet.source).cursor=packet.createdAt;ensurePrintJobs();save();return o}
+function hubExpandLines(packet){
+ var out=[];
+ (packet.items||[]).forEach(function(i){
+  var q=Number(i.quantity),u=Number(i.unitSellingPrice);
+  if(!Number.isInteger(q)||q<1||q>500||!Number.isFinite(u)||u<0)throw Error("Invalid platform item quantity or price");
+  for(var k=0;k<q;k++)out.push(snapshotLine({
+   productId:i.localId==null?null:i.localId,name:String(i.name||"Platform ürünü"),
+   productKey:String(i.name||"Platform ürünü"),qty:1,price:u,removed:i.removed||[],
+   note:(i.modifiers||[]).join(", ")+(i.note?" · "+i.note:""),
+   packageItemId:String(i.packageItemId)+"-"+k,remoteProductId:i.productId
+  }));
+ });
+ return out;
+}
+function hubReconcileItems(o,packet,old){
+ var incoming=hubExpandLines(packet),first=o.batches.find(function(b){return b.lines.some(function(l){return !l.correction})});
+ if(!first)return;
+ if(old==="Created"){first.lines=incoming;return}
+ var previous=o.batches.filter(function(b){return !b.lines.some(function(l){return l.correction})}).flatMap(function(b){return b.lines});
+ var known=new Set(previous.map(function(l){return l.packageItemId}));
+ var byId=new Map(incoming.map(function(l){return [l.packageItemId,l]}));
+ var removed=previous.filter(function(l){return !l.voided&&!byId.has(l.packageItemId)});
+ var added=incoming.filter(function(l){return !known.has(l.packageItemId)});
+ var altered=previous.filter(function(l){var n=byId.get(l.packageItemId);return n&&!l.voided&&(l.price!==n.price||l.note!==n.note||l.name!==n.name)});
+ if(removed.length){
+  removed.forEach(function(l){l.voided=true});
+  var correction={id:o.batches.length+1,staff:"Platform",time:at(),createdAt:hubNow(),
+   lines:removed.map(function(l){return {productId:l.productId,productKey:l.productKey,name:"İPTAL: "+l.name,qty:l.qty,price:0,note:"Platform güncellemesi",removed:[],correction:true}})};
+  o.batches.push(correction);queuePrint(o,correction);
+ }
+ if(added.length){
+  var extra={id:o.batches.length+1,staff:"Platform",time:at(),createdAt:hubNow(),lines:added};
+  o.batches.push(extra);queuePrint(o,extra);
+ }
+ if(altered.length){
+  o.platformItemConflicts=o.platformItemConflicts||[];
+  o.platformItemConflicts.push({at:hubNow(),revision:packet.revision,ids:altered.map(function(l){return l.packageItemId}),note:"Kabul sonrası fiyat / not değişikliği: kontrol gerekli"});
+ }
+}
+function hubApplyState(o,old,next){
+ if(old===next)return;
+ o.demoRemoteStatus=next;
+ if(old==="Created"&&next==="Picking"&&o.batches[0])queuePrint(o,o.batches[0]);
+ if(next==="Delivered")o.closed=true;
+ if(next==="Cancelled"||next==="UnSupplied"){
+  var remaining=total(o);
+  o.cancelled=true;o.closed=true;
+  if(remaining>0&&o.platformCollection==="Collected")hubRefundRecord(o,remaining,"Platform olayı: "+next+" · örnek finans düzeltmesi");
+ }
+}
+function hubImport(packet){
+ if(!packet||!HUB_SOURCES.includes(packet.source)||!packet.packageId||!Array.isArray(packet.items)||!packet.items.length)return false;
+ if(!Number.isInteger(packet.revision)||packet.revision<1||!Number.isFinite(Number(packet.orderTotal))||Number(packet.orderTotal)<0)return false;
+ var itemLines;
+ try{itemLines=hubExpandLines(packet)}catch(e){toast("Geçersiz platform ürün verisi.");return false}
+ var db=hub(),o=state.orders.find(function(x){return x.source===packet.source&&x.platformPackageId===packet.packageId});
+ if(o){
+  if(packet.revision<=(o.platformRevision||0))return false;
+  var old=remoteState(o),next=packet.status;
+  if(!hubAllowedTransition(old,next))return false;
+  var before=total(o),wasCollected=o.platformCollection==="Collected";
+  hubReconcileItems(o,packet,old);
+  o.platformSnapshot=clone(packet);
+  o.platformSnapshot.orderTotal=Number(packet.orderTotal)+hubCancelledAmount(o);
+  o.platformOrderTotal=Number(packet.orderTotal);o.platformRevision=packet.revision;
+  o.platformDeliveryType=packet.storePickupSelected?"GEL-AL":"Platform kuryesi";
+  o.platformPickup=!!packet.storePickupSelected;o.platformNote=packet.note||"";
+  o.platformCustomerName=packet.customerName||"";
+  o.platformCollection=wasCollected?"Collected":(packet.collection||"Pending");
+  var after=total(o);
+  if(wasCollected&&after!==before){
+   o.platformAdjustments=o.platformAdjustments||[];
+   o.platformAdjustments.push({amount:Math.round((after-before)*100)/100,stamp:hubNow(),reason:"Platform sipariş revizyonu · demo"});
+  }
+  hubApplyState(o,old,next);
+  if(!wasCollected&&packet.collection==="Collected"){o.platformCollection="Pending";hubMarkCollected(o)}
+  o.events.push(hubNow()+" · Platform revizyon "+packet.revision+" ("+old+" → "+next+")");
+  hubConfig(packet.source).lastSync=hubNow();save();return o;
+ }
+ o=newOrder(packet.source,null,"Platform",itemLines,0,null,null);
+ o.platformSnapshot=clone(packet);o.platformPackageId=packet.packageId;o.platformRevision=packet.revision;
+ o.demoOrderId=packet.orderId;o.platformOrderCode=packet.orderCode;
+ o.demoRemoteStatus=packet.status;o.platformPickup=!!packet.storePickupSelected;
+ o.platformDeliveryType=packet.storePickupSelected?"GEL-AL":"Platform kuryesi";
+ o.platformCollection=packet.collection||"Pending";
+ o.platformPaymentLabel=(packet.paymentType==="PAY_WITH_ON_DELIVERY"?"Teslimatta ödeme":packet.paymentType==="MEAL_CARD"?"Yemek kartı":"Online kart")+" · Tahsilat: platform"+(packet.collection==="Pending"?" · Bekleniyor":" · Tahsil edildi");
+ o.platformCustomerName=packet.customerName;o.platformAddress=packet.address;
+ o.platformNote=packet.note;o.platformOrderTotal=Number(packet.orderTotal);o.platformCancelledAmount=0;
+ if(packet.collection==="Collected")o.payments.push({method:"Platform",amount:Number(packet.orderTotal),createdAt:hubNow(),by:packet.source,time:at()});
+ if(packet.status==="Delivered")o.closed=true;
+ if(packet.status==="Cancelled"||packet.status==="UnSupplied"){o.cancelled=true;o.closed=true;if(packet.collection==="Collected")hubRefundRecord(o,Number(packet.orderTotal),"Imported cancelled platform order · demo")}
+ if(packet.status==="Picking"||packet.status==="Invoiced")queuePrint(o,o.batches[0]);
+ db.seen.push(packet.source+":"+packet.packageId);
+ hubConfig(packet.source).lastSync=hubNow();hubConfig(packet.source).cursor=packet.createdAt;
+ save();return o;
+}
 function hubAllowedTransition(old,next){var paths={Created:['Picking','Cancelled','UnSupplied'],Picking:['Invoiced','Cancelled','UnSupplied'],Invoiced:['Shipped','Delivered','Cancelled','UnSupplied'],Shipped:['Delivered','Cancelled','UnSupplied']};return old===next||(paths[old]||[]).includes(next)}
 injectOnline=function(){var src=hubSource;if(!demoOpen[src]){toast('Önce demo mağazasını açın.');return}var kind=hubInput('hub-scenario')||'card',o=hubImport(hubFixture(src,kind));if(!o){toast('Satışa açık örnek ürün yok.');return}onlineAlarmSilenced=false;if(onlineSoundEnabled){startOnlineAlarm();onlineAlarmTick()}render();toast('Yeni örnek sipariş alındı. Gerçek platform bağlı değil.')};
 updateOnline=function(id,action){var o=order(id);if(!o||!isPlatform(o)||o.cancelled||hubPending(o))return;var st=remoteState(o),cfg=hubConfig(o.source);if(action==='accept'&&st==='Created'){if(cfg.acceptFlow==='indirect'){toast('Kabul Vendor App üzerinden; platform olayı bekleniyor.');return}var prep=Number(hubInput('hub-prep-'+id));if(!Number.isInteger(prep)||prep<1||prep>180){toast('1–180 dakika arasında hazırlık süresi girin.');return}hubQueue('accept',o.source,id,{preparationTime:prep,expected:st})}if(action==='ready'&&st==='Picking')hubQueue('ready',o.source,id,{expected:st})};
