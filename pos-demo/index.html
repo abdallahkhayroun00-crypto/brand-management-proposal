@@ -175,6 +175,56 @@
 
 .hub-tabs{display:flex;gap:7px;overflow:auto;padding:15px 0;position:sticky;top:0;background:var(--cream);z-index:3}.hub-tabs button{white-space:nowrap}.hub-card{margin:17px 0;padding:19px;border:1px solid var(--border);border-radius:15px;background:#fafcf8;overflow-wrap:anywhere}.hub-card h3{margin:0 0 10px}.hub-check{display:flex;align-items:center;gap:8px;padding:9px 0;font-size:12px}.hub-details{margin-top:13px;border-top:1px solid var(--border);padding-top:13px}.hub-details summary{cursor:pointer;font-size:12px;font-weight:800;padding:7px 0}.hub-details .filter-field{margin:10px 0}.hub-hours{display:grid;grid-template-columns:100px 1fr 1fr 90px;align-items:center;gap:12px;border-bottom:1px solid var(--border);padding:8px 0}.hub-hours label{font-size:11px}.online-order{margin-top:15px}.online-order p{font-size:12px;line-height:1.6}.online-order .form-row .filter-field{flex:1}.hub-card .filter-field{min-width:0}.table .filter-field select{max-width:230px}.hub-card .actions{margin-top:10px}@media(max-width:770px){.hub-hours{grid-template-columns:1fr 1fr;gap:8px}.hub-tabs{top:0}.hub-card{padding:13px}.hub-card .filter-grid{grid-template-columns:1fr}.hub-tabs button{font-size:11px}}
 
+
+/* Masalar · interactive floor plan built from the owner's 5-table sketch */
+.floor-shell{margin:19px 0 17px;border:1px solid #dce6da;background:#fff;border-radius:22px;padding:20px;box-shadow:0 10px 34px #1739250b}
+.floor-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:13px}
+.floor-head h3{font-size:17px;letter-spacing:-.4px;margin:0 0 5px;color:#254735}
+.floor-head p{font-size:12px;color:#829086;margin:0;line-height:1.5}
+.floor-tools,.floor-legend{display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+.floor-tools button{font-size:12px}
+.floor-legend{gap:17px;border-bottom:1px solid #e9eee7;padding:12px 2px 16px;margin-bottom:14px;color:#61796a;font-size:12px;font-weight:650}
+.floor-legend span{display:inline-flex;align-items:center;gap:6px}
+.floor-dot{width:10px;height:10px;border-radius:50%;background:#e9ede7;border:1px solid #aab7a9;display:inline-block}
+.floor-dot.busy{background:#ebb669;border-color:#ce963e}
+.floor-dot.selected{background:#3e7d58;border-color:#2e6549}
+.floor-viewport{overflow-x:auto;overflow-y:hidden;border-radius:16px;border:1px solid #e2e9dc;background:#f6f8f3}
+.floor-stage{position:relative;min-width:740px;width:100%;aspect-ratio:1075/640;min-height:440px;background:repeating-linear-gradient(0deg,transparent,transparent 33px,#e6ece51b 34px),repeating-linear-gradient(90deg,transparent,transparent 33px,#e6ece51b 34px),#f6f8f3;isolation:isolate}
+.floor-stage:before{content:"";position:absolute;inset:13px;border:1px dashed #d4dfd1;border-radius:12px;pointer-events:none}
+.floor-wall{position:absolute;top:33.3%;height:3px;background:#d98b82;border-radius:6px;z-index:0;box-shadow:0 2px 0 #f6dad5}
+.floor-wall.left{left:0;width:11.8%}.floor-wall.right{left:22.1%;right:0}
+.floor-door{position:absolute;left:12.5%;top:29.5%;width:9%;height:7%;z-index:0;display:grid;place-items:center;color:#b35c50;font-size:13px;font-weight:850;letter-spacing:2px}
+.floor-door:after{content:"";position:absolute;top:100%;left:50%;width:48%;height:30px;border-left:2px solid #d98b82;border-bottom:2px solid #d98b82;border-radius:0 0 0 80%;transform-origin:top left;transform:rotate(-13deg);opacity:.65}
+.floor-zone{position:absolute;top:35.5%;right:3.5%;font-size:10px;letter-spacing:1.5px;color:#adc0ac;font-weight:800;pointer-events:none}
+.floor-table{position:absolute;z-index:2;border:0;background:transparent;color:#1d402d;padding:0;cursor:pointer;touch-action:manipulation;text-align:center;min-width:0;min-height:0;overflow:visible;font:inherit}
+.floor-table .floor-surface{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px 7px;background:linear-gradient(135deg,#fffef9,#e8f0e7);border:2px solid #87ac8f;border-radius:13px;box-shadow:0 7px 0 #b1c2b2,0 14px 17px #375b3824;transition:background .17s,border-color .17s,transform .17s}
+.floor-table .floor-name{font-size:clamp(12px,1.25vw,17px);font-weight:850;letter-spacing:-.2px;line-height:1.1}
+.floor-table .floor-status{font-size:clamp(10px,1vw,12px);font-weight:700;opacity:.9;line-height:1.3}
+.floor-table .floor-id{font-size:10px;color:#719079;white-space:nowrap}
+.floor-table:not(.is-editing):hover .floor-surface{transform:translateY(-3px);border-color:#368958;box-shadow:0 8px 0 #a7c3a9,0 17px 24px #2b552c26}
+.floor-table.occupied .floor-surface{background:linear-gradient(135deg,#ffefd4,#f5d49a);border-color:#cf9648;box-shadow:0 7px 0 #c3a272,0 14px 17px #734a1322;color:#74471c}
+.floor-table.occupied .floor-id{color:#947448}
+.floor-table.selected .floor-surface{outline:4px solid #327e54;outline-offset:4px}
+.floor-table:focus-visible .floor-surface{outline:4px solid #266b46;outline-offset:5px}
+.floor-chair{position:absolute;width:18px;height:18px;border:2px solid #d3a84b;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff2bc,#e7bf69 70%);box-shadow:0 2px 4px #805b2224;pointer-events:none;z-index:1}
+.floor-chair:after{content:"";position:absolute;inset:4px;border:1px solid #c59432;border-radius:50%;opacity:.75}
+.floor-chair.top{top:-23px;transform:translateX(-50%)}.floor-chair.bottom{bottom:-29px;transform:translateX(-50%)}
+.floor-chair.left{left:-27px;transform:translateY(-50%)}.floor-chair.right{right:-27px;transform:translateY(-50%)}
+.floor-table.table-5 .floor-surface{border-radius:9px;padding:3px}
+.floor-table.table-5 .floor-name{font-size:12px}.floor-table.table-5 .floor-status{font-size:10px}.floor-table.table-5 .floor-id{display:none}
+.floor-table.is-editing{cursor:grab;touch-action:none}.floor-table.is-dragging{z-index:9;cursor:grabbing}
+.floor-table.is-editing .floor-surface{border-style:dashed}.floor-table.is-dragging .floor-surface{transform:scale(1.03);box-shadow:0 12px 28px #244e2f33}
+.floor-guide{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between;margin-top:13px;color:#738576;font-size:11px}
+.floor-guide b{color:#325b40}
+.floor-hint{margin:10px 0 0;padding:12px 14px;background:#eaf4e8;border:1px solid #cde1c9;color:#466c4d;border-radius:12px;font-size:12px;line-height:1.5}
+.floor-occupied-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}
+.floor-occupied-preview button{font-size:11px;border:1px solid #dce8d9;border-radius:11px;padding:9px 12px;background:#f8fbf7;color:#35523a}
+.floor-occupied-preview button b{margin-left:4px}
+.floor-occupied-preview .occupied{background:#fff3dd;border-color:#eed6ad;color:#865d2c}
+.floor-occupied-preview button.selected{outline:2px solid #317d53}
+@media(max-width:830px){.floor-shell{padding:13px}.floor-legend{gap:12px}.floor-head{gap:10px}.floor-stage{min-width:710px}.floor-guide{line-height:1.5}}
+@media(prefers-reduced-motion:reduce){.floor-table .floor-surface{transition:none}}
+
 </style></head><body><div id="root"></div><div id="print-sheet" class="only-print"></div><script src="../nohut-menu/menu-data.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script>window.NOHUT_QR_ROWS=data;window.NOHUT_QR_CATS=categories;window.NOHUT_QR_PHOTOS=Object.assign({},photoMap,{"Nohut Özel Tabağı":"assets/platter-cutouts/nohut-special-20261025.png","Şambali Tatlısı":"assets/dessert-cutouts/sambali.png","Tahinli Muhallebi":"assets/dessert-cutouts/tahinli-muhallebi.png","Kıymalı Sembusek (4 Adet)":"assets/side-cutouts/sides.png","Nohut Özel Dürüm":"assets/wrap-cutouts/wraps.png","Falafel Dürüm":"assets/wrap-cutouts/wraps.png","Patatesli Patlıcanlı Falafel Dürüm":"assets/wrap-cutouts/wraps.png","Kibbe (3 Adet)":"assets/products/kibbe-6003492c.jpg","Sarma (6 Adet)":"assets/products/tgo-9295403_1738157981309.jpg","Tereyağlı Fatte":"assets/products/tgo-9295446_1738157998385.jpg","Patates Dürüm":"assets/wrap-cutouts/wraps.png","Vegan Özel Tabağı":"assets/platter-cutouts/vegan-ozel.png","Beyrut Tabağı":"assets/platter-cutouts/nohut-ozel.png","Kuruyemişli Humus":"assets/meze-cutouts/kuruyemisli-humus.png","Peynirli Sembusek (4 Adet)":"assets/side-cutouts/cheese-sembusek.png","Falafel Porsiyon":"assets/platter-cutouts/falafel-porsiyon.png","Bakla Tabağı":"assets/platter-cutouts/bakla.png","Patlıcanlı Fatte":"assets/products/ys-68085836.jpg","Tereyağında Kuruyemişli Fatte":"assets/products/ys-68085837.jpg","Patatesli Falafel Dürüm":"assets/wrap-cutouts/wraps.png","Ispanaklı Sembusek (4 Adet)":"assets/side-cutouts/sides.png","Patates Kızartması":"assets/side-cutouts/sides.png","Sade Humus":"assets/meze-cutouts/sade-humus-top.png","Babagannuş":"assets/meze-cutouts/babagannus-updated.png","Mütebbel":"assets/meze-cutouts/mutebbel.png","Pancarlı Humus":"assets/meze-cutouts/pancarli-humus.png","Muhammara":"assets/meze-cutouts/muhammara.png","Tabbule":"assets/salad-cutouts/salads.png","Fettuş":"assets/salad-cutouts/salads.png","Falafel Salatası":"assets/salad-cutouts/salads.png","Kutu Cola Turka":"assets/drinks/cola-can.jpg","Şişe Cola Turka":"assets/drinks/cola-bottle.jpg","Niğde Gazozu":"assets/drinks/nigde.jpg","Doğanay Acılı Şalgam":"assets/drinks/doganay-spicy.png","Doğanay Acısız Şalgam":"assets/drinks/doganay-mild.png","Küçük Ayran":"assets/drinks/eker-small.png","Beypazarı Maden Suyu":"assets/drinks/beypazari-plain.png","Su":"assets/drinks/water.jpg"});</script><script>
 (function(){
 "use strict";
@@ -255,7 +305,104 @@ function detail(o){if(!o)return "";var charge=chargeFor(o),received=readAmount(c
 function orderPage(){return '<div class="section-title"><div><h2>Tüm Siparişler</h2><p class="sub">PC üzerinden yeni Masa, Gel-Al (Telefon/Tezgahtan) siparişi oluşturun.</p></div><button class="primary" data-pc-order>+ Sipariş Al</button></div><div class="actions">'+["Tümü"].concat(sources).map(function(t){return '<button class="'+(sourceFilter===t?"primary":"quiet")+'" data-filter="'+esc(t)+'">'+esc(t)+'</button>'}).join("")+'</div><div class="panel" style="margin-top:15px">'+orderRows(state.orders.filter(function(o){return sourceFilter==="Tümü"||o.source===sourceFilter}).slice().reverse())+'</div>'+(selectedId?detail(order(selectedId)):"")}
 function adminOpenTableEditor(n,id){if(!Number.isInteger(n)||n<1||n>TABLE_COUNT){toast("Yalnızca 1–"+TABLE_COUNT+" masaları kullanılabilir.");return}mode="admin";tab="tables";adminTableEditor=true;tableEntryHint=false;tableChoice=n;selectedId=id||null;targetOrderId=id||null;orderType="Masa";pickupChannel="Tezgahtan";cart=[];customProduct=null;editingIndex=null;workerStep="catalog";catalogCat="all";query="";render()}
 function adminTableEditorPage(){var o=targetOrderId?order(targetOrderId):null;return '<section class="admin-table-order"><div class="panel-header"><div><span class="eyebrow">YÖNETİM PANELİ · MASA SİPARİŞİ</span><h3>Masa '+tableChoice+(o?' · Ek Sipariş':' · Yeni Sipariş')+'</h3><p class="sub">Siparişi laptop yönetimi içinde girin; ödeme yalnızca yönetici kasasında yapılır.</p></div><button class="quiet" data-admin-table-cancel>← Masalara Dön</button></div>'+(o?'<div class="admin-order-status"><span>Sipariş #'+o.id+'</span><span>Toplam '+price(total(o))+'</span><strong>Kalan '+price(due(o))+'</strong></div>':'')+(workerStep==="cart"?cartMarkup():customProduct!==null?customizer():'<div class="admin-menu-entry">'+productCatalog()+'</div><div class="admin-cart-footer"><div><b>'+cart.reduce(function(n,l){return n+l.qty},0)+' ürün</b><small>'+price(cartValue())+'</small></div><button class="primary" data-worker-cart '+(cart.length?"":"disabled")+'>Sepeti Gör →</button></div>')+'</section>'}
-function tablePage(){var active=selectedId?order(selectedId):null;return '<div class="section-title"><div><h2>Masa Yönetimi</h2><p class="sub">Masa hesabı, Nakit/Kart ve hesabı bölme yalnızca bu laptop yönetiminde yapılır.</p></div><button class="primary" data-admin-new-table>+ Masa Siparişi</button></div>'+(tableEntryHint?'<div class="admin-table-hint">Yeni sipariş için boş bir masaya tıklayın. Personel uygulamasına geçilmez.</div>':'')+'<div class="table-cards">'+Array.from({length:TABLE_COUNT},function(_,i){var n=i+1,o=openTable(n);return '<button class="table-card '+(o?"occupied":"")+' '+(active&&active.table===n&&!adminTableEditor?"selected":"")+'" data-table="'+n+'"><span>'+(o?"● Dolu":"○ Boş")+'</span><h3>Masa '+n+'</h3><strong>'+(o?price(due(o)):"Yeni Sipariş")+'</strong><span>'+(o?"Sipariş #"+o.id:"Sipariş oluştur")+'</span></button>'}).join("")+'</div>'+(adminTableEditor?adminTableEditorPage():active&&active.source==="Masa"?'<section class="admin-table-payment"><div class="admin-table-payment-head"><div><b>MASA '+active.table+' · YÖNETİCİ KASASI</b><p>Nakit / Kart / Hesabı Böl yalnızca burada. Personel telefonunda ödeme ekranı bulunmaz.</p></div>'+(!active.closed?'<button class="secondary" data-admin-table-add="'+active.id+'">+ Ek Sipariş</button>':'')+'</div>'+detail(active)+'</section>':'<div class="admin-table-hint">Dolu masaya dokunun: hesap ve ödeme. Boş masaya dokunun: yeni sipariş.</div>')}
+
+var FLOOR_KEY="nohut-pos-floor-plan-v1";
+var FLOOR_DEFAULT={
+ 1:{x:45.6,y:13.0,w:14.3,h:13.5},2:{x:25.5,y:16.5,w:13.0,h:11.3},
+ 3:{x:26.5,y:42.4,w:34.3,h:17.4},4:{x:26.1,y:71.0,w:34.6,h:17.8},
+ 5:{x:3.2,y:67.6,w:7.6,h:14.8}
+};
+function floorLoad(){var value=null;try{value=JSON.parse(localStorage.getItem(FLOOR_KEY)||"null")}catch(err){}
+ var output=clone(FLOOR_DEFAULT);
+ if(value&&typeof value==="object")Object.keys(FLOOR_DEFAULT).forEach(function(n){
+  var p=value[n],base=output[n];if(!p)return;
+  if(Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.x>=0&&p.y>=0&&p.x+base.w<=100&&p.y+base.h<=100){base.x=p.x;base.y=p.y}
+ });
+ return output;
+}
+var floorSaved=floorLoad(),floorDraft=null,floorEditing=false,floorPointer=null;
+function floorPosition(n){return (floorEditing&&floorDraft?floorDraft:floorSaved)[n]}
+function floorSeat(side,at){return '<span aria-hidden="true" class="floor-chair '+side+'" style="'+(side==="top"||side==="bottom"?'left:':'top:')+at+'%"></span>'}
+function floorSeats(n){
+ if(n===1||n===2)return floorSeat("left",50)+floorSeat("right",50);
+ if(n===5)return floorSeat("top",50)+floorSeat("bottom",50);
+ return floorSeat("top",19)+floorSeat("top",76)+floorSeat("right",50)+floorSeat("bottom",19)+floorSeat("bottom",76);
+}
+function floorTable(n){
+ var o=openTable(n),p=floorPosition(n),active=selectedId&&o&&selectedId===o.id&&!adminTableEditor;
+ var value=o?due(o)===0?"Ödendi":price(due(o)):"Yeni Sipariş";
+ var label="Masa "+n+" · "+(o?"Dolu · Kalan "+price(due(o)):"Boş · Yeni sipariş");
+ return '<button type="button" data-table="'+n+'" class="floor-table table-'+n+(o?" occupied":"")+(active?" selected":"")+(floorEditing?" is-editing":"")+'" aria-label="'+esc(label)+'" aria-pressed="'+(active?"true":"false")+'" title="'+esc(label)+'" style="left:'+p.x+'%;top:'+p.y+'%;width:'+p.w+'%;height:'+p.h+'%">'+floorSeats(n)+
+  '<span class="floor-surface"><span class="floor-name">Masa '+n+'</span><span class="floor-status">'+(o?'● Dolu':'○ Boş')+'</span><span class="floor-id">'+esc(value)+'</span></span></button>';
+}
+function floorMap(){
+ var busy=Array.from({length:TABLE_COUNT},function(_,i){return !!openTable(i+1)}).filter(Boolean).length;
+ return '<div class="floor-shell"><div class="floor-head"><div><h3>Restoran Yerleşimi</h3><p>Gerçek masa düzenine göre · Masaya tıklayın, hesabı görüntüleyin veya sipariş açın.</p></div><div class="floor-tools">'+
+ (floorEditing?'<button class="quiet" data-floor-action="reset">İlk Yerleşim</button><button class="quiet" data-floor-action="cancel">Vazgeç</button><button class="primary" data-floor-action="save">Düzeni Kaydet</button>':
+ '<button class="secondary" data-floor-action="edit">✥ Yerleşimi Düzenle</button>')+'</div></div>'+
+ '<div class="floor-legend"><span><i class="floor-dot"></i> Boş: '+(TABLE_COUNT-busy)+'</span><span><i class="floor-dot busy"></i> Dolu: '+busy+'</span><span><i class="floor-dot selected"></i> Seçili</span><span>Toplam '+TABLE_COUNT+' masa</span></div>'+
+ '<div class="floor-viewport" aria-label="Nohut Falafel beş masalı restoran yerleşimi"><div id="floor-stage" class="floor-stage">'+
+ '<div class="floor-wall left" aria-hidden="true"></div><div class="floor-wall right" aria-hidden="true"></div><div class="floor-door">KAPI</div><div class="floor-zone">OTURMA ALANI</div>'+
+ [2,1,3,4,5].map(floorTable).join("")+'</div></div>'+
+ (floorEditing?'<div class="floor-hint">✥ Masaları sürükleyerek yerlerini değiştirin. Klavyede ok tuşlarıyla da taşıyabilirsiniz. <b>Düzeni Kaydet</b> demeden değişiklikler kalıcı olmaz. Numaralar ve hesaplar değişmez.</div>':'')+
+ '<div class="floor-guide"><span>🟡 Sandalyeler · 🔴 KAPI / giriş tarafı · <b>5 fiziksel masa</b></span><span>Yerleşim bu tarayıcıya kaydedilir (demo).</span></div>'+
+ '<div class="floor-occupied-preview">'+Array.from({length:TABLE_COUNT},function(_,i){var n=i+1,o=openTable(n);return '<button data-table="'+n+'" type="button" class="'+(o?"occupied":"")+(o&&selectedId===o.id?" selected":"")+'" aria-label="Masa '+n+' '+(o?'dolu':'boş')+'">Masa '+n+' <b>'+(o?price(due(o)):'Boş')+'</b></button>'}).join("")+'</div></div>';
+}
+function floorEditSave(){
+ if(!floorEditing||!floorDraft)return;
+ try{localStorage.setItem(FLOOR_KEY,JSON.stringify(floorDraft));floorSaved=clone(floorDraft);floorEditing=false;floorDraft=null;render();toast("Masa yerleşimi bu tarayıcıya kaydedildi.")}
+ catch(e){toast("Yerleşim kaydedilemedi, tarayıcı depolamasını kontrol edin.")}
+}
+document.addEventListener("click",function(e){
+ var b=e.target.closest("button[data-floor-action]");if(b){
+  e.preventDefault();e.stopImmediatePropagation();
+  var a=b.dataset.floorAction;
+  if(a==="edit"){floorDraft=clone(floorSaved);floorEditing=true;render()}
+  if(a==="save")floorEditSave();
+  if(a==="cancel"){floorEditing=false;floorDraft=null;render()}
+  if(a==="reset"&&floorEditing){floorDraft=clone(FLOOR_DEFAULT);render()}
+  return;
+ }
+ if(floorEditing&&e.target.closest("button[data-table]")){
+  e.preventDefault();e.stopImmediatePropagation();return;
+ }
+ if(floorEditing&&e.target.closest("button[data-tab]")){floorEditing=false;floorDraft=null}
+},true);
+document.addEventListener("pointerdown",function(e){
+ if(!floorEditing||!floorDraft||e.button!==0)return;
+ var b=e.target.closest("button.floor-table[data-table]"),stage=document.getElementById("floor-stage");
+ if(!b||!stage)return;
+ var n=Number(b.dataset.table),p=floorDraft[n];if(!p)return;
+ var bounds=stage.getBoundingClientRect();
+ floorPointer={id:e.pointerId,n:n,clientX:e.clientX,clientY:e.clientY,originalX:p.x,originalY:p.y,w:bounds.width,h:bounds.height};
+ b.classList.add("is-dragging");if(b.setPointerCapture)b.setPointerCapture(e.pointerId);e.preventDefault();
+});
+document.addEventListener("pointermove",function(e){
+ if(!floorPointer||!floorEditing||e.pointerId!==floorPointer.id||!floorDraft)return;
+ var q=floorPointer,p=floorDraft[q.n],el=document.querySelector('.floor-table[data-table="'+q.n+'"]');
+ if(!p||!el)return;
+ p.x=Math.max(0,Math.min(100-p.w,Math.round((q.originalX+(e.clientX-q.clientX)/q.w*100)*10)/10));
+ p.y=Math.max(0,Math.min(100-p.h,Math.round((q.originalY+(e.clientY-q.clientY)/q.h*100)*10)/10));
+ el.style.left=p.x+"%";el.style.top=p.y+"%";
+});
+function floorEndPointer(e){if(!floorPointer||e.pointerId!==floorPointer.id)return;
+ var el=document.querySelector('.floor-table[data-table="'+floorPointer.n+'"]');
+ if(el)el.classList.remove("is-dragging");
+ floorPointer=null;
+}
+document.addEventListener("pointerup",floorEndPointer);document.addEventListener("pointercancel",floorEndPointer);
+document.addEventListener("keydown",function(e){
+ if(!floorEditing||!floorDraft)return;
+ var b=e.target.closest("button.floor-table[data-table]");if(!b)return;
+ var shifts={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]},move=shifts[e.key];if(!move)return;
+ e.preventDefault();var p=floorDraft[Number(b.dataset.table)],step=e.shiftKey?5:1;if(!p)return;
+ p.x=Math.max(0,Math.min(100-p.w,p.x+move[0]*step));p.y=Math.max(0,Math.min(100-p.h,p.y+move[1]*step));
+ b.style.left=p.x+"%";b.style.top=p.y+"%";
+});
+
+function tablePage(){var active=selectedId?order(selectedId):null;return '<div class="section-title"><div><h2>Masa Yönetimi</h2><p class="sub">5 masa · Örnek yerleşim: KAPI, sandalyeler ve masa konumları. Masa hesabı ve ödeme yalnızca yönetici laptopunda.</p></div><button class="primary" data-admin-new-table>+ Masa Siparişi</button></div>'+
+ (tableEntryHint?'<div class="admin-table-hint">Yeni sipariş için boş bir masaya tıklayın.</div>':'')+floorMap()+
+ (adminTableEditor?'<div id="table-account-panel">'+adminTableEditorPage()+'</div>':active&&active.source==="Masa"?'<section id="table-account-panel" class="admin-table-payment"><div class="admin-table-payment-head"><div><b>MASA '+active.table+' · YÖNETİCİ KASASI</b><p>Nakit / Kart / Hesabı Böl yalnızca burada. Personel telefonunda ödeme ekranı bulunmaz.</p></div>'+(!active.closed?'<button class="secondary" data-admin-table-add="'+active.id+'">+ Ek Sipariş</button>':'')+'</div>'+detail(active)+'</section>':'<div class="admin-table-hint">Yeşil masa boş, altın rengi masa dolu. Masaya tıklayın: açık hesap veya yeni sipariş.</div>')}
 
 function paymentPage(){var s=stats();return '<div class="section-title"><h2>Ödeme & Kasa Takibi</h2><span class="pill">POS Bağlantısı Yok</span></div><div class="metrics">'+box("Nakit",price(s.cash),"▤","Kasa kaydı")+box("Kart",price(s.card),"▣","POS simülasyonu")+box("Platform",price(s.platform),"⇄","Platformda ödenmiş brüt")+box("Açık Hesaplar",price(s.pending),"◷","Ödenmemiş")+'</div><div class="panel"><h3>Ödenmemiş Siparişler</h3>'+orderRows(state.orders.filter(function(o){return due(o)>0&&o.batches.length>0}))+'</div>'+(selectedId?detail(order(selectedId)):"")}
 function employeePage(){return '<div class="section-title"><div><h2>Personel Yönetimi</h2><p class="sub">Demo kullanıcıları gerçek giriş veya yetki sistemi değildir.</p></div><button class="primary" data-addstaff>+ Personel Ekle</button></div><div class="staffcards">'+state.employees.map(function(e){return '<div class="staffcard"><div class="staff-avatar">'+esc(e.name.slice(0,1))+'</div><h3>'+esc(e.name)+'</h3><p>'+esc(e.role)+' · '+(e.active?"Aktif":"Pasif")+'</p><div class="line"><span>İlk sipariş</span><strong>'+state.orders.filter(function(o){return o.batches[0]&&o.batches[0].staffId===e.id}).length+'</strong></div><div class="actions" style="margin-top:14px"><button class="quiet" data-staff-edit="'+e.id+'">Düzenle</button><button class="'+(e.active?"danger":"secondary")+'" '+(e.id===1?"disabled":"")+' data-staff-toggle="'+e.id+'">'+(e.active?"Pasifleştir":"Aktifleştir")+'</button></div></div>'}).join("")+'</div><p class="info" style="margin-top:15px">Geçmiş sipariş personel ismi kayıtlarında korunur. Gerçek hesap güvenliği ve rol denetimi ancak yerel backend üzerinde sağlanacaktır.</p>'}
