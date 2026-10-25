@@ -1,0 +1,206 @@
+{
+  "dimensions_unit": "millimetres",
+  "slicer_fitting_test_performed": false,
+  "real_hardware_fit_verified": false,
+  "items": [
+    {
+      "file": "01_head_front_bezel.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 2576,
+      "size_x_mm": 100.0,
+      "size_y_mm": 58.0,
+      "height_on_plate_mm": 11.0,
+      "rotation_x_degrees": 90
+    },
+    {
+      "file": "02_head_rear_housing.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 3108,
+      "size_x_mm": 100.0,
+      "size_y_mm": 58.0,
+      "height_on_plate_mm": 39.0,
+      "rotation_x_degrees": -90
+    },
+    {
+      "file": "03_universal_screen_carrier.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 736,
+      "size_x_mm": 87.0,
+      "size_y_mm": 43.0,
+      "height_on_plate_mm": 3.0,
+      "rotation_x_degrees": -90
+    },
+    {
+      "file": "04_optional_display_blank.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 716,
+      "size_x_mm": 75.0,
+      "size_y_mm": 32.0,
+      "height_on_plate_mm": 2.4,
+      "rotation_x_degrees": -90
+    },
+    {
+      "file": "05_lower_body_shell.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 2532,
+      "size_x_mm": 74.0,
+      "size_y_mm": 58.0,
+      "height_on_plate_mm": 47.0,
+      "rotation_x_degrees": 180
+    },
+    {
+      "file": "06_base_bottom_cover.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 2300,
+      "size_x_mm": 74.0,
+      "size_y_mm": 58.0,
+      "height_on_plate_mm": 3.0,
+      "rotation_x_degrees": 0
+    },
+    {
+      "file": "07_underglow_diffuser_ring.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 544,
+      "size_x_mm": 74.0,
+      "size_y_mm": 58.0,
+      "height_on_plate_mm": 2.0,
+      "rotation_x_degrees": 0
+    },
+    {
+      "file": "08_neck_with_cable_channel.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 288,
+      "size_x_mm": 17.0,
+      "size_y_mm": 15.0,
+      "height_on_plate_mm": 22.0,
+      "rotation_x_degrees": 0
+    },
+    {
+      "file": "09_electronics_tray_generic.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 1084,
+      "size_x_mm": 62.0,
+      "size_y_mm": 43.0,
+      "height_on_plate_mm": 2.5,
+      "rotation_x_degrees": 0
+    },
+    {
+      "file": "10_servo_cradle_generic.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 836,
+      "size_x_mm": 34.0,
+      "size_y_mm": 26.0,
+      "height_on_plate_mm": 16.5,
+      "rotation_x_degrees": 0
+    },
+    {
+      "file": "11_leaf_sprout_top.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 872,
+      "size_x_mm": 42.21,
+      "size_y_mm": 38.5,
+      "height_on_plate_mm": 4.0,
+      "rotation_x_degrees": 90
+    },
+    {
+      "file": "12_top_button_cap.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 500,
+      "size_x_mm": 6.7,
+      "size_y_mm": 6.7,
+      "height_on_plate_mm": 4.8,
+      "rotation_x_degrees": 180
+    },
+    {
+      "file": "13_top_button_cap.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 500,
+      "size_x_mm": 6.7,
+      "size_y_mm": 6.7,
+      "height_on_plate_mm": 4.8,
+      "rotation_x_degrees": 180
+    },
+    {
+      "file": "14_front_logo_badge.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 1704,
+      "size_x_mm": 43.0,
+      "size_y_mm": 17.0,
+      "height_on_plate_mm": 2.4,
+      "rotation_x_degrees": -90
+    },
+    {
+      "file": "15_optional_left_eye_overlay.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 220,
+      "size_x_mm": 19.7,
+      "size_y_mm": 8.84,
+      "height_on_plate_mm": 0.8,
+      "rotation_x_degrees": 90
+    },
+    {
+      "file": "16_optional_right_eye_overlay.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 220,
+      "size_x_mm": 19.7,
+      "size_y_mm": 8.84,
+      "height_on_plate_mm": 0.8,
+      "rotation_x_degrees": 90
+    },
+    {
+      "file": "NOHUTCUK_ALL_PARTS_ASSEMBLED_REFERENCE.stl",
+      "watertight": false,
+      "connected_components": 17,
+      "winding_consistent": true,
+      "number_of_triangles": 18736,
+      "size_x_mm": 100.0,
+      "size_y_mm": 60.9,
+      "height_on_plate_mm": 155.0,
+      "rotation_x_degrees": 0
+    },
+    {
+      "file": "NOHUTCUK_ONE_PIECE_SOLID_STATUE.stl",
+      "watertight": true,
+      "connected_components": 1,
+      "winding_consistent": true,
+      "number_of_triangles": 5144,
+      "size_x_mm": 100.0,
+      "size_y_mm": 59.9,
+      "height_on_plate_mm": 155.0,
+      "rotation_x_degrees": 0
+    }
+  ],
+  "note": "These are computer geometry watertight tests, not a physical fit/safety/print test."
+}

@@ -1,0 +1,19 @@
+Validated print-oriented 16 files plus 2 merged models.
+01_head_front_bezel.stl watertight= True bodies= 1 size(mm)= 100.0 58.0 11.0
+02_head_rear_housing.stl watertight= True bodies= 1 size(mm)= 100.0 58.0 39.0
+03_universal_screen_carrier.stl watertight= True bodies= 1 size(mm)= 87.0 43.0 3.0
+04_optional_display_blank.stl watertight= True bodies= 1 size(mm)= 75.0 32.0 2.4
+05_lower_body_shell.stl watertight= True bodies= 1 size(mm)= 74.0 58.0 47.0
+06_base_bottom_cover.stl watertight= True bodies= 1 size(mm)= 74.0 58.0 3.0
+07_underglow_diffuser_ring.stl watertight= True bodies= 1 size(mm)= 74.0 58.0 2.0
+08_neck_with_cable_channel.stl watertight= True bodies= 1 size(mm)= 17.0 15.0 22.0
+09_electronics_tray_generic.stl watertight= True bodies= 1 size(mm)= 62.0 43.0 2.5
+10_servo_cradle_generic.stl watertight= True bodies= 1 size(mm)= 34.0 26.0 16.5
+11_leaf_sprout_top.stl watertight= True bodies= 1 size(mm)= 42.21 38.5 4.0
+12_top_button_cap.stl watertight= True bodies= 1 size(mm)= 6.7 6.7 4.8
+13_top_button_cap.stl watertight= True bodies= 1 size(mm)= 6.7 6.7 4.8
+14_front_logo_badge.stl watertight= True bodies= 1 size(mm)= 43.0 17.0 2.4
+15_optional_left_eye_overlay.stl watertight= True bodies= 1 size(mm)= 19.7 8.84 0.8
+16_optional_right_eye_overlay.stl watertight= True bodies= 1 size(mm)= 19.7 8.84 0.8
+NOHUTCUK_ALL_PARTS_ASSEMBLED_REFERENCE.stl watertight= False bodies= 17 size(mm)= 100.0 60.9 155.0
+NOHUTCUK_ONE_PIECE_SOLID_STATUE.stl watertight= True bodies= 1 size(mm)= 100.0 59.9 155.0
