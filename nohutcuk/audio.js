@@ -126,8 +126,8 @@
     if(muted)stopSong();
   }
   function setEffectsEnabled(value){effectsEnabled=Boolean(value);}
-  function playEffect(id) {
-    if(muted||!effectsEnabled||!EFFECTS[id]||!init())return false;
+  function playEffect(id,force=false) {
+    if(muted||(!effectsEnabled&&!force)||!EFFECTS[id]||!init())return false;
     const start=ctx.currentTime+.015;
     const type=['sleeping','sad','shy','love','kissing'].includes(id)?'sine':
       ['angry','drama'].includes(id)?'sawtooth':'triangle';
