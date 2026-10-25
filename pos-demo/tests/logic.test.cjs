@@ -126,6 +126,47 @@ test("LAN-simultaneous-updates-reject-stale-writer",async()=>{
  assert(first.alerts.concat(second.alerts).some(x=>x.includes("Başka bir cihaz")));
 });
 
+test("LAN-conflict-restores-submitted-cart-and-allows-safe-retry",async()=>{
+ let net=fakeLaptop();
+ let first=testApp(mainHtml,new Map(),"?panel=yonetici",new Map(),net);
+ let second=testApp(mainHtml,new Map(),"?panel=yonetici",new Map(),net);
+ await networkTick();
+ for(let [client,table] of [[first,"1"],[second,"2"]]){
+  client.click("pcOrder");client.click("workerTable",table);
+  client.click("product","0");client.click("cartSave");
+ }
+ first.click("cartSubmit");second.click("cartSubmit");
+ await networkTick();
+ assert.equal(net.state.orders.length,1);
+ let rejected=first.api.savedDraft?first:second;
+ assert(rejected.api.savedDraft,"A rejected order must restore the draft");
+ assert.equal(rejected.api.savedDraft.targetOrderId,null,"New order must not point to lost local ID");
+ assert.equal(rejected.api.savedDraft.cart.length,1);
+ assert(rejected.session.has(rejected.api.draftKey),"Draft must survive a reload");
+ assert(rejected.html.includes("Kaydedilmemiş taslak"));
+ rejected.click("resumeDraft");
+ assert.equal(rejected.api.ui.workerStep,"cart");
+ rejected.click("cartSubmit");
+ await networkTick();
+ assert.equal(net.state.orders.length,2,"Both tables should be saved only after an explicit retry");
+ assert.deepEqual(net.state.orders.map(o=>o.table).sort(),[1,2]);
+});
+test("LAN-split-view-does-not-write-and-double-click-waits-for-ack",async()=>{
+ let net=fakeLaptop(),pc=testApp(mainHtml,new Map(),"?panel=yonetici",new Map(),net);
+ await networkTick();
+ pc.click("pcOrder");pc.click("workerTable","1");pc.click("product","0");pc.click("cartSave");pc.click("cartSubmit");
+ await networkTick();
+ assert.equal(net.state.orders.length,1);
+ let revision=net.revision;
+ let splitPanel=testApp(splitHtml,new Map(),"?order=1200",new Map(),net);
+ await networkTick();
+ assert.equal(net.revision,revision,"Simply opening split bill must not write a new snapshot");
+ assert(splitPanel.html.includes("Kişi 1"));
+ splitPanel.click("add");splitPanel.click("add");
+ await networkTick();
+ assert.equal(net.revision,revision+1,"Rapid double click must not queue a second write");
+ assert.equal(net.state.orders[0].guestChecks.length,3);
+});
 test("floor-map-prototype-chair-count-and-order",()=>{let t=fresh();t.click("tab","tables");assert(t.html.includes('class="floor-door">KAPI</div>'));let a=[...t.html.matchAll(/class="floor-table table-(\d+)/g)].map(x=>Number(x[1]));assert.deepEqual(a,[2,1,3,4,5]);assert.equal((t.html.match(/class="floor-chair /g)||[]).length,16);assert(t.html.includes("Yerleşimi Düzenle"));assert(!t.html.includes('class="table-cards"'));assert(t.html.includes('class="floor-table table-2 occupied'));assert(t.html.includes('class="floor-table table-4 occupied'))});
 test("floor-map-edit-save-cancel-and-account-click",()=>{let t=fresh(),count=t.api.state.orders.length;t.click("tab","tables");t.click("floorAction","edit");assert(t.html.includes("Düzeni Kaydet"));t.click("table","3");assert.equal(t.api.state.orders.length,count);assert(!t.api.ui.tableChoice);t.click("floorAction","reset");t.click("floorAction","save");let saved=JSON.parse(t.storage.get("nohut-pos-floor-plan-v1"));assert.equal(saved[3].x,26.5);assert.equal(saved[5].y,67.6);t.click("table","3");assert.equal(t.api.ui.tableChoice,3);assert(t.html.includes("Masalara Dön"))});
 test("floor-map-existing-occupied-table-opens-checkout",()=>{let t=fresh();t.click("tab","tables");t.click("table","2");assert.equal(t.api.ui.selectedId,1200);assert(t.html.includes('id="table-account-panel"'));assert(t.html.includes("Kasa (PC)")||t.html.includes("YÖNETİCİ KASASI"))});
@@ -174,4 +215,9 @@ test('empty-menu-no-online-fixture',()=>{let {a}=online();a.hub().menu['Trendyol
 test('platform-correction-ticket-is-separate-from-active-order',()=>{let {t,a,o}=online();accept(t,a,o);a.hubQueue('cancel',o.source,o.id,{itemIds:[o.batches[0].lines[0].packageItemId],reasonId:621,expected:'Picking'});ack(a);a.printOrder(o,1,false);assert(t.elements['print-sheet'].innerHTML.includes('MUTFAK DÜZELTMESİ'));a.printOrder(o,0,false);let html=t.elements['print-sheet'].innerHTML;assert(!html.includes('İPTAL:'));assert(html.includes('Güncel indirim 5 ₺'));assert(html.includes('145 ₺'))});
 test('finance-after-partial-cancel-does-not-double-discount',()=>{let {t,a,o}=online();accept(t,a,o);a.hubQueue('cancel',o.source,o.id,{itemIds:[o.batches[0].lines[0].packageItemId],reasonId:621,expected:'Picking'});ack(a);a.updateOnline(o.id,'ready');ack(a);a.hubExternal(o.id,'ship');a.hubExternal(o.id,'deliver');a.hubQueue('settlement',o.source,o.id,{});ack(a);let r=a.hub().settlements[0];assert.equal(r.gross,290);assert.equal(r.refund,145);assert.equal(r.net,123.25);assert(a.hubFinancePage().includes('tekrar düşülmez'))});
 test('partial-claim-objection-keeps-other-items-actionable',()=>{let {t,a,o}=online();delivered(t,a,o);a.hubHandle('claim-sample','');let c=a.hub().claims[0];a.hubQueue('claim',o.source,c.id,{itemIds:[c.items[0].id],decision:'reject',note:'Evidence',reasonId:5000});ack(a);assert.equal(c.status,'WaitingInAction');assert(!c.completionDate);assert.equal(c.items[1].status,'WaitingInAction')});
+
+test('landing-panel-choice-and-sidebar-return',()=>{let t=testApp(mainHtml,undefined,'?panel=secim');assert.equal(t.api.ui.mode,'welcome');assert(t.html.includes('Personel Paneli'));assert(t.html.includes('Yönetici Paneli'));t.click('mode','staff');assert.equal(t.api.ui.mode,'staff');assert(t.elements.loginEmployee);t.click('mode','welcome');assert.equal(t.api.ui.mode,'welcome');t.click('mode','admin');assert.equal(t.api.ui.mode,'admin');t.click('mode','welcome');assert.equal(t.api.ui.mode,'welcome')});
+test('platform-pending-is-not-local-paid-filter',()=>{let t=fresh(),a=t.api,o=a.order(1204);o.platformCollection='Pending';a.filterState.orders.pay='paid';assert(!a.matchesOrder(o));a.filterState.orders.pay='platform-pending';assert(a.matchesOrder(o));o.platformCollection='Collected';assert(!a.matchesOrder(o));a.filterState.orders.pay='platform-collected';assert(a.matchesOrder(o))});
+test('cash-register-filters-out-platform-payments',()=>{let t=fresh(),a=t.api,o=a.order(1204);o.payments.push({method:'Nakit',amount:123,createdAt:new Date().toISOString()});a.filterState.cash.state='all';t.click('tab','payments');let events=a.cashEvents();assert(events.every(e=>e.order.source==='Masa'||e.order.source==='Gel-Al'));assert(!t.html.includes('<td>#'+o.id+'</td>'));assert(t.html.includes('Kasa yalnızca restoranın doğrudan aldığı'))});
+test('invalid-draft-line-does-not-create-order',()=>{let t=fresh(),a=t.api;t.click('pcOrder');t.click('workerTable','1');t.click('product','0');t.click('cartSave');t.click('workerCart');let before=a.state.orders.length;a.cart[0].qty=0;t.click('cartSubmit');assert.equal(a.state.orders.length,before)});
 (async()=>{let failed=[];for(let c of all){try{await c.fn()}catch(e){failed.push({test:c.name,error:e.stack})}}console.log(JSON.stringify({total:all.length,passed:all.length-failed.length,failed},null,2));if(failed.length)process.exitCode=1})().catch(e=>{console.error(e);process.exitCode=1});

@@ -156,7 +156,7 @@ function splitApply(v){
  var raw=JSON.stringify(store);localStorage.setItem(KEY,raw);lastRaw=raw;
  order=store.orders.find(function(x){return x.id===Number(new URLSearchParams(window.location.search).get("order"))})||null;
  if(order&&(!order.guestChecks||!order.guestChecks.length)&&remaining()>0){
-  order.guestChecks=[{id:1,name:"Kişi 1",allocations:[]},{id:2,name:"Kişi 2",allocations:[]}];save()
+  order.guestChecks=[{id:1,name:"Kişi 1",allocations:[]},{id:2,name:"Kişi 2",allocations:[]}]; // Show a draft split without writing on page open.
  }
  selected=order&&order.guestChecks[0]?order.guestChecks[0].id:null;view();
 }
@@ -174,8 +174,9 @@ function splitFlush(){
    alert("Başka cihaz siparişi değiştirdi. Değişiklik yerel sunucuda kabul edilmedi. Güncel hesabı kontrol edin.");location.reload();return
   }
   if(result.status!==200||!result.body.ok){splitFailure("Ödeme sunucuya kaydedilmedi");return}
-  splitLocal.version=result.body.revision;splitNotice("● SQLite laptop bağlantısı aktif · Ödemeler kaydediliyor");
+  splitLocal.version=result.body.revision;
   if(splitLocal.pending)splitFlush();
+  else splitNotice("● Laptop SQLite kaydı onaylandı");
  }).catch(function(){splitLocal.busy=false;splitLocal.pending=splitLocal.pending||payload;splitFailure("Laptop / Wi-Fi bağlantısı kesildi")});
 }
 var splitOriginalSave=save;
@@ -184,7 +185,7 @@ function splitPoll(){if(!splitLocal.ready||splitLocal.blocked||splitLocal.busy||
  fetch("/api/state",{cache:"no-store"}).then(function(r){if(!r.ok)throw Error("Offline");return r.json()})
  .then(function(v){if(v.revision!==splitLocal.version)splitApply(v)}).catch(function(){splitFailure("Laptop / Wi-Fi bağlantısı kesildi")});
 }
-document.addEventListener("click",function(e){if(splitLocal.candidate&&(!splitLocal.ready||splitLocal.blocked)&&e.target.closest("button")){e.preventDefault();e.stopImmediatePropagation();alert("Yerel SQLite bağlantısı hazır değil. İşlem yapılmadı.")}},true);
+document.addEventListener("click",function(e){if(splitLocal.candidate&&(!splitLocal.ready||splitLocal.blocked||splitLocal.busy||splitLocal.pending)&&e.target.closest("button,a")){e.preventDefault();e.stopImmediatePropagation();alert(splitLocal.busy||splitLocal.pending?"Laptop SQLite kayıt onayı bekleniyor. Aynı işlemi tekrar göndermeyin.":"Yerel SQLite bağlantısı hazır değil. İşlem yapılmadı.")}},true);
 function splitBootstrap(){
  if(!splitLocal.candidate){init();return}
  splitNotice("⏳ Laptop SQLite veritabanına bağlanılıyor");

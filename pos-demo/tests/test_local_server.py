@@ -113,6 +113,38 @@ class LocalServerTests(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertTrue(health["online"])
 
+    def test_06_encoded_sensitive_files_blocked(self):
+        for path in (
+            "/pos-demo/%6cocal-data/nohut-pos%2esqlite3",
+            "/pos-demo/%6cocal_server%2epy",
+            "/pos-demo/%256cocal-data/nohut-pos%252esqlite3",
+            "/pos-demo/%2e%2e/pos-demo/local_server%2epy",
+            "/pos-demo/%2e%67itignore",
+        ):
+            code, _ = self.request(path)
+            self.assertIn(code, (403, 404), path)
+
+    def test_07_invalid_financial_snapshot_rejected(self):
+        _, existing = self.request("/api/state")
+        state = existing["state"]
+        state["orders"][0]["payments"] = [
+            {"method": "Nakit", "amount": -25}
+        ]
+        code, reply = self.request("/api/state", method="PUT",
+                                   data={"baseVersion": existing["revision"], "state": state})
+        self.assertEqual(code, 422)
+        self.assertEqual(reply["error"], "invalid_state")
+        state["orders"][0]["payments"] = []
+        state["orders"][0]["batches"] = [{"id": 1, "lines": [
+            {"price": 10, "qty": -2}
+        ]}]
+        code, reply = self.request("/api/state", method="PUT",
+                                   data={"baseVersion": existing["revision"], "state": state})
+        self.assertEqual(code, 422)
+        self.assertEqual(reply["error"], "invalid_state")
+        _, unchanged = self.request("/api/state")
+        self.assertEqual(unchanged["revision"], existing["revision"])
+
 
 if __name__ == "__main__":
     unittest.main()
