@@ -44,7 +44,7 @@ node pos-demo/tests/logic.test.cjs
 python3 -m unittest discover -s pos-demo/tests -p "test_local_server.py" -v
 ```
 
-118 browser regression scenarios plus 5 Python SQLite/LAN integration tests cover local checkout/drafts and the new platform concept. Browser checks cover request acknowledgement, partial cancellation, courier events, claim objections, review replies, settlement and phone-width layout.
+127 browser regression scenarios plus 7 Python SQLite/LAN integration tests cover local checkout/drafts and the new platform concept. Browser checks cover request acknowledgement, partial cancellation, courier events, claim objections, review replies, settlement and phone-width layout.
 
 ## Official references
 
@@ -83,6 +83,8 @@ python3 -m unittest discover -s pos-demo/tests -p "test_local_server.py" -v
 | Laptop SQLite | Rejects duplicate employee IDs, non-finite/negative payment or line amounts, invalid quantities, invalid table numbers, malformed batches. | Snapshot database remains a prototype with no per-user authentication, signed audit ledger or real transactional payment settlement. |
 | Static server | Decodes URL segments before file checks, rejects encoded/hidden/backend routes, and blocks source/db exposure including percent-encoded paths. | Keep LAN on private staff Wi-Fi only, no public port forwarding or real customer/payment details. |
 | Automated checks | Node-based POS regressions plus Python LAN/server tests in GitHub Actions. | A passing demo suite is not production or security certification. |
+| Concurrent staff orders | A conflicting LAN order is returned to a recoverable unsent draft, with a manual review/retry; success toast follows an acknowledged SQLite write. | No automatic replay after conflicts or uncertain network failures; payment operations must always be verified. |
+| Split bill | Opening the split screen does not silently modify the database; user edits wait for write acknowledgements before another action. | Backend still uses versioned full snapshots and is not a transaction-certified financial system. |
 
 ### Integration readiness checkpoints
 
