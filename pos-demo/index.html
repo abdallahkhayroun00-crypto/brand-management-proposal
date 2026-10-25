@@ -366,6 +366,7 @@ document.addEventListener("click",function(e){
  if(floorEditing&&e.target.closest("button[data-table]")){
   e.preventDefault();e.stopImmediatePropagation();return;
  }
+ if(!floorEditing&&e.target.closest("button.floor-table[data-table]")){setTimeout(function(){var panel=document.getElementById("table-account-panel");if(panel&&typeof panel.scrollIntoView==="function")panel.scrollIntoView({behavior:"smooth",block:"start"})},35)}
  if(floorEditing&&e.target.closest("button[data-tab]")){floorEditing=false;floorDraft=null}
 },true);
 document.addEventListener("pointerdown",function(e){
