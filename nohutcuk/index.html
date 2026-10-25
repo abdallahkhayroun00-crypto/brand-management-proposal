@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d160f">
+  <meta name="description" content="Nohutçuk — multicolor animated eye and reaction simulator for Nohut Falafel. Browser prototype, no physical robot required.">
+  <title>Nohutçuk | Eye Studio</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <div class="ambient ambient-left" aria-hidden="true"></div>
+  <div class="ambient ambient-right" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="../nohut-menu/" aria-label="Nohut Falafel QR Menu">
+      <span class="brand-icon">🌱</span>
+      <span><strong>Nohutçuk</strong><small>NOHUT FALAFEL • EYE STUDIO</small></span>
+    </a>
+    <div class="top-actions">
+      <span class="tag"><span class="live-dot"></span> BROWSER SIMULATOR</span>
+      <a class="nav-link" href="./README.md">Proje bilgisi ↗</a>
+      <a class="nav-link" href="../nohut-menu/">QR Menü ↗</a>
+    </div>
+  </header>
+  <main class="shell">
+    <section class="intro">
+      <div>
+        <div class="eyebrow">MEET THE LITTLE FALAFEL FRIEND</div>
+        <h1>Give Nohutçuk <em>personality.</em></h1>
+        <p>Renkli gözler, canlı mimikler ve gerçekçi tepki akışları. Baskıdan önce hepsini burada deneyelim.</p>
+      </div>
+      <div class="legend"><span>✦ 20 emotions</span><span>♥ Multicolor</span><span>◉ Real-time preview</span></div>
+    </section>
+    <div class="workspace">
+      <section class="preview-panel card" aria-label="Robot preview">
+        <div class="panel-header">
+          <div><div class="eyebrow">LIVE PREVIEW</div><h2>Say hello to Nohutçuk!</h2></div>
+          <span id="statusBadge" class="status-pill">● READY</span>
+        </div>
+        <div class="scene" id="scene">
+          <div class="scene-halo" aria-hidden="true"></div>
+          <div class="robot" id="robot">
+            <div class="sprout" aria-hidden="true"><i class="stem"></i><i class="leaf leaf-one"></i><i class="leaf leaf-two"></i></div>
+            <div class="antenna antenna-left"></div><div class="antenna antenna-right"></div>
+            <div class="head" id="head">
+              <div class="bezel">
+                <div class="screen" id="screen">
+                  <svg id="face" viewBox="0 0 320 160" role="img" aria-label="Animated Nohutçuk face">
+                    <defs><filter id="eye-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                    <linearGradient id="rainbow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#77e9ff"/><stop offset=".5" stop-color="#f687e2"/><stop offset="1" stop-color="#ffd46c"/></linearGradient></defs>
+                    <g id="faceContent"><path d="M58 100 Q98 43 138 100 M182 100 Q222 43 262 100" stroke="#9eeaff" stroke-width="12" stroke-linecap="round" fill="none"/></g>
+                  </svg>
+                  <div class="screen-shine"></div>
+                </div>
+              </div>
+              <div class="head-detail"></div>
+            </div>
+            <div class="neck"></div>
+            <div class="body">
+              <div class="body-button"></div>
+              <div class="body-brand"><span>🌿</span><strong>Nohut</strong><small>Falafel</small></div>
+            </div>
+            <div class="base-light"></div>
+            <div class="shadow"></div>
+          </div>
+          <div class="message-bubble" id="speechBubble" aria-live="polite">Merhaba! Ben Nohutçuk 💚</div>
+          <div class="scene-note">Move your pointer over the face to guide the eyes</div>
+        </div>
+        <div class="now-playing">
+          <div><span class="eyebrow">CURRENT EXPRESSION</span><strong id="currentMood">Normal</strong></div>
+          <div><span class="eyebrow">EVENT</span><strong id="currentEvent">Idle • Blink • Glance</strong></div>
+          <button type="button" class="secondary-button" id="resetBtn">↺ Reset</button>
+        </div>
+        <div class="quick-actions">
+          <button type="button" data-action="welcome">👋 Welcome</button>
+          <button type="button" data-action="touch1">💚 Pet head</button>
+          <button type="button" data-action="dance">♫ Dance</button>
+          <button type="button" data-action="photo">📸 Photo pose</button>
+        </div>
+        <div class="note">Simulation only — no physical sensor, motor, audio module or POS connected. No real orders or payments are executed.</div>
+      </section>
+      <aside class="control-panel card">
+        <div class="panel-header">
+          <div><div class="eyebrow">REACTION LAB</div><h2>Make those eyes come alive.</h2></div>
+          <span class="control-emoji">✦</span>
+        </div>
+        <div class="tabs" role="tablist" aria-label="Reaction categories">
+          <button type="button" role="tab" data-tab="emotions" aria-selected="true">Emotions</button>
+          <button type="button" role="tab" data-tab="interactions" aria-selected="false">Interactions</button>
+          <button type="button" role="tab" data-tab="restaurant" aria-selected="false">Restaurant</button>
+          <button type="button" role="tab" data-tab="special" aria-selected="false">Special</button>
+        </div>
+        <div class="tab-panel" id="panel-emotions" role="tabpanel">
+          <p class="panel-help">Tap any emotion to preview colorful expressions, not just one-color OLED eyes.</p>
+          <div class="emotion-grid" id="emotionGrid"></div>
+        </div>
+        <div class="tab-panel" id="panel-interactions" role="tabpanel" hidden>
+          <p class="panel-help">Simulated proximity, touch, waving and character behaviors.</p>
+          <div class="action-grid" id="interactionGrid"></div>
+          <div class="inline-stat">Friendship interactions <strong id="friendCount">0 / 4</strong></div>
+        </div>
+        <div class="tab-panel" id="panel-restaurant" role="tabpanel" hidden>
+          <p class="panel-help">Safe demo events from our restaurant PC app only. Not connected to platform APIs.</p>
+          <div class="action-grid" id="restaurantGrid"></div>
+        </div>
+        <div class="tab-panel" id="panel-special" role="tabpanel" hidden>
+          <p class="panel-help">Social, festive and performance reactions. No games in the approved product scope.</p>
+          <div class="action-grid" id="specialGrid"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="settings-header"><h3>Customize the face</h3><span>⚙</span></div>
+        <div class="form-grid">
+          <label>Eye palette<select id="paletteSelect"><option value="expressive">Expressive • per emotion</option><option value="rainbow">Rainbow gradient</option><option value="cyan">Ice blue</option><option value="pink">Pink neon</option><option value="mint">Mint green</option><option value="amber">Warm amber</option><option value="custom">Custom color</option></select></label>
+          <label>Voice language<select id="languageSelect"><option value="tr-TR">Türkçe</option><option value="en-US">English</option><option value="ar-MA">العربية</option></select></label>
+          <label class="wide color-line">Custom eye color <input type="color" id="customColor" value="#a7edff" aria-label="Custom eye color"></label>
+          <label class="wide range-line">Reaction duration <strong id="durationValue">3.5s</strong><input type="range" id="durationRange" min="1" max="12" step=".5" value="3.5"></label>
+          <label class="wide range-line">Blink interval <strong id="blinkValue">3s</strong><input type="range" id="blinkRange" min="1" max="9" step=".5" value="3"></label>
+          <label class="wide range-line">Animation speed <strong id="speedValue">1×</strong><input type="range" id="speedRange" min=".5" max="2" step=".25" value="1"></label>
+        </div>
+        <div class="toggle-stack">
+          <label class="switch-label"><input id="autoBlink" type="checkbox" checked><span>Natural blink & glance</span></label>
+          <label class="switch-label"><input id="autoSleep" type="checkbox"><span>Sleep after 30 seconds idle</span></label>
+          <label class="switch-label"><input id="voiceEnabled" type="checkbox"><span>Voice preview (browser speech)</span></label>
+          <label class="switch-label"><input id="quietMode" type="checkbox"><span>Quiet mode (mute + reduce motion)</span></label>
+        </div>
+      </aside>
+    </div>
+    <section class="bottom-grid">
+      <div class="card log-card">
+        <div class="panel-header"><div><div class="eyebrow">EVENT STREAM</div><h2>Reaction history</h2></div><button type="button" class="mini-button" id="clearLog">Clear</button></div>
+        <ol id="eventLog" class="event-log" aria-live="polite"></ol>
+      </div>
+      <div class="card info-card">
+        <div class="eyebrow">FROM SIMULATION TO REAL ROBOT</div><h2>Built for multicolor eyes.</h2>
+        <p>These colorful expressions require a <strong>color display</strong> (for example an IPS TFT or color OLED). A monochrome OLED cannot show pink hearts, blue eyes and golden stars together.</p>
+        <div class="info-tags"><span>HTML + CSS</span><span>SVG graphics</span><span>Vanilla JavaScript</span><span>ESP32-S3 next</span></div>
+        <p class="fine">This is a browser prototype. Exact display model, resolution, power, servo travel and firmware will be selected and validated before 3D printing.</p>
+      </div>
+    </section>
+    <footer>🌱 Nohutçuk — Nohut Falafel mascot concept · <a href="./docs/FEATURES.md">Full features</a> · <a href="./docs/ROADMAP.md">Engineering checklist</a></footer>
+  </main>
+</body>
+</html>
