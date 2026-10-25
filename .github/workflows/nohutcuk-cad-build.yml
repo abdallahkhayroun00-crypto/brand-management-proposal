@@ -38,7 +38,7 @@ jobs:
       - name: Install CAD and mesh dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r nohutcuk/CAD_Source/requirements.txt
+          python -m pip install -r nohutcuk/CAD_Source/requirements.txt networkx>=3.0
 
       - name: Generate 16 separated parts, two merged STLs and STEP
         run: |
