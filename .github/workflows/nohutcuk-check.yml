@@ -25,5 +25,9 @@ jobs:
           node-version: '22'
       - name: Check JavaScript syntax
         run: node --check nohutcuk/app.js
+      - name: Check sound synthesizer syntax
+        run: node --check nohutcuk/audio.js
       - name: Run simulated UI and reaction checks
         run: node nohutcuk/tests/smoke.mjs
+      - name: Run original song and sound-effect tests
+        run: node nohutcuk/tests/audio.mjs
