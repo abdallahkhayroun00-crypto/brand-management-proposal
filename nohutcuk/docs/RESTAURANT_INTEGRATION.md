@@ -2,24 +2,25 @@
 
 ## Purpose and boundary
 
-Nohutçuk is a **non-critical notification and guest-interaction device**, not a cash register, order-taker, authorization system or financial record. Keep it isolated from payment credentials and personal order details. The current POS/QR projects are concept/demo work, so all integration below is **planned**, not operational.
+Nohutçuk is a **non-critical notification and guest-interaction device**, not a cash register, order-taker, authorization system or financial record. **Its single source of restaurant data is the Nohut Falafel PC application.** Keep it isolated from payment credentials and personal order details. The current POS/QR projects are concept/demo work, so all integration below is **planned**, not operational.
 
-## Intended topology
+## Exactly ONE event source: our restaurant application on the PC
 
+**Nohutçuk receives ALL restaurant information from the Nohut Falafel PC management system we are building, NOT directly from any delivery-platform, cash-register, payment-device or other third-party API.** It only listens for events the local PC app has already received/recorded/validated.
+
+```text
+Platform orders / table orders / POS transaction results
+       ↓ handled ONLY by our Nohut Falafel PC app
+Nohut Falafel PC management application + local SQLite
+       ├── cashier screen, staff phones, local printer (normal restaurant operation)
+       ├── integrations with marketplaces or supported ÖKC/POS where authorized
+       └── publishes safe, small mascot notifications on restaurant Wi-Fi
+                                      ↓
+                             Nohutçuk ESP32-S3
+                       facial reaction / gesture / sound only
 ```
-Yemeksepeti / Trendyol Go / future Migros integration
-     ↓ official API integration, subject to approval
-Restaurant laptop: local restaurant backend + SQLite
-     ├── cashier PC dashboard (source of truth)
-     ├── staff phones on trusted Wi-Fi
-     ├── printer / compatible ÖKC-POS integrations (separate)
-     └── local sanitized notification gateway
-               ↓ authenticated WebSocket / MQTT / HTTPS
-           ESP32-S3 Nohutçuk mascot
-               ↓ face + sounds + motion only
-```
 
-If platforms require public webhooks, solve this at the restaurant backend level, not inside the mascot. Never place official delivery API secrets on an ESP32.
+The robot **does not call, poll, authenticate with, or hold API credentials for** Yemeksepeti, Trendyol Go, Migros Yemek or a payment terminal. Even if a marketplace order is not imported into our PC app, the robot **does not fetch that order itself**. All platform integration complexities belong to the PC system, not the mascot. The PC application must work normally while the mascot is disconnected.
 
 ## Allowed event schema — proposal
 
@@ -41,9 +42,9 @@ Event IDs allow duplicate suppression. Timezone must be explicit. Use versioned 
 
 | System event | Mascot response | Required truth condition |
 |---|---|---|
-| `ORDER_NEW` from Trendyol Go | wake + orange/chime | accepted backend order event |
-| `ORDER_NEW` from Yemeksepeti | happy + distinct chime | accepted backend order event |
-| `ORDER_NEW` from Migros | platform alert | integration available/authorized |
+| `ORDER_NEW` tagged Trendyol Go | wake + orange/chime | PC app has already saved/validated the platform order |
+| `ORDER_NEW` tagged Yemeksepeti | happy + distinct chime | PC app has already saved/validated the platform order |
+| `ORDER_NEW` tagged Migros Yemek | platform alert | PC app has already saved/validated that platform's order |
 | `TABLE_ORDER_NEW` | eager falafel eyes | newly submitted in-house order |
 | `ORDER_ITEM_ADDED` | nod/blink | saved incremental item(s), not draft |
 | `CARD_PAYMENT_SUCCEEDED` | wink/smile | **confirmed POS settlement/approval**, never mere button press |
@@ -60,9 +61,9 @@ Do not expose customer names, phone numbers, addresses, ticket item details, ten
 
 - Mascot should connect to a **restricted private Wi-Fi** or protected IoT segment, not a public guest network.
 - Use unique per-device authentication and encrypted transport where available; allow gateway/robot key rotation.
-- Define predictable offline behavior: mascot continues local face/touch games if restaurant laptop or Internet is offline.
+- Define predictable offline behavior: mascot continues its local expressions, greetings and touch responses if the PC or Internet is offline (without games).
 - Apply rate limits, duplicate event filtering, event TTL, busy-mode batching and worker override/mute.
-- Don't send platform API tokens, POS PINs, staff passwords or a SQLite database to robot.
+- Robot must never talk directly to marketplace/POS APIs or hold platform tokens, POS PINs, staff passwords or database copies. All its restaurant events originate in the PC app.
 - Avoid direct internet exposure of ESP32 admin ports.
 - For critical kitchen operations, use normal POS UI/sound alerts and printer instead of relying on a novelty robot.
 
@@ -78,7 +79,7 @@ A cashier on the **PC** remains responsible for `Nakit` / `Kart`, split bills an
 
 ## Acceptance tests
 
-1. New in-store order produces one non-blocking mascot alert.
+1. New in-store order recorded in the PC app produces one non-blocking mascot alert.
 2. Duplicate event ID does not cause multiple sounds.
 3. Silent mode suppresses all sound but retains logged notice.
 4. Disconnected ESP32 does not prevent saving/printing an order or receiving payment.
@@ -88,3 +89,5 @@ A cashier on the **PC** remains responsible for `Nakit` / `Kart`, split bills an
 8. Restarting mascot does not replay expired alerts.
 9. Restaurant Wi-Fi isolation and credentials pass basic security review.
 10. Child-safe motion limits and hardware fault stop are enforced.
+11. Disable the PC app: the mascot must NOT independently contact any marketplace or terminal.
+12. A platform event unseen by the PC app must not appear on Nohutçuk.
