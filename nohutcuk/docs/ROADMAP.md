@@ -16,16 +16,21 @@
 | Assembly manual and maintenance | **planned** |
 | Separate GitHub assets | upload status tracked in assets/README.md |
 
-## Versions and gates
+## One complete version — final scope
 
-| Version | Capabilities | Exit criteria |
+**Delivery policy: ONE complete Nohutçuk build.** There are no V1–V6 product releases. All features are planned for the same finished robot. The rows below are internal engineering work packages and their acceptance checks, **not versions**.
+
+| Work package (same release) | All required capabilities | Completion check |
 |---|---|---|
-| **V1 — Friendly face** | OLED eye engine, 15 primary expressions, capacitive pet sensor, Auto Sleep | fast reliable reaction, no accidental touch spam; standalone offline |
-| **V2 — Alive** | one/two servos, prerecorded voice, proximity wake, optional LED | stable power, safe travel limits, quiet settings |
-| **V3 — Play** | ten mini games, friendship meter, funny behaviors/easter eggs | repeatable gameplay, no crashes, nonintrusive controls |
-| **V4 — Restaurant-aware** | POS backend event gateway, platforms when authorized, admin page | secure + sanitized events, no duplicated alerts, operational independence |
-| **V5 — Social mascot** | photo/selfie/reels presets, events | usable branded content, quiet-mode and owner approval |
-| **V6 — Refined** | adaptive timing, advanced mood and modular accessories | maintainability, consistent component/size interfaces |
+| Personality & face | full eye expression library, blinking, emotional reactions, auto sleep, randomized idle, mood and affection modes | expressions respond to events correctly |
+| Guest interaction | proximity welcome, touch patterns, greetings in TR/EN/AR, safe servo nod/tilt, look/wave interaction and friendship mode | live guest tests, touch debounce, no repeated greetings |
+| Games & fun | all ten mini-games, eight funny behaviors, secret expressions and weekly/daily challenges | each game playable on chosen controls |
+| Restaurant connection | local PC notifications for orders, ready/delay/cancel, confirmed payments, admin settings, authorized delivery platform events | tested integration without payment dependencies or customer data |
+| Social & events | photo, selfie, Instagram/Reels, QR menu card, Ramadan/Eid/New Year/birthday animations | tested interaction and branding |
+| Full physical build | unified modular body, final BOM, wired ESP32-S3, verified power, CAD/STEP/STL/3MF, printed and assembled parts | print-fit, electrical safety, movement and stability tests |
+| Documentation & package | full wiring, firmware, release files, assembly and maintenance guide, reference art | one consistent reproducible release archive |
+
+Feature enablement may depend on the actual selected hardware or platform permissions. **Do not silently remove a feature:** flag external blockers explicitly. Restaurant order or payment handling must keep working even if mascot alerts are unavailable.
 
 ## Production package / file layout (planned)
 
