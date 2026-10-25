@@ -1,6 +1,10 @@
 name: Build Flutter Windows POS
 
 on:
+  pull_request:
+    paths:
+      - 'flutter_desktop/**'
+      - '.github/workflows/flutter-desktop-windows.yml'
   push:
     paths:
       - 'flutter_desktop/**'
@@ -10,6 +14,13 @@ on:
       - 'nohut-menu/**'
       - '.github/workflows/flutter-desktop-windows.yml'
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: flutter-windows-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   windows-app:
@@ -21,31 +32,31 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-      - name: Generate native Windows runner
-        working-directory: flutter_desktop
-        run: flutter create --platforms=windows --project-name=nohut_falafel_desktop .
       - name: Install Dart packages
         working-directory: flutter_desktop
         run: flutter pub get
       - name: Dart static analysis
         working-directory: flutter_desktop
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+        run: flutter analyze
       - name: Unit tests
         working-directory: flutter_desktop
-        run: flutter test
+        run: flutter test --reporter expanded
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preserved HTML prototype regression
+        run: node pos-demo/tests/logic.test.cjs
       - name: Compile Windows desktop release
         working-directory: flutter_desktop
         run: flutter build windows --release
-      - name: Bundle employee web app and menu for offline LAN QR
+      - name: Record release checksums and source revision
         shell: pwsh
         run: |
-          $dest = 'flutter_desktop/build/windows/x64/runner/Release/site'
-          New-Item -ItemType Directory -Force -Path "$dest/pos-demo/vendor" | Out-Null
-          Copy-Item 'pos-demo/index.html' -Destination "$dest/pos-demo/index.html"
-          Copy-Item 'pos-demo/split-bill.html' -Destination "$dest/pos-demo/split-bill.html"
-          Copy-Item 'pos-demo/fis-onizleme.html' -Destination "$dest/pos-demo/fis-onizleme.html"
-          Copy-Item 'pos-demo/vendor/qrcode.min.js' -Destination "$dest/pos-demo/vendor/qrcode.min.js"
-          Copy-Item 'nohut-menu' -Destination "$dest/nohut-menu" -Recurse
+          $release = 'flutter_desktop/build/windows/x64/runner/Release'
+          $manifest = Get-ChildItem -LiteralPath $release -File -Recurse | ForEach-Object {
+            [pscustomobject]@{ path = $_.FullName.Substring((Resolve-Path $release).Path.Length + 1); sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash }
+          }
+          @{ sourceRevision = '${{ github.sha }}'; files = @($manifest) } | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 "$release/build-manifest.json"
       - name: Upload Windows program (folder with exe and DLL files)
         uses: actions/upload-artifact@v4
         with:

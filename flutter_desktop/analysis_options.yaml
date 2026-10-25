@@ -5,3 +5,6 @@ analyzer:
     invalid_assignment: error
     undefined_method: error
     undefined_identifier: error
+  exclude:
+    - build/**
+    - windows/**
