@@ -1,9 +1,11 @@
 # Nohutçuk visual references — upload manifest
 
+**Current scope supersedes visual references:** ONE complete Nohutçuk, **NO games**, and all operational data is sent by the **Nohut Falafel PC application** (no direct third-party integrations on the robot). The original infographics show earlier ideas and are not the active specification.
+
 Two original user-provided infographic images are the authoritative visual references. They arrived on **26 October 2026** with dimensions **1312 × 1199 px** each. Their exact uploaded names were:
 
-1. `Infographie du robot mascotte Nohutçuk-1.png` — English “ALL REACTIONS & FEATURES”, character overview, 15 expressions, 10 games, POS alerts, modular design, 4 color variants and proposed package contents.
-2. `Nohutçuk, le robot mascotte du falafel-2.png` — Turkish “Nohutçuk / Nohut Falafel'in Maskotu”, emotion grid, touch/welcome/photo modes, mini-games, social integration, modular cutaway, and illustrative dimensions.
+1. `Infographie du robot mascotte Nohutçuk-1.png` — English original concept showing 15 expressions, **outdated game concepts (excluded from final scope)**, PC system alerts, modular design, 4 color variants and proposed package contents.
+2. `Nohutçuk, le robot mascotte du falafel-2.png` — Turkish “Nohutçuk / Nohut Falafel'in Maskotu”, emotion grid, touch/welcome/photo modes, **outdated mini-games (excluded)**, social integration, modular cutaway, and illustrative dimensions.
 
 **Current GitHub state:** originals are **not yet uploaded into this repository**. Do not claim the GitHub folder contains their PNG bytes until it does. A separate local ZIP handoff holds both originals.
 
