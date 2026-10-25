@@ -1,24 +1,24 @@
 # Online platform concept — 2026-10-25
 
-This is a browser-only POS concept. All new orders, claims, reviews, invoice links, API results and financial records are clearly labelled examples. No platform API, bank, fiscal printer, public webhook receiver or cross-device database is connected. Do not enter API credentials.
+This is a browser-only POS concept. On a normal laptop browser it opens the Yönetici Paneli directly, and on a phone browser (Chrome/Safari) it opens the Personel Paneli with password-free employee selection. The demo has exactly five physical tables (Masa 1–5). All new orders, claims, reviews, invoice links, API results and financial records are clearly labelled examples. No platform API, bank, fiscal printer, public webhook receiver or cross-device database is connected. The public web demo stores records only in the current browser and therefore cannot synchronize a PC with phone browsers yet. A future local laptop backend and SQLite store are separate implementation work. Do not enter API credentials.
 
 ## Implemented flows
 
 | Area | Concept behaviour |
 | --- | --- |
-| Orders | Separate platform snapshots, package and item identifiers, source prices and modifiers, discount totals, contact/PIN placeholders, courier ETA and platform pickup priority. |
-| Payments | Card, meal card and platform-collected payment on delivery examples; no second restaurant collection. Collection is tracked separately from restaurant receivables and bank settlement. |
+| Orders | Five local tables; a phone's staff orders stay pickup-only for direct telephone requests; separate platform snapshots, package and item identifiers, source prices and modifiers, discount totals, contact/PIN placeholders, courier ETA and platform pickup priority. |
+| Payments | Local cash/card and exact-cent equal guest split; card, meal card and platform-collected payment-on-delivery examples; no second restaurant collection. Courier-delivered is not automatically platform-collected without a payment confirmation. Collection is tracked separately from restaurant receivables and bank settlement. |
 | Acceptance | Validated preparation time; request remains pending until an explicit simulated result. Yemeksepeti defaults to Vendor App acceptance; direct POS acceptance is a labelled test assumption. |
-| Delivery | Ready is distinct from invoice submission. Courier pickup/delivery are incoming platform events in a test-only drawer, not restaurant courier commands. |
+| Delivery | The restaurant operates **no own delivery service or courier**. Direct telephone requests are pickup-only (Telefon Gel-Al). Ready is distinct from invoice submission. Courier pickup/delivery are incoming platform events in a test-only drawer, not restaurant courier commands. |
 | Cancellation | Trendyol partial/full item cancellation with permitted restaurant reason codes. Platform cancellation and restaurant cancellation use different states. No invented Yemeksepeti item cancellation capability. |
-| Kitchen | Partial cancellation creates a separate kitchen correction job. Remaining-order prints exclude correction lines and show the current discount. |
+| Kitchen | Partial cancellation creates a separate kitchen correction job with the cancelled quantity and reason. Initial orders, additional product batches and cancellation corrections print separately. Remaining-order prints exclude correction lines and show the current discount. |
 | Menu | Separate per-platform catalog and local mapping; product/category availability, mandatory free-option validation, bulk price jobs with per-item success/failure. Option switching is explicitly a local scenario, not an asserted modifier-write API. |
 | Store | Example identifiers, acceptance mode, open/close requests, weekly hours including next-day midnight intervals and overlap validation. |
 | Claims | Item-level partial acceptance/objection, four-hour response deadline, refund/resend examples, evidence presence and unresolved platform review. Claim acceptance does not itself manufacture a cash refund. |
 | Reviews | Example category scores, combined date/text/reply filters, draft reply and moderation states. Disabled for the simulated Uber Eats migration and unverified Yemeksepeti access. |
 | Invoices | HTTPS link submission, pending results, duplicate prevention, delete-before-replace. No fiscal invoice is generated. |
 | Synchronization | Pending/completed/error requests, trace identifiers, 429 backoff, conflict protection, retries, duplicate-package replay and missed-order recovery examples. |
-| Finance | Separate sales, cancellation adjustment, example commission and net payout records, payment order matching and CSV. Discounts already included in an order are informational, never deducted twice. Commission is an explicitly fictitious 15% scenario. |
+| Finance | Cash drawer opening/closing sessions, manual cash movements and counted-cash variance; separate sales, cancellation adjustment, example commission and net payout records, payment order matching and CSV. Discounts already included in an order are informational, never deducted twice. Commission is an explicitly fictitious 15% scenario. |
 | Navigation | Online features are tabs under Online Siparişler; connection configuration is under Ayarlar; settlement is under Raporlar. Staff selection remains password-free, and PC order entry always acts as Kasa (PC). |
 
 ## Platform limits
@@ -43,7 +43,7 @@ Run from the repository root:
 node pos-demo/tests/logic.test.cjs
 ```
 
-107 regression scenarios cover local checkout/drafts and the new platform concept. Browser checks cover request acknowledgement, partial cancellation, courier events, claim objections, review replies, settlement and phone-width layout.
+115 regression scenarios cover local checkout/drafts and the new platform concept. Browser checks cover request acknowledgement, partial cancellation, courier events, claim objections, review replies, settlement and phone-width layout.
 
 ## Official references
 
@@ -56,3 +56,16 @@ node pos-demo/tests/logic.test.cjs
 - https://developer.yemeksepeti.com/en/documentation/introduction
 - https://integration.yemeksepeti.com/en/
 - https://developers.deliveryhero.com/documentation/pos.html
+
+## Checkout safeguards added
+
+- Five-table range validation; inactive employees cannot post new orders.
+- Orders and table occupancy, checkout, service completion, and partial refunds are separate states.
+- Even-guest splitting allocates every kuruş with no missing remainder; closed checks reject additional allocations.
+- Importing a delivered/cancelled platform order does not enqueue old preparation jobs.
+- Platform updates use source+package ID plus monotonic revision, reconcile changed item batches, and keep explicit records for changed prices or notes.
+- Platform delivery is an external courier event; collection remains pending until explicitly confirmed by the platform.
+- Last-item merchant cancellation settles any proportional-discount rounding remainder.
+- Online order status filters include the two distinct cancellation sources.
+- Cash opening float, manual entries/withdrawals and end-of-shift counted cash are demo workflows only.
+- Regression checks are run in GitHub Actions for source changes; passing the tests does not establish real integration or security readiness.
