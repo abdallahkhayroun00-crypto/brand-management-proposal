@@ -1,6 +1,8 @@
 # Original Nohutçuk feature proposal (Darija)
 
 > Archived working reference. The structured technical docs incorporate its requirements.
+>
+> **Latest decision:** one complete Nohutçuk version with all features. Any older V1–V6 staging language below is archived historical text, not the current release plan.
 
 BROOO 😂❤️🔥 دابا غادي نجمع ليك **جميع الخصائص ديال Nohutçuk**، من أبسط حركة ديال العينين حتى لروبوت ذكي كيتفاعل مع الزبائن، كيعاون العمال، ومربوط بنظام Nohut Falafel.
 
