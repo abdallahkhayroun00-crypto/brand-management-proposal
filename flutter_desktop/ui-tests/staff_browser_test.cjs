@@ -115,6 +115,9 @@ const server = http.createServer((req, res) => {
       await page.locator("#open-cart").click();
       assert((await page.locator("#total").textContent()).includes("310"));
       assert.equal(await page.locator(".cart-line").count(), 2);
+      assert(await page.locator("#submit").isVisible());
+      const sendBox=await page.locator("#submit").boundingBox();
+      assert(sendBox.y+sendBox.height<=844, "Send action must remain in the viewport");
       await page.locator(".cart-line").first().locator("summary").click();
       await page.locator('[data-note="0"]').fill("Sos ayrı");
       await page.locator('[data-removed="0"]').fill("Soğan");
