@@ -27,9 +27,12 @@ Employees, five table accounts, dishes and additions, cancellation, pickup order
 - GET /api/bootstrap returns server status, staff QR URL and the current SQLite state.
 - GET /api/state returns the current record and its monotonically increasing revision.
 - PUT /api/state accepts the full snapshot **only if the caller's baseVersion is current**. Two devices writing concurrently cannot silently overwrite the same revision: the stale write returns HTTP 409 and must be reviewed and retried.
+- When two worker devices submit at the same time and one write receives HTTP 409, the rejected cart is restored in the **unsent draft** banner (for a brand-new order it is unlinked from the discarded temporary order ID). The worker must check the accepted orders before selecting **Devam Et** and resubmitting. This does not auto-retry or double-charge.
+- In the active LAN UI, buttons wait for a pending SQLite write to acknowledge before starting another operation. The order confirmation message appears only after the server accepts the write; a submission shows a pending status first.
+- Opening the **Ürünlere Göre Hesabı Böl** screen does **not** write an empty split to SQLite. The first intentional change writes it. Rapid repeated clicks while this write is pending are blocked.
 - GET /api/health reports connectivity and revision.
 
-When a device disconnects, the UI blocks new actions and prompts a reconnect/reload. UI changes may appear before a server write is confirmed; operators must recheck an order/payment after a conflict or disconnect. This is a test prototype, not a transaction-certified production system.
+When a device disconnects, the UI blocks new actions and prompts a reconnect/reload. UI changes may appear before a server write is confirmed; a pending screen/toast is not final approval. Operators must recheck an order/payment after a conflict or disconnect. A disconnected client cannot know whether the server accepted the last write before the connection failed, so do not resend a payment without checking. This is a test prototype, not a transaction-certified production system.
 
 The first SQLite database is empty of fake orders (only the three example worker accounts are initialized). GitHub Pages demo seed orders are isolated and **never** imported silently into the live restaurant database.
 
