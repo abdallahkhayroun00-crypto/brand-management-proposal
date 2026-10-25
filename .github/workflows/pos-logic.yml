@@ -20,3 +20,5 @@ jobs:
           node-version: '22'
       - name: POS functional regression tests
         run: node pos-demo/tests/logic.test.cjs
+      - name: Laptop SQLite server / QR and API integration tests
+        run: python3 -m unittest discover -s pos-demo/tests -p 'test_local_server.py' -v
