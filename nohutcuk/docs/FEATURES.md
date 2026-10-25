@@ -50,22 +50,9 @@ Optional “one eye opens” idle response after petting ends.
 
 **Photo Mode** — hold an attractive still pose for approximately 10 seconds on activation.
 
-## 3. Ten mini games
+## 3. No games — confirmed product decision
 
-| Game | Proposed interaction |
-|---|---|
-| Taş Kağıt Makas | choose rock/paper/scissors using buttons/screen cues; robot displays result |
-| Guess My Mood | recognize shown expressive eyes; answer by button |
-| Reaction Challenge / Tepki Oyunu | robot closes eyes then signals start, player reacts quickly; measure response |
-| Make Me Happy / Beni Mutlu Et | taps trigger progressive happy faces |
-| Memory Game / Hafıza Oyunu | repeat a short light/sound pattern |
-| Lucky Eyes / Şanslı Gözler | playful random eye result, no wagering |
-| Follow the Rhythm / Ritmi Takip Et | copy a tap pattern |
-| Don't Wake Me / Uyandırma | respond to sleep/wake cues |
-| Pet Challenge / Evcilik | discover favorite touch sequences |
-| Secret Expressions / Gizli İfadeler | uncover hidden expression combinations |
-
-Recommended first game: **Reaction Challenge** — lowest complexity with simple button/touch input and OLED feedback. Some games require extra buttons or a companion phone interface; mark these pending hardware design.
+Nohutçuk is a friendly restaurant mascot, **not a gaming device**. No rock-paper-scissors, quizzes, reaction-time challenges, memory games, rhythm games, game controls, scoring or leaderboards. Touch, greetings, expressions and affectionate reactions are natural interactions, not games.
 
 ## 4. Eight funny behaviors
 
@@ -82,7 +69,7 @@ Recommended first game: **Reaction Challenge** — lowest complexity with simple
 
 | Language | Sample phrases from concept |
 |---|---|
-| Turkish | “Hoş geldiiin!”, “Beni seviyor musun?”, “Başımı okşa!”, “Çok teşekkür ederim!”, “Yine beklerim!”, “Afiyet olsun!”, “Hadi oyun oynayalım!” |
+| Turkish | “Hoş geldiiin!”, “Beni seviyor musun?”, “Başımı okşa!”, “Çok teşekkür ederim!”, “Yine beklerim!”, “Afiyet olsun!”, “Nasılsın?!” |
 | English | “Hellooo!”, “You're my friend!”, “Pet my head!”, “Come back soon!” |
 | Arabic / Moroccan Darija | “مرحبا بيك!”, “واش بغيتي نلعبو؟”, “شكراً بزاف!”, “بالصحة والراحة!” |
 
@@ -95,8 +82,7 @@ Start with **prerecorded voice assets**. Language selection, mute, quiet hours, 
 - **Reels Mode:** scripted synchronized dancing/expressions for short recordings.
 - **QR Menu Companion:** a small card and matching Nohut Falafel sign; QR opens public menu only.
 - **Special Events:** Ramadan, Eid/Bayram, New Year, birthdays; themed eyes/hats *as optional physical decorations*.
-- **Daily secret:** one rotating easter egg.
-- **Weekly challenge:** highest quick-reaction score without personal data.
+- **Occasional surprise expressions:** natural, noncompetitive visual reactions without scores or puzzles.
 - **Birthday celebration:** worker-activated greeting; avoid retaining personal birthdays unnecessarily.
 
 ## 7. Smart/autonomous behavior
@@ -110,14 +96,14 @@ Start with **prerecorded voice assets**. Language selection, mute, quiet hours, 
 | Random Reactions | vary responses to repeated inputs |
 | Energy Simulation | lively morning, relaxed evening (simulated) |
 | Quiet Mode | low-volume/no movement during service peaks |
-| Easter Eggs | surprise eye sequences |
+| Surprise expressions | infrequent spontaneous face animations, with no challenge mechanic |
 | Auto Recovery | restart from transient recoverable state; log real failures |
 
-A simple priority model prevents overlapping behaviors: **safety / hardware fault > urgent operational alert > direct guest interaction > selected game > idle**. Implement interrupt limits so new events don't repeatedly interrupt a customer.
+A simple priority model prevents overlapping behaviors: **safety / hardware fault > urgent operational alert > direct guest interaction > spontaneous expression > idle**. Implement interrupt limits so new events don't repeatedly interrupt a customer.
 
 ## 8. Restaurant event reactions
 
-All trigger details in [RESTAURANT_INTEGRATION.md](RESTAURANT_INTEGRATION.md). Planned reactions:
+All restaurant events come **only from the Nohut Falafel PC management application**, never directly from marketplace or POS APIs. Full trigger details in [RESTAURANT_INTEGRATION.md](RESTAURANT_INTEGRATION.md). Planned reactions:
 
 | Event | Face / cue |
 |---|---|
