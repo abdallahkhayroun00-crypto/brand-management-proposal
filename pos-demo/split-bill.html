@@ -185,7 +185,7 @@ function splitPoll(){if(!splitLocal.ready||splitLocal.blocked||splitLocal.busy||
  fetch("/api/state",{cache:"no-store"}).then(function(r){if(!r.ok)throw Error("Offline");return r.json()})
  .then(function(v){if(v.revision!==splitLocal.version)splitApply(v)}).catch(function(){splitFailure("Laptop / Wi-Fi bağlantısı kesildi")});
 }
-document.addEventListener("click",function(e){if(splitLocal.candidate&&(!splitLocal.ready||splitLocal.blocked||splitLocal.busy||splitLocal.pending)&&e.target.closest("button")){e.preventDefault();e.stopImmediatePropagation();alert(splitLocal.busy||splitLocal.pending?"Laptop SQLite kayıt onayı bekleniyor. Aynı işlemi tekrar göndermeyin.":"Yerel SQLite bağlantısı hazır değil. İşlem yapılmadı.")}},true);
+document.addEventListener("click",function(e){if(splitLocal.candidate&&(!splitLocal.ready||splitLocal.blocked||splitLocal.busy||splitLocal.pending)&&e.target.closest("button,a")){e.preventDefault();e.stopImmediatePropagation();alert(splitLocal.busy||splitLocal.pending?"Laptop SQLite kayıt onayı bekleniyor. Aynı işlemi tekrar göndermeyin.":"Yerel SQLite bağlantısı hazır değil. İşlem yapılmadı.")}},true);
 function splitBootstrap(){
  if(!splitLocal.candidate){init();return}
  splitNotice("⏳ Laptop SQLite veritabanına bağlanılıyor");
