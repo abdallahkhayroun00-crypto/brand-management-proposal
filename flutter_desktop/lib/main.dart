@@ -355,7 +355,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                         fontWeight: FontWeight.w700, letterSpacing: 1.3)),
                     const SizedBox(height: 4),
                     Text(sections.firstWhere((s) => s.$1 == page).$3,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w850)),
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
                   ],
                 )),
                 Icon(lan.running ? Icons.wifi_tethering : Icons.wifi_off,
@@ -496,7 +496,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
             crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Nohut Falafel · İşletme Sistemi',
                 style: TextStyle(color: Colors.white, fontSize: 24,
-                  fontWeight: FontWeight.w850)),
+                  fontWeight: FontWeight.w800)),
               SizedBox(height: 6),
               Text('Windows Flutter · Lokal SQLite · Telefon siparişleri QR üzerinden',
                 style: TextStyle(color: Color(0xffbddec6), fontSize: 12)),
@@ -600,7 +600,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Sipariş #$id · ${o['source']}${o['table']==null?'':' · Masa ${o['table']}'}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w850)),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
               const SizedBox(height: 4),
               Text(closed ? 'Kapalı' : 'Açık · ${o['serviceStatus'] ?? 'Hazırlanıyor'}',
                 style: const TextStyle(color: Color(0xff708273), fontSize: 12)),
@@ -620,7 +620,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                 child: Text('${line['qty']}×', textAlign: TextAlign.center)),
               const SizedBox(width: 11),
               Expanded(child: Text('${line['name'] ?? line['productKey'] ?? 'Ürün'}',
-                style: const TextStyle(fontWeight: FontWeight.w650))),
+                style: const TextStyle(fontWeight: FontWeight.w600))),
               Text(formatTry(cents(line['price']) * ((line['qty'] as num?)?.toInt() ?? 0))),
             ])),
         const Divider(height: 25),
@@ -628,14 +628,14 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           Text('Toplam: ${formatTry(total)}',
             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
           Text('Alınan: ${formatTry(paid)}',
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w650)),
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
           Text('Kalan: ${formatTry(orderDueCents(o))}',
             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: dark)),
         ]),
         if (split.isNotEmpty) ...[
           const Divider(height: 24),
           const Text('Kişi Hesapları', style: TextStyle(fontSize: 15,
-            fontWeight: FontWeight.w850)),
+            fontWeight: FontWeight.w800)),
           for (final guest in split) Builder(builder: (context) {
             final allocated = asMaps(guest['allocations']).fold<int>(0,
               (sum, a) => sum + (a['cents'] as int));
@@ -907,7 +907,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
         Expanded(child: Card(child: Padding(padding: const EdgeInsets.all(21),
           child: Column(children: [
             const Text('PERSONEL GİRİŞ QR', style: TextStyle(
-              fontSize: 17, fontWeight: FontWeight.w850)),
+              fontSize: 17, fontWeight: FontWeight.w800)),
             const SizedBox(height: 17),
             Container(padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(color: Colors.white,
@@ -1004,7 +1004,7 @@ class _OrderComposerState extends State<_OrderComposer> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Expanded(child: Text(widget.adding ? 'Ek Sipariş · Kasa (PC)' : 'Yeni Sipariş · Kasa (PC)',
-              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w850))),
+              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800))),
             IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
           ]),
           const SizedBox(height: 12),
@@ -1045,7 +1045,7 @@ class _OrderComposerState extends State<_OrderComposer> {
             itemBuilder: (context, i) {
               final p = filtered[i],qty = counts[p.id] ?? 0;
               return ListTile(
-                title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.w650)),
+                title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.w600)),
                 subtitle: Text(p.price == null ? 'Fiyat belirlenmedi' : formatTry(cents(p.price))),
                 trailing: p.price == null ? const Text('Fiyat yok',
                   style: TextStyle(color: Colors.deepOrange)) :
@@ -1063,7 +1063,7 @@ class _OrderComposerState extends State<_OrderComposer> {
           const Divider(),
           Row(children: [
             Expanded(child: Text('Ürün: ${counts.values.fold<int>(0,(a,b)=>a+b)} · Toplam: ${formatTry(totalCents)}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w850))),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
             OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Vazgeç')),
             const SizedBox(width: 10),
             FilledButton.icon(
