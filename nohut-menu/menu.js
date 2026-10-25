@@ -376,9 +376,9 @@ function renderMenu(){
  const tr=lang==='tr',current=categories.find(c=>c[0]===category);
  const searching=byId('search').value.trim().length>0;
  byId('sectionTitle').textContent=searching?(lang==='ar'?'نتائج البحث':tr?'Arama sonuçları':'Search results'):(lang==='ar'?arabicMenu.categories[category]:current[tr?1:2]);
- byId('sectionDescription').textContent=searching?(lang==='ar'?'نتائج من جميع أقسام القائمة':tr?'Tüm menü kategorilerinden sonuçlar':'Results from all menu categories'):(lang==='ar'?arabicMenu.descriptions[category]:descriptions[category][tr?0:1]);
- byId('search').placeholder=lang==='ar'?'ابحث في القائمة...':tr?'Menüde ara...':'Search menu...';
- byId('search').setAttribute('aria-label',lang==='ar'?'ابحث في القائمة':tr?'Menüde ara':'Search menu');
+ byId('sectionDescription').textContent=searching?(lang==='ar'?'نتائج البحث في قائمة الطعام':tr?'Tüm menü kategorilerinden sonuçlar':'Results from all menu categories'):(lang==='ar'?arabicMenu.descriptions[category]:descriptions[category][tr?0:1]);
+ byId('search').placeholder=lang==='ar'?'ابحث عن طبق...':tr?'Menüde ara...':'Search menu...';
+ byId('search').setAttribute('aria-label',lang==='ar'?'البحث في قائمة الطعام':tr?'Menüde ara':'Search menu');
  const normalize=value=>String(value).toLocaleLowerCase('tr-TR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ı/g,'i').replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي');
  const query=normalize(byId('search').value.trim());
  let items=data.filter(item=>(searching||category==='all'||category===item[0])&&normalize([item[1],item[2],item[4],item[5],...arabicMenu.items[item[1]],...(drinkDisplayNames[item[1]]||[])].join(' ')).includes(query));
@@ -397,7 +397,7 @@ function renderMenu(){
  }).join('');
  byId('grid').querySelectorAll('img').forEach(image=>image.addEventListener('error',()=>{image.hidden=true;image.nextElementSibling.hidden=false;},{once:true}));
  byId('empty').hidden=items.length>0;
- byId('empty').textContent=lang==='ar'?'لم يتم العثور على منتجات. جرّب كلمة أخرى.':tr?'Ürün bulunamadı. Başka bir kelime deneyin.':'No items found. Try another search.';
+ byId('empty').textContent=lang==='ar'?'ما لقينا أي صنف بهذا الاسم. جرّب كلمة ثانية.':tr?'Ürün bulunamadı. Başka bir kelime deneyin.':'No items found. Try another search.';
  byId('counter').textContent=`${items.length} ${lang==='ar'?(items.length>=3&&items.length<=10?'منتجات':'منتج'):tr?'ürün':'items'}`;
 }
 function setLanguage(next){
@@ -405,7 +405,7 @@ function setLanguage(next){
  document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';
  ['tr','ar','en'].forEach(code=>byId(code).setAttribute('aria-pressed',String(lang===code)));
  document.querySelector('.contact-strip').setAttribute('aria-label',lang==='ar'?'تواصل معنا واطلب عبر الإنترنت':lang==='tr'?'İletişim ve sipariş bağlantıları':'Contact and order links');
- document.querySelector('footer img').alt=lang==='ar'?'شعار نوحوت فلافل':lang==='tr'?'Nohut Falafel orijinal logo':'Nohut Falafel logo';
+ document.querySelector('footer img').alt=lang==='ar'?'شعار نوهوت فلافل':lang==='tr'?'Nohut Falafel orijinal logo':'Nohut Falafel logo';
  reviewsTrack.scrollLeft=0;
  document.querySelectorAll('[data-tr][data-en]').forEach(node=>{
   const parts=node.dataset[lang].split('|');node.replaceChildren();
