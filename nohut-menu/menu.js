@@ -372,6 +372,29 @@ function renderCategories(){
   else if(selectedRect.right>navRect.right)nav.scrollLeft+=selectedRect.right-navRect.right+5;
  }
 }
+// Defer heavy SVG food photography until the product card approaches the viewport.
+const svgPhotoObserver=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{
+ for(const entry of entries){
+  if(!entry.isIntersecting)continue;
+  entry.target.querySelectorAll('image[data-deferred-href]').forEach(img=>{
+   img.setAttribute('href',img.dataset.deferredHref);
+   delete img.dataset.deferredHref;
+  });
+  svgPhotoObserver.unobserve(entry.target);
+ }
+},{rootMargin:'350px 0px'}):null;
+function deferSvgFoodPhotos(){
+ document.querySelectorAll('#grid .dish').forEach(card=>{
+  const images=card.querySelectorAll('svg image[href]');
+  if(!images.length)return;
+  if(!svgPhotoObserver)return; // Browser fallback: retain normal images.
+  images.forEach(img=>{
+   img.dataset.deferredHref=img.getAttribute('href');
+   img.removeAttribute('href');
+  });
+  svgPhotoObserver.observe(card);
+ });
+}
 function renderMenu(){
  const tr=lang==='tr',current=categories.find(c=>c[0]===category);
  const searching=byId('search').value.trim().length>0;
@@ -395,6 +418,7 @@ function renderMenu(){
   const desc=item[0]==='drink'?'':`<p class="desc">${escapeHtml(menuDescription(item))}</p>`;
   return `<article class="dish"><div class="art${isMenuCutout(item)?' cutout-art':''}">${productVisual(item,index)}</div><div class="dish-text">${categoryTag}<h3 class="name">${escapeHtml(displayName)}</h3><span class="price" dir="ltr">${price}</span>${desc}</div></article>`;
  }).join('');
+ deferSvgFoodPhotos();
  byId('grid').querySelectorAll('img').forEach(image=>image.addEventListener('error',()=>{image.hidden=true;image.nextElementSibling.hidden=false;},{once:true}));
  byId('empty').hidden=items.length>0;
  byId('empty').textContent=lang==='ar'?'ما لقينا أي صنف بهذا الاسم. جرّب كلمة ثانية.':tr?'Ürün bulunamadı. Başka bir kelime deneyin.':'No items found. Try another search.';
