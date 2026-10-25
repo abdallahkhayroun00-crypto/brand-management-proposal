@@ -61,7 +61,7 @@ main{max-width:1260px;margin:0 auto;padding:25px 20px 50px}.demo{background:#fff
  #receipt-print .nf-receipt-legal{text-align:center!important;font-size:8px!important;margin-top:12px!important}
  #receipt-print .nf-copy{text-align:center!important;font-weight:900!important;font-size:11px!important;margin:7px 0!important}
 }
-</style></head><body><header><div><strong>NOHUT FALAFEL</strong><small>ÜRÜNLERE GÖRE HESABI BÖL · TASARIM DEMOSU</small></div><a href="./">← Yönetici Paneli</a></header><main><div class="demo">⚠ DEMO: Bu ekran yalnızca tarayıcınızdaki örnek siparişlerle çalışır. Ödemeler simülasyondur; gerçek POS, banka, mali fiş veya yazıcı işlemi yapılmaz.</div><div id="app"></div><p class="footer">Nohut Falafel · Ürün bazlı hesap bölme · Yerel demo kayıtları · QR Menu değiştirilmez.</p></main><div id="receipt-print"></div><script src="../nohut-menu/menu-data.js"></script><script>
+</style></head><body><header><div><strong>NOHUT FALAFEL</strong><small>ÜRÜNLERE GÖRE HESABI BÖL · TASARIM DEMOSU</small></div><a href="./">← Yönetici Paneli</a></header><main><div class="demo"><span id="split-live-message">⚠ GitHub demo: Tarayıcıdaki örnek veriler. Gerçek ödeme, banka, mali fiş veya yazıcı bağlantısı yoktur.</span></div><div id="app"></div><p class="footer">Nohut Falafel · Ürün bazlı hesap bölme · Yerel demo kayıtları · QR Menu değiştirilmez.</p></main><div id="receipt-print"></div><script src="../nohut-menu/menu-data.js"></script><script>
 (function(){
 "use strict";
 var KEY="nohut-pos-ui-concept-2026-v2",store=null,order=null,selected=null,method="Nakit",given="",payPart="",guestPaymentReady={};
@@ -143,6 +143,56 @@ guardPage();
 
 document.addEventListener("click",function(e){var next=e.target.closest("button[data-new-guest-payment]");if(next){var g=current();if(g&&!order.closed){guestPaymentReady[g.id]=true;payPart="";given="";view()}return}var b=e.target.closest("button[data-assign-payment]");if(!b)return;var p=order.payments[Number(b.dataset.assignPayment)],g=current();if(!p||!g||order.closed)return;var max=Math.min(unmatchedPayment(p),owed(g));if(max<=0){alert("Önce bu kişiye ürün ayırın.");return}var answer=prompt("Bu kişiye aktarılacak önceki ödeme (₺). En fazla "+asMoney(max)+":",String(max/100));if(answer===null)return;var n=amt(answer);if(!(n>0&&n<=max)){alert("Geçerli bir tutar girin.");return}if(!p.guestAllocations)p.guestAllocations=[];p.guestAllocations.push({guestCheckId:g.id,guestName:g.name,amount:n/100});order.events.push(new Date().toISOString()+" · Kasa (PC) · Önceki ödemenin "+asMoney(n)+" payı "+g.name+" hesabına eşleştirildi");save();view()});
 function init(){try{lastRaw=localStorage.getItem(KEY);store=JSON.parse(lastRaw||"null");if(store)normalize(store);var id=Number(new URLSearchParams(window.location.search).get("order"));if(!store||!Array.isArray(store.orders))return view();order=store.orders.find(function(o){return o.id===id});if(!order||order.source==="Yemeksepeti"||order.source==="Trendyol Go"){order=null;return view()}if(!Array.isArray(order.guestChecks))order.guestChecks=[];if(order.guestChecks.length===0&&remaining()>0){order.guestChecks=[{id:1,name:"Kişi 1",allocations:[]},{id:2,name:"Kişi 2",allocations:[]}];save()}selected=order.guestChecks[0]?order.guestChecks[0].id:null;view()}catch(e){document.getElementById("app").innerHTML='<div class="alert">Demo verisi okunamadı. Yönetici Paneline dönün.</div>'}}
-init();
+
+/* Shared laptop SQLite in LAN mode; browser-only preview remains unchanged on GitHub Pages. */
+var splitLocal=(function(){var l=window.location||{};return {
+ candidate:l.protocol==="http:"&&/^(?:localhost|127(?:\.\d+){3}|10(?:\.\d+){3}|192\.168(?:\.\d+){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d+){2})$/.test(l.hostname||""),
+ ready:false,version:0,blocked:false,busy:false,pending:null
+}})();
+function splitNotice(msg){var el=document.getElementById("split-live-message");if(el)el.textContent=msg}
+function splitApply(v){
+ if(!v||!v.state||!Array.isArray(v.state.orders))throw Error("Invalid SQLite response");
+ splitLocal.version=v.revision;store=normalize(v.state);
+ var raw=JSON.stringify(store);localStorage.setItem(KEY,raw);lastRaw=raw;
+ order=store.orders.find(function(x){return x.id===Number(new URLSearchParams(window.location.search).get("order"))})||null;
+ if(order&&(!order.guestChecks||!order.guestChecks.length)&&remaining()>0){
+  order.guestChecks=[{id:1,name:"Kişi 1",allocations:[]},{id:2,name:"Kişi 2",allocations:[]}];save()
+ }
+ selected=order&&order.guestChecks[0]?order.guestChecks[0].id:null;view();
+}
+function splitFailure(message){splitLocal.blocked=true;splitNotice("⛔ "+message+" · İşlemler durduruldu. Bağlantıyı kontrol edip sayfayı yenileyin.")}
+function splitFlush(){
+ if(!splitLocal.ready||splitLocal.blocked||splitLocal.busy||!splitLocal.pending)return;
+ var payload=splitLocal.pending,base=splitLocal.version;splitLocal.pending=null;splitLocal.busy=true;
+ fetch("/api/state",{method:"PUT",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({baseVersion:base,state:JSON.parse(payload)})})
+ .then(function(r){return r.json().then(function(body){return {status:r.status,body:body}})})
+ .then(function(result){
+  splitLocal.busy=false;
+  if(result.status===409){
+   splitLocal.blocked=true;splitLocal.pending=null;
+   if(result.body&&result.body.state){var raw=JSON.stringify(result.body.state);localStorage.setItem(KEY,raw);lastRaw=raw}
+   alert("Başka cihaz siparişi değiştirdi. Değişiklik yerel sunucuda kabul edilmedi. Güncel hesabı kontrol edin.");location.reload();return
+  }
+  if(result.status!==200||!result.body.ok){splitFailure("Ödeme sunucuya kaydedilmedi");return}
+  splitLocal.version=result.body.revision;splitNotice("● SQLite laptop bağlantısı aktif · Ödemeler kaydediliyor");
+  if(splitLocal.pending)splitFlush();
+ }).catch(function(){splitLocal.busy=false;splitLocal.pending=splitLocal.pending||payload;splitFailure("Laptop / Wi-Fi bağlantısı kesildi")});
+}
+var splitOriginalSave=save;
+save=function(){if(splitLocal.candidate&&!splitLocal.ready)throw Error("SQLite initial load pending");if(splitLocal.blocked)throw Error("SQLite offline");splitOriginalSave();if(splitLocal.ready){splitLocal.pending=lastRaw;splitNotice("⏳ Ödeme laptop veritabanına kaydediliyor");splitFlush()}};
+function splitPoll(){if(!splitLocal.ready||splitLocal.blocked||splitLocal.busy||splitLocal.pending)return;
+ fetch("/api/state",{cache:"no-store"}).then(function(r){if(!r.ok)throw Error("Offline");return r.json()})
+ .then(function(v){if(v.revision!==splitLocal.version)splitApply(v)}).catch(function(){splitFailure("Laptop / Wi-Fi bağlantısı kesildi")});
+}
+document.addEventListener("click",function(e){if(splitLocal.candidate&&(!splitLocal.ready||splitLocal.blocked)&&e.target.closest("button")){e.preventDefault();e.stopImmediatePropagation();alert("Yerel SQLite bağlantısı hazır değil. İşlem yapılmadı.")}},true);
+function splitBootstrap(){
+ if(!splitLocal.candidate){init();return}
+ splitNotice("⏳ Laptop SQLite veritabanına bağlanılıyor");
+ fetch("/api/state",{cache:"no-store"}).then(function(r){if(!r.ok)throw Error("Offline");return r.json()})
+ .then(function(v){splitLocal.ready=true;splitApply(v);splitNotice("● Laptop SQLite veritabanı bağlı · Gerçek paylaşılan sipariş verisi");setInterval(splitPoll,2200)})
+ .catch(function(){splitFailure("Bu adreste Local Server bulunamadı")});
+}
+
+splitBootstrap();
 })();
 </script></body></html>
