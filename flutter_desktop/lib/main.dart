@@ -756,33 +756,45 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     String amount,
     IconData icon, {
     Color color = dark,
+    VoidCallback? onTap,
   }) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    color: Color(0xff809081),
-                    fontSize: 12,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(17),
+      hoverColor: const Color(0xffedf5e9),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: Color(0xff809081),
+                      fontSize: 12,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            amount,
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900),
-          ),
-        ],
+                if (onTap != null)
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 17,
+                    color: Color(0xff9aac9d),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              amount,
+              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900),
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -863,21 +875,25 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                   'Aktif Sipariş',
                   '${active.length}',
                   Icons.receipt_outlined,
+                  onTap: () => _switch('orders'),
                 ),
                 _metric(
                   'Dolu Masa',
                   '$busy / 5',
                   Icons.table_restaurant_outlined,
+                  onTap: () => _switch('tables'),
                 ),
                 _metric(
                   'Restoran Tahsilatı · Demo',
                   formatTry(cash),
                   Icons.payments_outlined,
+                  onTap: () => _switch('payments'),
                 ),
                 _metric(
                   'Yazdırma Bekleyen',
                   '${asMaps(db['printJobs']).where((j) => j['state'] != 'İşaretlendi').length}',
                   Icons.print_outlined,
+                  onTap: () => _switch('printer'),
                 ),
               ],
             );
@@ -1464,289 +1480,680 @@ class _OrderComposer extends StatefulWidget {
 }
 
 class _OrderComposerState extends State<_OrderComposer> {
+  final searchController = TextEditingController();
   final counts = <int, int>{};
   final notes = <int, String>{};
-  Json pickupCustomer = {};
   final removed = <int, List<String>>{};
-  String category = 'all', source = 'Masa', pickup = 'Tezgahtan';
+  Json pickupCustomer = {};
+  String category = 'wrap', source = 'Masa', pickup = 'Tezgahtan', search = '';
   int? table;
+  static const categories = {
+    'wrap': 'Dürümler',
+    'plate': 'Porsiyonlar',
+    'drink': 'İçecekler',
+    'meze': 'Mezeler',
+    'fatte': 'Fatte',
+    'side': 'Yan Ürünler',
+    'salad': 'Salatalar',
+    'dessert': 'Tatlılar',
+  };
+  IconData icon(String category) => switch (category) {
+    'wrap' => Icons.lunch_dining_rounded,
+    'plate' => Icons.dinner_dining_rounded,
+    'drink' => Icons.local_drink_rounded,
+    'dessert' => Icons.cake_outlined,
+    'salad' => Icons.eco_outlined,
+    _ => Icons.restaurant_menu_rounded,
+  };
   @override
   void initState() {
     super.initState();
     table = widget.table;
     if (widget.adding) source = widget.table == null ? 'Gel-Al' : 'Masa';
+    if (!widget.products.any((p) => p.category == category) &&
+        widget.products.isNotEmpty) {
+      category = widget.products.first.category;
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final filtered = widget.products
-        .where((p) => (category == 'all' || p.category == category))
-        .toList();
-    final totalCents = counts.entries.fold<int>(0, (sum, e) {
-      final p = widget.products.firstWhere((x) => x.id == e.key);
-      return sum + cents(p.price) * e.value;
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  int get total => counts.entries.fold(
+    0,
+    (sum, e) =>
+        sum +
+        cents(widget.products.firstWhere((p) => p.id == e.key).price) * e.value,
+  );
+  int get quantity => counts.values.fold(0, (a, b) => a + b);
+  String searchKey(String value) => value
+      .toLowerCase()
+      .replaceAll('ı', 'i')
+      .replaceAll('ü', 'u')
+      .replaceAll('ö', 'o')
+      .replaceAll('ç', 'c')
+      .replaceAll('ş', 's')
+      .replaceAll('ğ', 'g')
+      .replaceAll('\u0307', '');
+  void change(Product p, int delta) {
+    if (p.price == null) return;
+    setState(() {
+      final n = ((counts[p.id] ?? 0) + delta).clamp(0, 1000);
+      if (n == 0) {
+        counts.remove(p.id);
+        notes.remove(p.id);
+        removed.remove(p.id);
+      } else {
+        counts[p.id] = n;
+      }
     });
-    return Dialog(
-      child: SizedBox(
-        width: 820,
-        height: 650,
-        child: Padding(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.adding
-                          ? 'Ek Sipariş · Kasa (PC)'
-                          : 'Yeni Sipariş · Kasa (PC)',
-                      style: const TextStyle(
-                        fontSize: 21,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
+  }
+
+  Future<void> customize(Product p) async {
+    final v = await askFields(context, '${p.name} · Not / Malzeme', [
+      ('Ürün notu', notes[p.id] ?? ''),
+      ('Çıkarılacak malzemeler (virgülle)', (removed[p.id] ?? []).join(', ')),
+    ]);
+    if (v != null && mounted) {
+      setState(() {
+        notes[p.id] = v[0];
+        removed[p.id] = v[1]
+            .split(',')
+            .map((s) => s.trim())
+            .where((s) => s.isNotEmpty)
+            .toList();
+      });
+    }
+  }
+
+  void save() {
+    if (counts.isEmpty || (source == 'Masa' && table == null)) return;
+    Navigator.pop(
+      context,
+      OrderRequest(
+        source: source,
+        table: source == 'Masa' ? table : null,
+        pickupChannel: pickup,
+        customer: pickupCustomer,
+        lines: [
+          for (final e in counts.entries)
+            (() {
+              final p = widget.products.firstWhere((p) => p.id == e.key);
+              return <String, dynamic>{
+                'productId': p.id,
+                'productKey': p.name,
+                'name': p.name,
+                'price': p.price,
+                'qty': e.value,
+                'removed': removed[p.id] ?? <String>[],
+                'note': notes[p.id] ?? '',
+              };
+            })(),
+        ],
+      ),
+    );
+  }
+
+  Widget categoryButton(String id, String label) => Padding(
+    padding: const EdgeInsets.only(bottom: 7, right: 7),
+    child: ChoiceChip(
+      key: ValueKey('category-$id'),
+      showCheckmark: false,
+      avatar: Icon(
+        icon(id),
+        size: 18,
+        color: category == id ? Colors.white : dark,
+      ),
+      label: Text(label),
+      selected: category == id && search.isEmpty,
+      selectedColor: dark,
+      labelStyle: TextStyle(
+        color: category == id && search.isEmpty ? Colors.white : dark,
+        fontWeight: FontWeight.w700,
+      ),
+      onSelected: (_) => setState(() {
+        category = id;
+        search = '';
+        searchController.clear();
+      }),
+    ),
+  );
+  Widget basket() => Container(
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(color: const Color(0xffe4e9e3)),
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.shopping_bag_outlined),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'Sipariş Sepeti',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  if (!widget.adding)
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        initialValue: source,
-                        decoration: const InputDecoration(
-                          labelText: 'Sipariş Türü',
-                        ),
-                        items: ['Masa', 'Gel-Al']
-                            .map(
-                              (v) => DropdownMenuItem(value: v, child: Text(v)),
-                            )
-                            .toList(),
-                        onChanged: (v) => setState(() => source = v ?? 'Masa'),
+            ),
+            Text(
+              '$quantity ürün',
+              style: const TextStyle(color: Color(0xff7c8b80)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          source == 'Masa'
+              ? (table == null
+                    ? 'Önce masa seçin'
+                    : 'Masa $table${widget.adding ? ' · Ek Sipariş' : ''}')
+              : 'Gel-Al · $pickup',
+          style: const TextStyle(color: emerald, fontWeight: FontWeight.w700),
+        ),
+        const Divider(height: 24),
+        Expanded(
+          child: counts.isEmpty
+              ? const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.add_shopping_cart_rounded,
+                        size: 46,
+                        color: Color(0xffa6bca8),
                       ),
-                    ),
-                  if (!widget.adding) const SizedBox(width: 12),
-                  if (source == 'Masa')
-                    Expanded(
-                      child: DropdownButtonFormField<int>(
-                        initialValue: table,
-                        decoration: const InputDecoration(labelText: 'Masa'),
-                        items: List.generate(
-                          5,
-                          (i) => DropdownMenuItem(
-                            value: i + 1,
-                            child: Text('Masa ${i + 1}'),
-                          ),
+                      SizedBox(height: 14),
+                      Text('Sepet henüz boş'),
+                      SizedBox(height: 6),
+                      Text(
+                        'Ürün kartına dokunarak ekleyin.',
+                        style: TextStyle(
+                          color: Color(0xff7c8b80),
+                          fontSize: 12,
                         ),
-                        onChanged: widget.adding
-                            ? null
-                            : (v) => setState(() => table = v),
                       ),
-                    ),
-                  if (source == 'Gel-Al')
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        initialValue: pickup,
-                        decoration: const InputDecoration(
-                          labelText: 'Teslim Alma',
-                        ),
-                        items: ['Tezgahtan', 'Telefon']
-                            .map(
-                              (v) => DropdownMenuItem(value: v, child: Text(v)),
-                            )
-                            .toList(),
-                        onChanged: (v) =>
-                            setState(() => pickup = v ?? 'Tezgahtan'),
-                      ),
-                    ),
-                ],
-              ),
-              if (source == 'Gel-Al' && !widget.adding)
-                OutlinedButton(
-                  onPressed: () async {
-                    final v = await askFields(context, 'Gel-Al Bilgileri', [
-                      ('Ad', '${pickupCustomer['name'] ?? ''}'),
-                      ('Telefon', '${pickupCustomer['phone'] ?? ''}'),
-                      ('Teslim alma saati', '${pickupCustomer['time'] ?? ''}'),
-                    ]);
-                    if (v != null && mounted) {
-                      setState(
-                        () => pickupCustomer = {
-                          'name': v[0],
-                          'phone': v[1],
-                          'time': v[2],
-                        },
-                      );
-                    }
-                  },
-                  child: const Text('Gel-Al Müşteri / Saat Bilgisi'),
-                ),
-              const SizedBox(height: 15),
-              const Text('Ürüne dokunun: not ve çıkarılan malzemeler.'),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
+                    ],
+                  ),
+                )
+              : ListView(
                   children: [
-                    for (final x in [
-                      ('all', 'Tümü'),
-                      ('wrap', 'Dürümler'),
-                      ('plate', 'Porsiyonlar'),
-                      ('meze', 'Mezeler'),
-                      ('fatte', 'Fatte'),
-                      ('side', 'Diğer'),
-                      ('salad', 'Salatalar'),
-                      ('dessert', 'Tatlı'),
-                      ('drink', 'İçecekler'),
-                    ])
-                      Padding(
-                        padding: const EdgeInsets.only(right: 7),
-                        child: ChoiceChip(
-                          label: Text(x.$2),
-                          selected: category == x.$1,
-                          onSelected: (_) => setState(() => category = x.$1),
-                        ),
-                      ),
+                    for (final entry in counts.entries)
+                      (() {
+                        final p = widget.products.firstWhere(
+                          (p) => p.id == entry.key,
+                        );
+                        return Container(
+                          key: ValueKey('basket-${p.id}'),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(color: Color(0xffedf0ea)),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                p.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                formatTry(cents(p.price) * entry.value),
+                                style: const TextStyle(
+                                  color: emerald,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              if ((notes[p.id] ?? '').isNotEmpty)
+                                Text(
+                                  notes[p.id]!,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xff7c8b80),
+                                  ),
+                                ),
+                              if ((removed[p.id] ?? []).isNotEmpty)
+                                Text(
+                                  'Çıkar: ${removed[p.id]!.join(', ')}',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextButton(
+                                      onPressed: () => customize(p),
+                                      child: const Text('Not / Malzeme'),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: '${p.name} azalt',
+                                    onPressed: () => change(p, -1),
+                                    icon: const Icon(
+                                      Icons.remove_circle_outline,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${entry.value}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: '${p.name} artır',
+                                    onPressed: () => change(p, 1),
+                                    icon: const Icon(Icons.add_circle_outline),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      })(),
                   ],
                 ),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: filtered.length,
-                  itemBuilder: (context, i) {
-                    final p = filtered[i], qty = counts[p.id] ?? 0;
-                    return ListTile(
-                      title: Text(
-                        p.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        const Divider(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('TOPLAM', style: TextStyle(fontWeight: FontWeight.w700)),
+            Text(
+              formatTry(total),
+              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        FilledButton.icon(
+          key: const ValueKey('save-order'),
+          onPressed: counts.isEmpty || (source == 'Masa' && table == null)
+              ? null
+              : save,
+          icon: const Icon(Icons.check_circle_outline),
+          label: const Text('Siparişi Kaydet'),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Ctrl + Enter ile kaydet',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 10, color: Color(0xff7c8b80)),
+        ),
+      ],
+    ),
+  );
+  @override
+  Widget build(BuildContext context) {
+    final available = widget.products.map((p) => p.category).toSet();
+    final labels = {
+      ...categories,
+      for (final id in available)
+        if (!categories.containsKey(id)) id: id,
+    };
+    final filtered = widget.products
+        .where(
+          (p) => search.trim().isEmpty
+              ? p.category == category
+              : searchKey(p.name).contains(searchKey(search.trim())),
+        )
+        .toList();
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.enter, control: true): save,
+      },
+      child: Dialog(
+        insetPadding: const EdgeInsets.all(20),
+        backgroundColor: cream,
+        child: SizedBox(
+          width: 1220,
+          height: MediaQuery.sizeOf(context).height * .89,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.restaurant_menu_rounded, color: emerald),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        widget.adding ? 'Ek Sipariş' : 'Sipariş Al',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                      subtitle: Text(
-                        p.price == null
-                            ? 'Fiyat belirlenmedi'
-                            : '${formatTry(cents(p.price))} · ${notes[p.id] ?? ''}',
-                      ),
-                      onTap: () async {
-                        final v = await askFields(context, p.name, [
-                          ('Ürün notu', notes[p.id] ?? ''),
-                          (
-                            'Çıkarılan malzemeler (virgülle)',
-                            (removed[p.id] ?? []).join(', '),
+                    ),
+                    IconButton(
+                      tooltip: 'Kapat',
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (widget.adding)
+                  Text(
+                    source == 'Masa'
+                        ? 'Masa $table · Mevcut hesaba ürün ekle'
+                        : 'Gel-Al · Mevcut siparişe ürün ekle',
+                    style: const TextStyle(
+                      color: emerald,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      for (final type in ['Masa', 'Gel-Al'])
+                        ChoiceChip(
+                          label: Text(type),
+                          selected: source == type,
+                          onSelected: (_) => setState(() => source = type),
+                        ),
+                      const SizedBox(width: 8),
+                      if (source == 'Masa')
+                        for (var n = 1; n <= 5; n++)
+                          ChoiceChip(
+                            key: ValueKey('select-table-$n'),
+                            label: Text('Masa $n'),
+                            selected: table == n,
+                            onSelected: (_) => setState(() => table = n),
                           ),
-                        ]);
-                        if (v != null && mounted) {
-                          setState(() {
-                            notes[p.id] = v[0];
-                            removed[p.id] = v[1]
-                                .split(',')
-                                .map((s) => s.trim())
-                                .where((s) => s.isNotEmpty)
-                                .toList();
-                          });
-                        }
-                      },
-                      trailing: p.price == null
-                          ? const Text(
-                              'Fiyat yok',
-                              style: TextStyle(color: Colors.deepOrange),
-                            )
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
+                      if (source == 'Gel-Al') ...[
+                        for (final channel in ['Tezgahtan', 'Telefon'])
+                          ChoiceChip(
+                            label: Text(channel),
+                            selected: pickup == channel,
+                            onSelected: (_) => setState(() => pickup = channel),
+                          ),
+                        TextButton.icon(
+                          onPressed: () async {
+                            final v = await askFields(
+                              context,
+                              'Gel-Al Bilgileri',
+                              [
+                                ('Ad', '${pickupCustomer['name'] ?? ''}'),
+                                ('Telefon', '${pickupCustomer['phone'] ?? ''}'),
+                                (
+                                  'Teslim alma saati',
+                                  '${pickupCustomer['time'] ?? ''}',
+                                ),
+                              ],
+                            );
+                            if (v != null && mounted) {
+                              setState(
+                                () => pickupCustomer = {
+                                  'name': v[0],
+                                  'phone': v[1],
+                                  'time': v[2],
+                                },
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.person_outline, size: 18),
+                          label: const Text('Müşteri Bilgisi'),
+                        ),
+                      ],
+                    ],
+                  ),
+                const SizedBox(height: 18),
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, c) {
+                      final wide = c.maxWidth >= 1000;
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (wide) ...[
+                            SizedBox(
+                              width: 142,
+                              child: ListView(
+                                children: [
+                                  const Padding(
+                                    padding: EdgeInsets.only(bottom: 14),
+                                    child: Text(
+                                      'MENÜ',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xff7c8b80),
+                                        letterSpacing: 1.3,
+                                      ),
+                                    ),
+                                  ),
+                                  for (final e in labels.entries)
+                                    if (available.contains(e.key))
+                                      categoryButton(e.key, e.value),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                          ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                IconButton(
-                                  onPressed: qty > 0
-                                      ? () => setState(() {
-                                          if (qty == 1) {
-                                            counts.remove(p.id);
-                                          } else {
-                                            counts[p.id] = qty - 1;
-                                          }
-                                        })
-                                      : null,
-                                  icon: const Icon(Icons.remove_circle_outline),
+                                TextField(
+                                  key: const ValueKey('catalog-search'),
+                                  controller: searchController,
+                                  decoration: const InputDecoration(
+                                    prefixIcon: Icon(Icons.search),
+                                    hintText: 'Ürün ara…',
+                                  ),
+                                  onChanged: (v) => setState(() => search = v),
                                 ),
-                                Text(
-                                  '$qty',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
+                                const SizedBox(height: 12),
+                                if (!wide)
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: [
+                                        for (final e in labels.entries)
+                                          if (available.contains(e.key))
+                                            categoryButton(e.key, e.value),
+                                      ],
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Text(
+                                    search.isEmpty
+                                        ? '${labels[category]} · ${filtered.length} ürün'
+                                        : '${filtered.length} arama sonucu',
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
                                 ),
-                                IconButton(
-                                  onPressed: () =>
-                                      setState(() => counts[p.id] = qty + 1),
-                                  icon: const Icon(
-                                    Icons.add_circle,
-                                    color: emerald,
-                                  ),
+                                Expanded(
+                                  child: filtered.isEmpty
+                                      ? const Center(
+                                          child: Text('Ürün bulunamadı.'),
+                                        )
+                                      : GridView.builder(
+                                          gridDelegate:
+                                              const SliverGridDelegateWithMaxCrossAxisExtent(
+                                                maxCrossAxisExtent: 220,
+                                                mainAxisExtent: 164,
+                                                crossAxisSpacing: 12,
+                                                mainAxisSpacing: 12,
+                                              ),
+                                          itemCount: filtered.length,
+                                          itemBuilder: (context, i) {
+                                            final p = filtered[i],
+                                                qty = counts[p.id] ?? 0;
+                                            return Material(
+                                              color: qty > 0
+                                                  ? const Color(0xfff1f7eb)
+                                                  : Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              child: InkWell(
+                                                key: ValueKey(
+                                                  'product-${p.id}',
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                onTap: p.price == null
+                                                    ? null
+                                                    : () => change(p, 1),
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(
+                                                    15,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(
+                                                      color: qty > 0
+                                                          ? const Color(
+                                                              0xff9eb99f,
+                                                            )
+                                                          : const Color(
+                                                              0xffe4e9e3,
+                                                            ),
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          16,
+                                                        ),
+                                                  ),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          Icon(
+                                                            icon(p.category),
+                                                            color: emerald,
+                                                          ),
+                                                          const Spacer(),
+                                                          if (qty > 0)
+                                                            Container(
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        8,
+                                                                    vertical: 4,
+                                                                  ),
+                                                              decoration: BoxDecoration(
+                                                                color:
+                                                                    const Color(
+                                                                      0xffdcead8,
+                                                                    ),
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      99,
+                                                                    ),
+                                                              ),
+                                                              child: Text(
+                                                                'Sepette $qty',
+                                                                style: const TextStyle(
+                                                                  fontSize: 11,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w700,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 10,
+                                                      ),
+                                                      Expanded(
+                                                        child: Text(
+                                                          p.name,
+                                                          maxLines: 2,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style:
+                                                              const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w800,
+                                                                fontSize: 14,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: Text(
+                                                              p.price == null
+                                                                  ? 'Fiyat belirlenmedi'
+                                                                  : formatTry(
+                                                                      cents(
+                                                                        p.price,
+                                                                      ),
+                                                                    ),
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w700,
+                                                                fontSize:
+                                                                    p.price ==
+                                                                        null
+                                                                    ? 11
+                                                                    : 14,
+                                                                color:
+                                                                    p.price ==
+                                                                        null
+                                                                    ? Colors
+                                                                          .deepOrange
+                                                                    : dark,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          Icon(
+                                                            p.price == null
+                                                                ? Icons.block
+                                                                : Icons
+                                                                      .add_circle_rounded,
+                                                            color:
+                                                                p.price == null
+                                                                ? Colors.grey
+                                                                : emerald,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
                                 ),
                               ],
                             ),
-                    );
-                  },
+                          ),
+                          const SizedBox(width: 18),
+                          SizedBox(
+                            width: c.maxWidth < 900 ? 280 : 320,
+                            child: basket(),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-              const Divider(),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Ürün: ${counts.values.fold<int>(0, (a, b) => a + b)} · Toplam: ${formatTry(totalCents)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Vazgeç'),
-                  ),
-                  const SizedBox(width: 10),
-                  FilledButton.icon(
-                    onPressed:
-                        counts.isEmpty || (source == 'Masa' && table == null)
-                        ? null
-                        : () {
-                            final lines = <Json>[];
-                            for (final entry in counts.entries) {
-                              final product = widget.products.firstWhere(
-                                (p) => p.id == entry.key,
-                              );
-                              lines.add({
-                                'productId': product.id,
-                                'productKey': product.name,
-                                'name': product.name,
-                                'price': product.price,
-                                'qty': entry.value,
-                                'removed': removed[product.id] ?? <String>[],
-                                'note': notes[product.id] ?? '',
-                              });
-                            }
-                            Navigator.pop(
-                              context,
-                              OrderRequest(
-                                source: source,
-                                table: source == 'Masa' ? table : null,
-                                pickupChannel: pickup,
-                                lines: lines,
-                                customer: pickupCustomer,
-                              ),
-                            );
-                          },
-                    icon: const Icon(Icons.save),
-                    label: const Text('Siparişi Kaydet'),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

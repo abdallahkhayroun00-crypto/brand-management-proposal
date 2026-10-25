@@ -307,5 +307,5 @@ void closeLocalTable(Json order) {
 String formatTry(int amount) {
   final value = amount / 100;
   final fixed = value.toStringAsFixed(2);
-  return '$fixed ₺';
+  return '${fixed.replaceAll('.', ',')} ₺';
 }

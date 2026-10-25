@@ -15,3 +15,11 @@ Version 0.3.0 follows the existing `pos-demo/index.html` visual concept, includi
 Native widgets checked at 1600×900 and 1280×720, including both platform columns and the pairing action's visibility. Browser checks at 320, 390 and 768px exercise table occupancy, add-to-table selection, quantity controls, submission and absence of staff accept/reject controls, with no horizontal overflow. Browser visual checks use a synthetic local fixture; they are not restaurant Wi-Fi or live platform acceptance tests. Native review uses a separate QA database.
 
 All permission, enrollment, payment and integration boundaries described in [INTEGRATIONS.md](INTEGRATIONS.md) remain in force. The newly exposed phone floor projection contains geometry and kitchen data, not payment administration. Saved layout parity and response allowlist are covered by tests.
+
+## Faster ordering — version 0.4.0
+
+Phone ordering now follows **Masa → Ürünler → Sepet → Gönder**. Sections use the real menu categories: Dürümler, Porsiyonlar and İçecekler first, then the other available sections. Product cards have one add action. Quantities, removals and optional notes are edited in the review basket. A persistent basket button shows count and total. Search works across sections and accepts Turkish names typed without accents. Changing destination with items present requires explicit confirmation. Uncertain submissions lock the draft and retry the same stored request.
+
+Native PC ordering uses clickable product cards, category navigation, search and a persistent side basket. Quantities and notes update the running total; the selected table/source stays visible and Ctrl+Enter saves only a valid order. Removing the last unit clears its customization. Dashboard metrics navigate directly to orders, tables, cashier and printer. Turkish currency display uses decimal commas.
+
+The native order-entry test at 1280×720 moves between categories/search without losing the basket, changes quantities and verifies the saved table and exact SQLite total. `ui-tests` runs browser checks at 320, 390 and 768px for categories, global search, notes/removals, unavailable prices and an interrupted submission followed by an identical retry. These checks also run in Windows Actions.

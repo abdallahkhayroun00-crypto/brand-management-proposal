@@ -8,6 +8,82 @@ import 'package:nohut_falafel_desktop/platform_workflows.dart';
 import 'package:nohut_falafel_desktop/operations.dart';
 
 void main() {
+  testWidgets(
+    'PC categorized product cards preserve basket across filters and save quantities to chosen table',
+    (tester) async {
+      final folder = Directory.systemTemp.createTempSync('nohut-composer-'),
+          file = '${folder.path}/pos.sqlite3';
+      tester.view.physicalSize = const Size(1280, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox.shrink());
+        folder.deleteSync(recursive: true);
+      });
+      final seed = PosStore(databaseFile: file), s = seed.read().data;
+      s['localMenu'] = [
+        {'id': 0, 'name': 'Falafel Dürüm', 'category': 'wrap', 'price': 140},
+        {
+          'id': 1,
+          'name': 'Falafel Porsiyon',
+          'category': 'plate',
+          'price': 200,
+        },
+        {'id': 2, 'name': 'Ayran', 'category': 'drink', 'price': 30},
+      ];
+      seed.replace(s, 0);
+      seed.dispose();
+      await tester.pumpWidget(
+        NohutFalafelApp(databaseFile: file, startServer: false),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('+ Sipariş Al'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const ValueKey('product-0')), findsOneWidget);
+      expect(find.byKey(const ValueKey('product-1')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('select-table-2')));
+      await tester.tap(find.byKey(const ValueKey('product-0')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('category-drink')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('product-0')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('product-2')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('basket-0')), findsOneWidget);
+      expect(find.byKey(const ValueKey('basket-2')), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const ValueKey('catalog-search')),
+        'Porsiyon',
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('product-1')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('category-wrap')));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const ValueKey('catalog-search')))
+            .controller!
+            .text,
+        isEmpty,
+      );
+      await tester.tap(find.byTooltip('Falafel Dürüm artır'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.byKey(const ValueKey('save-order')));
+      await tester.pumpAndSettle();
+      final saved = PosStore(databaseFile: file),
+          order = asMaps(saved.read().data['orders']).single;
+      expect(order['table'], 2);
+      expect(orderTotalCents(order), 31000);
+      expect(
+        checkLines(order).fold<int>(0, (n, l) => n + (l.line['qty'] as int)),
+        3,
+      );
+      saved.dispose();
+    },
+  );
   for (final size in [const Size(1600, 900), const Size(1280, 720)]) {
     testWidgets(
       'manager and workflow navigation at ${size.width} without role chooser',
