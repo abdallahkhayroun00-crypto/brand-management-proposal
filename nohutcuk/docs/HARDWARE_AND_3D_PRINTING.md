@@ -93,7 +93,7 @@ boot / self-test
   ├── servo controller with travel limits
   ├── sound player
   ├── game and gesture state machine
-  ├── local Wi-Fi event listener (optional V4)
+  ├── local Wi-Fi event listener (in the single complete version; dependent on secure integration testing)
   ├── admin controls / quiet mode
   ├── fault monitor and telemetry (no personal data)
   └── idle / low-power manager
