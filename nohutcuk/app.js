@@ -37,14 +37,6 @@
     ['dance','💃','Dance mode'],['cool','😎','Cool mode'],
     ['loveAttack','💗','Love attack'],['falafel','🧆','Falafel lover']
   ];
-  const RESTAURANT = [
-    ['trendyol','🟠','Trendyol Go order'],['yemeksepeti','💗','Yemeksepeti order'],
-    ['migros','🟧','Migros Yemek order'],['table','🍽','Table order'],
-    ['extra','🥤','Extra drink / item'],['card','💳','Card payment confirmed'],
-    ['cash','💵','Cash payment confirmed'],['fail','⚠️','Payment failed'],
-    ['delay','⏳','Order delayed'],['cancel','❌','Order cancelled'],
-    ['ready','🎉','Order ready'],['close','🌙','Restaurant closing']
-  ];
   const SPECIAL = [
     ['photo','📸','Photo pose • 10 sec'],['selfie','🤳','Selfie pose'],
     ['instagram','💖','Instagram mode'],['reels','🎬','Reels / performance'],
@@ -52,18 +44,20 @@
     ['newyear','🎄','New Year'],['birthday','🎂','Birthday']
   ];
   const $ = id => document.getElementById(id);
+  const audio=window.NohutcukAudio;
   const els = {
     face:$('faceContent'),svg:$('face'),screen:$('screen'),robot:$('robot'),
     bubble:$('speechBubble'),currentMood:$('currentMood'),currentEvent:$('currentEvent'),
     badge:$('statusBadge'),eventLog:$('eventLog'),friendCount:$('friendCount'),
     palette:$('paletteSelect'),customColor:$('customColor'),language:$('languageSelect'),
     duration:$('durationRange'),blink:$('blinkRange'),speed:$('speedRange'),
-    autoBlink:$('autoBlink'),autoSleep:$('autoSleep'),voice:$('voiceEnabled'),quiet:$('quietMode')
+    autoBlink:$('autoBlink'),autoSleep:$('autoSleep'),voice:$('voiceEnabled'),quiet:$('quietMode'),
+    effects:$('effectsEnabled'),volume:$('volumeRange')
   };
   const state = {
     mood:'normal',label:'Idle • Blink • Glance',token:0,timeout:0,bubbleTimeout:0,motionTimeout:0,
     palette:'expressive',customColor:'#a7edff',duration:3.5,blinkEvery:3,speed:1,
-    autoBlink:true,autoSleep:false,voice:false,quiet:false,language:'tr-TR',
+    autoBlink:true,autoSleep:false,voice:false,quiet:false,effects:false,volume:.5,language:'tr-TR',
     blinkStarted:0,nextBlink:Date.now()+2400,glanceX:0,glanceY:0,lastPointer:0,
     lastInteraction:Date.now(),lastGlance:Date.now(),lastWelcome:0,friendship:0,
     previewSequence:0,frame:0
@@ -138,6 +132,7 @@
     motion(options.motion||'',options.duration||2000);
     if(options.bubble)bubble(options.bubble,options.duration||3000);
     if(options.say)say(options.say);
+    if(options.sound!==false&&options.interactive!==false&&state.effects&&!state.quiet)audio.playEffect(id);
     if(options.log!==false)log(state.label+' → '+BY_ID[id].name);
     const delay=typeof options.duration==='number'?options.duration:state.duration*1000/state.speed;
     if(delay>0 && id!=='normal'){
@@ -176,39 +171,19 @@
       setTimeout(()=>{if(state.token===token)setMood('surprised',{label:'Fake sleep • surprise wake',motion:'nod',bubble:'Aaa! 😲'});},1900/state.speed);return;
     }
     if(action==='bye'){setMood('goodbye',{label:'Farewell interaction',motion:'tilt',bubble:phrases.goodbye[state.language],say:'goodbye'});return;}
-    if(action==='dance'){setMood('celebrating',{label:'Dance mode',motion:'dance',duration:4500/state.speed,bubble:'Hadi dans edelim! 🎵'});return;}
+    if(action==='dance'){setMood('celebrating',{label:'Dance mode',motion:'dance',duration:4500/state.speed,bubble:'Hadi dans edelim! 🎵',sound:false});if(state.effects&&!state.quiet)startSong('dance');return;}
     if(action==='cool'){setMood('cool',{label:'Cool mode',motion:'tilt',bubble:'Çok havalı! 😎'});return;}
     if(action==='loveAttack'){setMood('love',{label:'Love attack',motion:'nod',bubble:'💗💗💗'});return;}
     if(action==='falafel'){setMood('hungry',{label:'Falafel lover',motion:'nod',bubble:'Falafel! 🧆'});return;}
     if(action==='photo'){setMood('happy',{label:'Photo mode • holds pose 10s',duration:10000,motion:'tilt',bubble:'Çek bakalım! 📸'});return;}
     if(action==='selfie'){setMood('shy',{label:'Selfie pose',duration:5000,motion:'tilt',bubble:'Selfie! 🤳'});return;}
     if(action==='instagram'){setMood('love',{label:'Instagram mode',motion:'nod',bubble:'Beni etiketle! #Nohutçuk'});return;}
-    if(action==='reels'){setMood('celebrating',{label:'Reels performance',motion:'dance',duration:6000,bubble:'Nohutçuk Reels 🎬'});return;}
+    if(action==='reels'){setMood('celebrating',{label:'Reels performance',motion:'dance',duration:6000,bubble:'Nohutçuk Reels 🎬',sound:false});if(state.effects&&!state.quiet)startSong('dance');return;}
     const holidays={ramadan:['thinking','Ramazan mübarek olsun! 🌙'],eid:['celebrating','İyi Bayramlar! ✨'],newyear:['celebrating','Mutlu yıllar! 🎄'],birthday:['love',phrases.birthday[state.language]]};
     if(holidays[action]){
       const entry=holidays[action];setMood(entry[0],{label:'Special event • '+action,motion:'nod',bubble:entry[1],say:action==='birthday'?'birthday':null});return;
     }
-    const pcEvents={
-      trendyol:['surprised','New Trendyol Go order','Trendyol Go 🟠','nod'],
-      yemeksepeti:['happy','New Yemeksepeti order','Yemeksepeti 💗','nod'],
-      migros:['hello','New Migros Yemek order','Migros Yemek 🟠','nod'],
-      table:['hungry','New table order','Masa siparişi! 🍽','nod'],
-      extra:['happy','Extra item added','Ek sipariş! 🥤','nod'],
-      card:['happy','Card payment confirmed','Kart ödemesi başarılı ✓','nod'],
-      cash:['love','Cash payment confirmed','Nakit ödeme başarılı ✓','nod'],
-      fail:['confused','Payment failed','Ödeme başarısız ⚠️',''],
-      delay:['sad','Order delayed','Sipariş gecikiyor ⏳','tilt'],
-      cancel:['sad','Order cancelled','Sipariş iptal edildi','tilt'],
-      ready:['celebrating','Order ready','Sipariş hazır! 🎉','dance'],
-      close:['sleeping','Restaurant closing','İyi geceler! 🌙','']
-    };
-    if(pcEvents[action]){
-      const e=pcEvents[action];
-      setMood(e[0],{label:'PC-app DEMO • '+e[1],bubble:e[2],motion:e[3],say:action==='ready'?'ready':null,duration:action==='close'?0:undefined});
-      // The robot consumes no actual marketplace or payment data.
-      return;
-    }
-    log('Unknown demo action: '+action);
+    log('Unknown character action: '+action);
   }
 
   // Pure-ish expression renderer: generated SVG shapes are based only on a known mood ID.
@@ -314,7 +289,6 @@
   }
   buildButtons('emotionGrid',MOODS,'emotion');
   buildButtons('interactionGrid',INTERACTIONS,'action');
-  buildButtons('restaurantGrid',RESTAURANT,'action');
   buildButtons('specialGrid',SPECIAL,'action');
   const cycleButton=document.createElement('button');
   cycleButton.type='button';cycleButton.className='secondary-button';
@@ -344,6 +318,65 @@
     setMood('normal',{label:'Idle • Blink • Glance',duration:0,bubble:'Merhaba! Ben Nohutçuk 💚'});
   });
   $('clearLog').addEventListener('click',()=>{els.eventLog.replaceChildren();log('History cleared (demo only).');});
+  // Audio studio — tunes and effects are local synthesis, not streaming/third-party music.
+  let localFileUrl=null;
+  const localPlayer=$('localAudioPlayer');
+  audio.onSongChange(id=>{
+    const songs=document.querySelectorAll('[data-song]');
+    songs.forEach(btn=>btn.classList.toggle('is-playing',btn.dataset.song===id));
+    $('musicStatus').textContent=id?'Now playing: '+audio.songNames[id]+' 🎶':'Choose a song to start listening 🎵';
+  });
+  function stopLocal(){
+    localPlayer.pause();
+    localPlayer.currentTime=0;
+  }
+  function startSong(id){
+    if(state.quiet){log('Quiet mode is enabled — no sound.');return;}
+    stopLocal();
+    const success=audio.playSong(id);
+    if(!success)log('Audio playback unavailable on this device/browser.');
+    else log('Playing original song • '+audio.songNames[id]);
+  }
+  document.querySelectorAll('[data-song]').forEach(btn=>btn.addEventListener('click',()=>startSong(btn.dataset.song)));
+  $('stopMusic').addEventListener('click',()=>{
+    audio.stopSong();stopLocal();$('musicStatus').textContent='Playback stopped ■';log('Music stopped');
+  });
+  const previewEffects=['happy','love','laughing','shy','surprised','sleeping','celebrating','touch','wink','goodbye'];
+  previewEffects.forEach(id=>{
+    const mood=BY_ID[id];
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='sfx-button';
+    button.textContent=({happy:'😊 Happy chime',love:'💗 Love sparkle',laughing:'😂 Giggle',shy:'🥹 Shy',surprised:'😲 Surprise',sleeping:'🌙 Sleepy',celebrating:'🎉 Celebrate',touch:'👆 Touch pop',wink:'😉 Wink',goodbye:'👋 Goodbye'})[id];
+    button.addEventListener('click',()=>{
+      if(state.quiet){log('Quiet mode is enabled — no sound.');return;}
+      const ok=audio.playEffect(id,true);
+      if(!ok)log('Audio playback unavailable on this device/browser.');
+      else log('Sound effect • '+(mood?mood.name:id));
+    });
+    $('sfxGrid').appendChild(button);
+  });
+  $('localAudioFile').addEventListener('change',()=>{
+    const file=$('localAudioFile').files && $('localAudioFile').files[0];
+    if(!file)return;
+    if(!file.type.startsWith('audio/')){log('Select a supported audio file.');return;}
+    stopLocal();
+    audio.stopSong();
+    if(localFileUrl)URL.revokeObjectURL(localFileUrl);
+    localFileUrl=URL.createObjectURL(file);
+    localPlayer.src=localFileUrl;
+    localPlayer.hidden=false;
+    localPlayer.volume=state.volume;
+    $('musicStatus').textContent='Local audio ready: '+file.name;
+    log('Loaded a local audio file in browser only (not uploaded).');
+  });
+  localPlayer.addEventListener('play',()=>{
+    audio.stopSong();
+    if(state.quiet){localPlayer.pause();return;}
+    $('musicStatus').textContent='Local audio playing 🎧';
+  });
+  localPlayer.addEventListener('ended',()=>{$('musicStatus').textContent='Local audio finished';});
+  window.addEventListener('pagehide',()=>{if(localFileUrl)URL.revokeObjectURL(localFileUrl);});
   function refreshSettings(){
     state.palette=els.palette.value;
     state.customColor=els.customColor.value;
@@ -355,6 +388,14 @@
     state.autoSleep=els.autoSleep.checked;
     state.voice=els.voice.checked;
     state.quiet=els.quiet.checked;
+    state.effects=els.effects.checked;
+    state.volume=Number(els.volume.value)/100;
+    audio.setEffectsEnabled(state.effects);
+    audio.setVolume(state.volume);
+    audio.setMuted(state.quiet);
+    localPlayer.volume=state.volume;
+    if(state.quiet&&!localPlayer.paused)localPlayer.pause();
+    $('volumeValue').textContent=Math.round(state.volume*100)+'%';
     $('durationValue').textContent=state.duration+'s';
     $('blinkValue').textContent=state.blinkEvery+'s';
     $('speedValue').textContent=state.speed+'×';
@@ -362,7 +403,7 @@
     if(state.quiet){clearMotion();try{window.speechSynthesis.cancel();}catch(_){}}
     draw();
   }
-  ['paletteSelect','customColor','languageSelect','durationRange','blinkRange','speedRange','autoBlink','autoSleep','voiceEnabled','quietMode'].forEach(id=>{
+  ['paletteSelect','customColor','languageSelect','durationRange','blinkRange','speedRange','autoBlink','autoSleep','voiceEnabled','effectsEnabled','quietMode','volumeRange'].forEach(id=>{
     $(id).addEventListener('input',refreshSettings);
     $(id).addEventListener('change',refreshSettings);
   });
