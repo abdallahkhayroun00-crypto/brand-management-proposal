@@ -20,6 +20,25 @@ The simulator is implemented in [index.html](index.html), [styles.css](styles.cs
 
 **Hardware decision:** the reference images show multiple simultaneous luminous colors. A **monochrome OLED cannot reproduce them**. Choose and test a compatible color OLED or IPS/TFT display (exact panel and ESP32-S3 graphics stack TBD) *before* freezing the CAD face opening. SVG is a desktop preview; the final microcontroller renderer must be ported to its display resolution and firmware environment.
 
+## 🖨️ Published 3D CAD prototype files — GitHub verified
+
+**All the following are now committed and verified in this repository:**
+
+| What you need | GitHub file / folder | Description |
+|---|---|---|
+| **All-in-one ZIP** | [Download complete STL + STEP + source package](downloads/NOHUTCUK_CAD_STL_COMPLETE_PROTOTYPE.zip) | CAD prototype bundle (not a tested printer profile) |
+| **One-piece merged STL** | [NOHUTCUK_ONE_PIECE_SOLID_STATUE.stl](STL_Merged/NOHUTCUK_ONE_PIECE_SOLID_STATUE.stl) | One connected watertight **decorative statue**; cannot hold replaceable electronics |
+| **All-parts assembled reference** | [NOHUTCUK_ALL_PARTS_ASSEMBLED_REFERENCE.stl](STL_Merged/NOHUTCUK_ALL_PARTS_ASSEMBLED_REFERENCE.stl) | View all components in assembly positions; **16 separate shells, not a single fused print** |
+| **16 individual STL components** | [STL_Individual/](STL_Individual/) | Edit/inspect separate parts, coordinates suitable for assembled preview |
+| **16 initially oriented STL components** | [STL_Print_Oriented/](STL_Print_Oriented/) | Starting orientations to test in Cura/PrusaSlicer/Bambu Studio |
+| **2 STEP files** | [STEP/](STEP/) | CAD interchange for modular assembly and one-piece object |
+| **Editable Python CAD source** | [CAD_Source/](CAD_Source/) | Parametric CadQuery generator, print orientation & mesh checks |
+| **Mesh reports** | [Docs/](Docs/) | Validation of watertight geometry and connectedness |
+
+**Prototype geometry dimensions:** approximate total height 155 mm including leaves; head 100 mm wide × 58 mm tall × 50 mm deep; body 74 mm wide × 47 mm tall × 58 mm deep. The 77 × 34 mm display cutout is a *placeholder* and needs an actual selected color display's measurements.
+
+The 16 individual STL files, 16 oriented STL files and single connected one-piece mesh passed automated geometric checks. **These are not physically test-printed and are not confirmed to fit any specific OLED/TFT screen, servo, ESP32-S3, sensors, cables or battery.** The one-piece figure is for decorative printing; use the modular set for developing the functional robot. **No final 3MF slicer preset, firmware, tested wiring diagram or physical assembly has been completed.**
+
 ## Project links
 
 - [Restaurant QR Menu](../nohut-menu/)
@@ -72,7 +91,7 @@ For detailed trigger/response specifications and all feature descriptions, read 
 - Early specification envelope: about **12–15 cm tall, 9–10 cm wide, 7–8 cm deep**. An infographic instead illustrates **85 mm width / 70 mm head / 60 mm base**; these are **illustrative and not approved CAD dimensions**.
 - Required physical parts: head front/bezel, rear shell, screen bracket, electronics tray, servo mount, body, bottom cover/base, detachable leaf ornament, fasteners.
 
-**STL files are not currently verified as existing.** Neither are source CAD/STEP, 3MF, wiring diagrams or working firmware. Even when STL is available, slicing/calibration/fit-check are required before printing; a marketing infographic that says “ZIP/STL included” is not itself a downloadable print-ready kit.
+**Prototype STL and STEP files are now present and geometrically checked in this GitHub repository.** Exact electronics fit, printer profiles, final wiring and firmware still require development and testing. Marketing infographics do not prove print-fit.
 
 ## Planned deliverables
 
@@ -89,7 +108,7 @@ For detailed trigger/response specifications and all feature descriptions, read 
 - Modular printable body, 3D CAD/STL/3MF deliverables, electronics, wiring, firmware, assembly instructions and tests.
 - All intended configuration options, including Turkish/English/Arabic voice cues.
 
-**Build work can be organized into technical tasks and tested in sequence, but those are not separate product versions.** The single release is not yet built; working CAD, firmware, printer files and live restaurant integration must still be engineered and verified. See [one-release completion checklist](docs/ROADMAP.md).
+**Build work can be organized into technical tasks and tested in sequence, but those are not separate product versions.** The single functional robot is not yet built: a first CAD/STL/STEP prototype now exists, but firmware, real hardware fitting, physical print tests and live PC-system integration must still be completed. See [one-release completion checklist](docs/ROADMAP.md).
 
 ### Integration boundary
 
