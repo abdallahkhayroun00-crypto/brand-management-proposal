@@ -10,11 +10,13 @@ Open the successful **Build Flutter Windows POS** Actions run for this branch/PR
 
 The release includes the employee page and menu inside Flutter assets. There is no separate `site` folder or Python server to install. The PC opens the manager directly; the prototype has no role chooser or passwords.
 
+See [UI_DESIGN.md](UI_DESIGN.md) for the Chrome-inspired visual revision, unified staff destination and shared phone floor plan.
+
 ## Worker phones
 
 1. Keep the Windows app running and the laptop awake, on trusted private staff Wi-Fi.
-2. Open **Personel Wi-Fi** and choose the actual Wi-Fi IPv4.
-3. Open **Personel → QR Yönetimi**, issue the worker’s personal QR and scan it in Chrome. Activate the device once within ten minutes. The URL uses the same laptop server, `http://<LAPTOP_IP>:8787/personel`. Later visits retain the worker’s device session; no name chooser or password.
+2. Open **Personel & QR**. Its shared Wi-Fi settings section selects the actual laptop Wi-Fi IPv4.
+3. In **Personel & QR → Telefon Bağlantıları**, select the worker and press **Telefon Bağla · QR Oluştur**. Scan the large inline QR in Chrome. Activate the device once within ten minutes. The URL uses the same laptop server, `http://<LAPTOP_IP>:8787/personel`. Later visits retain the worker’s device session; no name chooser or password.
 4. Submit a Masa 1–5 or Gel-Al order. Telephone orders are pickup-only. Occupied-table orders become additional batches.
 5. Wait for the confirmed SQLite order number. On a lost response, use **Aynı İsteği Yeniden Dene**. The persisted request ID prevents double submission. On a revision conflict, fetch current data, inspect the retained cart and resubmit.
 
