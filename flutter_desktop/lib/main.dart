@@ -15,6 +15,7 @@ import 'platform_api.dart';
 import 'platform_runtime.dart';
 import 'platform_settings_ui.dart';
 import 'order_action_ui.dart';
+import 'dashboard_insights.dart';
 
 const dark = Color(0xff183b2c);
 const cream = Color(0xfff6f6f2);
@@ -845,7 +846,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                     ),
                     SizedBox(height: 6),
                     Text(
-                      'Bugünün siparişleri, masaları ve ekibi tek yerde.',
+                      'Restoranın siparişleri, masaları ve ekibi tek yerde.',
                       style: TextStyle(color: Color(0xffbddec6), fontSize: 12),
                     ),
                   ],
@@ -900,6 +901,17 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           },
         ),
         const SizedBox(height: 15),
+        DashboardInsights(
+          state: db,
+          onSource: (source) => setState(() {
+            orderFilter = source;
+            orderSearch = orderStatus = orderStaff = orderFrom = orderTo = '';
+            selectedOrder = null;
+            page = 'orders';
+          }),
+          onReport: () => _switch('reports'),
+        ),
+        const SizedBox(height: 18),
         Card(
           child: Padding(
             padding: const EdgeInsets.all(18),
