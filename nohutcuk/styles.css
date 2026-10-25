@@ -42,3 +42,32 @@ a{color:inherit;text-decoration:none}.ambient{position:fixed;pointer-events:none
 @media(max-width:700px){.topbar{padding:18px 15px 5px;align-items:flex-start}.brand strong{font-size:22px}.top-actions .nav-link{display:none}.shell{padding:0 12px}.intro{display:block;margin:30px 3px 22px}.intro h1{font-size:38px;letter-spacing:-1.2px}.legend{justify-content:flex-start;margin-top:18px}.preview-panel,.control-panel{padding:15px;border-radius:17px}.workspace{gap:14px}.panel-header h2{font-size:18px}.scene{min-height:395px}.robot{transform:scale(.7);margin-top:48px}.message-bubble{top:12px;right:8px;font-size:10px;padding:9px 10px}.scene-note{font-size:9px;left:8px}.now-playing{gap:7px}.now-playing strong{font-size:12px}.secondary-button{padding:9px 10px}.quick-actions{grid-template-columns:repeat(2,1fr)}.tabs button{font-size:10px}.emotion-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.toggle-stack{grid-template-columns:1fr}.bottom-grid{grid-template-columns:1fr;gap:14px;margin-top:14px}.bottom-grid>.card{padding:16px}}
 @media(max-width:380px){.emotion-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.robot{transform:scale(.6)}.panel-header h2{font-size:16px}.scene{min-height:350px}.status-pill{font-size:8px}.legend span{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+
+/* Sound Studio — original theme songs, reactive effects and private local-audio preview */
+.audio-status{display:flex;align-items:center;gap:9px;padding:11px 12px;background:#10231a;border:1px solid #355340;border-radius:11px;color:#d9e6c4;font-size:11px;margin:15px 0}
+.audio-status>span:nth-child(2){flex:1;min-width:0}.audio-led{height:9px;width:9px;flex:0 0 9px;background:#abfa95;border-radius:50%;box-shadow:0 0 10px #8fea82}
+.stop-music{background:#372626;color:#f8d8cc;border:1px solid #74514a;border-radius:9px;padding:8px 11px;font-size:11px;font-weight:800}
+.stop-music:hover{background:#56332f}
+.song-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0 22px}
+.song-button{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:138px;padding:14px 13px;border-radius:14px;background:radial-gradient(circle at 90% 8%,#3a594044,transparent 55%),linear-gradient(125deg,#182b20,#101e18);border:1px solid #36533e;color:#f1f6e8;text-align:left;transition:transform .16s,border-color .16s,background .16s}
+.song-button:hover{border-color:#9dd28c;transform:translateY(-2px)}
+.song-button.is-playing{border-color:#9be990;box-shadow:0 0 0 1px #9be99077,0 0 20px #85d96621}
+.song-icon{font-size:26px}.song-button strong{font:700 14px Outfit,sans-serif}.song-button small{font-size:11px;color:#b2c7b1}.song-button b{position:absolute;top:15px;right:12px;background:#284a30;color:#d6efc9;border:1px solid #517656;border-radius:20px;font-size:10px;padding:5px 8px}
+.song-button.is-playing b{background:#a3e794;color:#193420}
+.sound-heading{display:flex;justify-content:space-between;align-items:baseline;font:700 14px Outfit,sans-serif;margin:0 0 11px}
+.sound-heading span{font:500 10px 'DM Sans',sans-serif;color:#b4c4aa}
+.sfx-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.sfx-button{background:#1a2820;border:1px solid #3b4e3e;border-radius:9px;color:#e2f2d8;padding:11px 9px;text-align:left;font-size:11px;font-weight:700;transition:background .15s}
+.sfx-button:hover{background:#294734;border-color:#80c477}
+.local-audio{margin-top:21px;border:1px dashed #46664a;background:#101d14;border-radius:13px;padding:13px;display:flex;flex-direction:column;gap:8px}
+.local-audio label{color:#d2e6c7;font-size:12px;font-weight:800}
+.local-audio input{max-width:100%;color:#a7bba6;font-size:11px}
+.local-audio input::file-selector-button{margin-right:9px;border:1px solid #527252;background:#2d492e;color:#ebf8e4;border-radius:7px;padding:7px;font:600 11px 'DM Sans',sans-serif;cursor:pointer}
+.local-audio small{color:#93a993;font-size:10px;line-height:1.5}
+.local-audio audio{width:100%;height:40px}
+.audio-volume{margin-top:19px;padding:13px 14px;background:#17261a;border:1px solid #395542;border-radius:12px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.audio-volume label{font-size:12px;font-weight:800;color:#e2f6d9}
+.audio-volume strong{font-size:12px;color:#b0e7a1;font-variant-numeric:tabular-nums}
+.audio-volume input{grid-column:1/-1;width:100%;accent-color:#a1e088;cursor:pointer}
+@media(max-width:700px){.song-grid{gap:8px}.song-button{padding:12px;min-height:128px}.song-button strong{font-size:12px}.song-button small{font-size:10px}.song-button b{font-size:9px;right:8px;top:8px}.audio-status{font-size:10px;padding:9px}.stop-music{font-size:10px;padding:7px 9px}}
