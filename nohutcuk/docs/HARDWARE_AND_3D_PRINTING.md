@@ -65,7 +65,7 @@ stl/
 | Proximity | ToF / IR distance sensor | wake on approaching guest | model TBD |
 | Sound | mini speaker | words/music/tones | impedance and model TBD |
 | Amplifier | suitable audio module | drive speaker as required | optional / TBD |
-| Buttons | momentary pushbuttons | game inputs | optional / TBD |
+| Buttons | momentary pushbutton | optional manual greeting / service control, **not games** | optional / TBD |
 | Light | addressable RGB LEDs | base illumination | optional / TBD |
 | Audio storage | microSD or flash | prerecorded voice cues | optional |
 | Power | approved USB-C source | low-voltage supply | design TBD |
@@ -92,8 +92,8 @@ boot / self-test
   ├── OLED eye renderer / animation scheduler
   ├── servo controller with travel limits
   ├── sound player
-  ├── game and gesture state machine
-  ├── local Wi-Fi event listener (in the single complete version; dependent on secure integration testing)
+  ├── touch/gesture and expression state machine (no games)
+  ├── local Wi-Fi event listener receiving notifications **exclusively from the Nohut Falafel PC app** (no marketplace/POS APIs on robot)
   ├── admin controls / quiet mode
   ├── fault monitor and telemetry (no personal data)
   └── idle / low-power manager
