@@ -667,6 +667,54 @@ hub();HUB_SOURCES.forEach(function(src){var c=hubConfig(src);if(c.open===undefin
 var hubPrintOrderCore=printOrder;
 printOrder=function(o,index,copy){if(!o||!isPlatform(o))return hubPrintOrderCore(o,index,copy);if(o.cancelled||remoteState(o)==='Created')return;var batch=index===null?null:o.batches[index];if(batch&&batch.lines.some(function(l){return l.correction})){document.getElementById('print-sheet').innerHTML='<div class="platform-print-brand">'+esc(o.source)+'</div><div class="platform-print-title">ÜRÜN İPTALİ / MUTFAK DÜZELTMESİ · DEMO</div><div class="platform-print-head"><strong>'+esc(platformOrderCode(o))+'</strong></div>'+platformPrintRow(batch)+'<p class="platform-print-note">Yalnız iptal edilen ürünleri hazırlıktan çıkarın. Bu çıktı ödeme / para iadesi değildir.</p>';window.print();return}printPlatformOrder(o,copy)};
 printPlatformOrder=function(o){if(!o||o.cancelled||remoteState(o)==='Created')return;var active=o.batches.map(function(b){return {lines:b.lines.filter(function(l){return !l.voided&&!l.correction})}}),itemsTotal=active.reduce(function(s,b){return s+b.lines.reduce(function(n,l){return n+l.price*l.qty},0)},0),discount=Math.max(0,Math.round((itemsTotal-total(o))*100)/100);document.getElementById('print-sheet').innerHTML='<div class="platform-print-brand '+(o.source==='Yemeksepeti'?'brand-ys':'brand-tgo')+'">'+esc(o.source)+'</div><div class="platform-print-title">ONLINE SİPARİŞ · DEMO</div><div class="platform-print-head"><b>Sipariş Kodu</b><strong>'+esc(platformOrderCode(o))+'</strong></div><div class="platform-print-meta"><span>'+esc(platformDelivery(o))+'</span><span>'+esc(orderStamp(o))+'</span></div><p class="platform-print-note">'+esc(o.platformCustomerName||'')+'</p>'+active.map(platformPrintRow).join('')+(o.platformNote?'<p class="platform-print-note">NOT: '+esc(o.platformNote)+'</p>':'')+'<div class="platform-print-rule"></div><p class="platform-print-note">Ürünler '+price(itemsTotal)+' · Güncel indirim '+price(discount)+'</p><div class="platform-print-total"><span>GÜNCEL TOPLAM</span><strong>'+price(total(o))+'</strong></div><p class="platform-print-payment">'+esc(hubPayment(o))+'</p><div class="platform-print-footer"><b>NOHUT FALAFEL</b><small>Platform hazırlık çıktısı · Mali fiş değildir</small></div>';window.print()};
+
+function cashBook(){if(!state.cashBook)state.cashBook={sessions:[],movements:[],next:1};return state.cashBook}
+function cashActive(){return cashBook().sessions.find(function(s){return !s.closedAt})||null}
+function cashExpected(c,end){
+ var stop=end||c.closedAt||new Date().toISOString();
+ var receipts=state.orders.flatMap(paymentEvents).filter(function(e){return e.method==="Nakit"&&e.stamp&&e.stamp>=c.openedAt&&e.stamp<=stop}).reduce(function(n,e){return n+Math.round(e.amount*100)},0);
+ var manual=cashBook().movements.filter(function(m){return m.sessionId===c.id&&m.at>=c.openedAt&&m.at<=stop}).reduce(function(n,m){return n+m.cents},0);
+ return c.openingCents+receipts+manual;
+}
+function cashBookPage(){
+ var db=cashBook(),c=cashActive(),past=db.sessions.slice().reverse().slice(0,15);
+ return '<section class="panel" style="margin-top:18px"><h3>Günlük Kasa · Açılış / Kapanış</h3>'+
+ '<p class="sub">Demo: yalnızca restoran Nakit hareketleri. Kart ve platform tahsilatı fiziksel nakit sayılmaz.</p>'+
+ (!c?'<div class="form-row"><label>Açılış bakiyesi (₺)<input id="cash-open" class="field" inputmode="decimal" placeholder="500"></label><button class="primary" data-cash-action="open">Kasayı Aç</button></div><p class="info-alert">Aktif kasa yok; eski işlemler demo kayıtlarında kalır.</p>':
+ '<p class="info">Kasa #'+c.id+' · '+hubTime(c.openedAt)+' · Açılış '+price(c.openingCents/100)+'</p>'+
+ '<div class="metrics">'+box("Beklenen Nakit",price(cashExpected(c)/100),"▤","Nakit tahsilat − iade + kasa hareketleri")+'</div>'+
+ '<div class="form-row"><label>Hareket<select id="cash-kind" class="field"><option value="in">Kasa Giriş</option><option value="out">Kasa Çıkış</option></select></label><label>Tutar ₺<input id="cash-amount" class="field" inputmode="decimal" placeholder="100"></label><label>Açıklama<input id="cash-note" class="field" maxlength="140"></label><button class="secondary" data-cash-action="move">Hareketi Kaydet</button></div>'+
+ '<div class="form-row"><label>Sayılan Nakit ₺<input id="cash-counted" class="field" inputmode="decimal" placeholder="500"></label><button class="primary" data-cash-action="close">Kasayı Kapat</button></div>')+
+ '<h3 style="margin-top:15px">Kasa Oturumları</h3>'+
+ (past.length?'<div class="table-scroll"><table class="table"><thead><tr><th>Açılış</th><th>Beklenen</th><th>Sayılan</th><th>Fark</th><th>Durum</th></tr></thead><tbody>'+past.map(function(x){return '<tr><td>'+hubTime(x.openedAt)+' · '+price(x.openingCents/100)+'</td><td>'+price((x.closedAt?x.expectedCents:cashExpected(x))/100)+'</td><td>'+(x.closedAt?price(x.countedCents/100):"—")+'</td><td>'+(x.closedAt?price(x.differenceCents/100):"—")+'</td><td>'+(x.closedAt?"Kapalı":"Açık")+'</td></tr>'}).join('')+'</tbody></table></div>':'<p class="empty">Henüz kasa oturumu yok.</p>')+
+ '<p class="footnote">Gerçek kasa, banka POS ve ÖKC bağlantısı değildir. Geçmişteki hareketler kapanan kasayı geriye dönük değiştirmez.</p></section>';
+}
+var cashBasePage=paymentPage;paymentPage=function(){return cashBasePage()+cashBookPage()};
+document.addEventListener("click",function(e){
+ var b=e.target.closest("button[data-cash-action]");if(!b||mode!=="admin")return;
+ var action=b.dataset.cashAction,db=cashBook(),c=cashActive(),now=new Date().toISOString();
+ if(action==="open"){
+  if(c)return;
+  var opening=moneyCents((document.getElementById("cash-open")||{}).value);
+  if(!Number.isInteger(opening)){toast("Geçerli açılış bakiyesi gerekli.");return}
+  db.sessions.push({id:db.next++,openedAt:now,openingCents:opening,openedBy:"Kasa (PC)",closedAt:null});
+ }else if(action==="move"){
+  if(!c)return;
+  var cents=moneyCents(document.getElementById("cash-amount").value),reason=document.getElementById("cash-note").value.trim();
+  var signed=document.getElementById("cash-kind").value==="out"?-cents:cents;
+  if(!Number.isInteger(cents)||cents<=0||!reason){toast("Tutar ve açıklama zorunlu.");return}
+  if(cashExpected(c)+signed<0){toast("Kasa negatife düşemez.");return}
+  db.movements.push({id:db.next++,sessionId:c.id,at:now,cents:signed,reason:reason,by:"Kasa (PC)"});
+ }else if(action==="close"){
+  if(!c)return;
+  var counted=moneyCents((document.getElementById("cash-counted")||{}).value);
+  if(!Number.isInteger(counted)){toast("Sayılan nakdi girin.");return}
+  c.expectedCents=cashExpected(c,now);c.countedCents=counted;
+  c.differenceCents=counted-c.expectedCents;c.closedAt=now;c.closedBy="Kasa (PC)";
+ }else return;
+ save();render();toast("Kasa işlemi kaydedildi (demo).");
+});
+
 render();
 })();
 </script></body></html>
