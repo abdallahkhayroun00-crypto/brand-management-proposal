@@ -382,7 +382,7 @@ const svgPhotoObserver=typeof IntersectionObserver==='function'?new Intersection
   });
   svgPhotoObserver.unobserve(entry.target);
  }
-},{rootMargin:'350px 0px'}):null;
+},{rootMargin:(navigator.connection?.saveData||/^(slow-2g|2g)$/.test(navigator.connection?.effectiveType||''))?'100px 0px':'350px 0px'}):null;
 function deferSvgFoodPhotos(){
  document.querySelectorAll('#grid .dish').forEach(card=>{
   const images=card.querySelectorAll('svg image[href]');
