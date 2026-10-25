@@ -62,16 +62,18 @@ For detailed trigger/response specifications and all feature descriptions, read 
 
 `cad/`: dimensioned editable STEP/native CAD; `stl/`: validated printable parts; `slicer/`: tested 3MF profiles; `electronics/`: wiring schematic and BOM; `firmware/`: versioned ESP32-S3 code; `assets/`: reference images, eye graphics and voice files; `docs/`: assembly, testing and maintenance instructions.
 
-## Versions
+## One complete version — all features together
 
-| Version | Planned scope |
-| --- | --- |
-| V1 | OLED eyes / 15 core moods + head touch + stable idle loop |
-| V2 | 1–2 servo movements, speech and proximity greetings |
-| V3 | Ten games and playful character behavior |
-| V4 | Local restaurant-POS event integration |
-| V5 | Instagram/reels/celebrations and special modes |
-| V6 | Advanced mood, modularity and refined interactions |
+**Nohutçuk has ONE intended complete release, not V1–V6.** This single release is meant to include the full approved scope, with no later-version dependency:
+
+- All face expressions, touch sensing, proximity welcome, greeting/voice, safe servo movement, look/wave interactions and friendship behavior.
+- All ten mini-games, scripted funny behaviors, mood/idle/quiet modes and hidden reactions.
+- Photo/selfie/Instagram/Reels and Ramadan/Eid/New Year/birthday modes.
+- Nohut Falafel's QR-menu companionship, plus secure local restaurant POS event notifications and manager controls (where an official integration is available).
+- Modular printable body, 3D CAD/STL/3MF deliverables, electronics, wiring, firmware, assembly instructions and tests.
+- All intended configuration options, including Turkish/English/Arabic voice cues.
+
+**Build work can be organized into technical tasks and tested in sequence, but those are not separate product versions.** The single release is not yet built; working CAD, firmware, printer files and live restaurant integration must still be engineered and verified. See [one-release completion checklist](docs/ROADMAP.md).
 
 ### Integration boundary
 
