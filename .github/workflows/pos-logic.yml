@@ -1,0 +1,22 @@
+name: Nohut POS logic checks
+on:
+  push:
+    paths:
+      - 'pos-demo/**'
+      - 'nohut-menu/menu-data.js'
+      - '.github/workflows/pos-logic.yml'
+  pull_request:
+    paths:
+      - 'pos-demo/**'
+      - 'nohut-menu/menu-data.js'
+  workflow_dispatch:
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: POS functional regression tests
+        run: node pos-demo/tests/logic.test.cjs
