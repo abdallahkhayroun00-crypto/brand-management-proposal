@@ -13,6 +13,9 @@ windows/flutter/generated_plugin_registrant.cc
 windows/flutter/generated_plugin_registrant.h
 windows/flutter/generated_plugins.cmake
 *.lock
+!pubspec.lock
+.idea/
+*.iml
 # Never commit restaurant orders or keys
 local-data/
 *.sqlite

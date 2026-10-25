@@ -1,84 +1,62 @@
-# Nohut Falafel — Flutter Desktop (Windows)
+# Nohut Falafel — native Flutter for Windows
 
-This is the **native Flutter desktop migration** of Nohut Falafel's GitHub Pages POS concept. It is a separate application, **not a WebView wrapper**.
+Native Yönetici Paneli / Kasa (PC), not a WebView. The original HTML demonstration and production QR menu remain in their existing folders.
 
-## What is already in Flutter
+Read [FEATURE_PARITY.md](FEATURE_PARITY.md) for the feature-by-feature audit, code/test mappings, synchronization decisions and remaining device acceptance checks. It separates native workflows, deliberate simulations and unverified physical connections.
 
-- Native Windows Yönetici Paneli / dashboard (no first-run panel chooser).
-- **Exactly 5 tables** in the interactive floor plan matching the restaurant sketch: 2 and 1 near KAPI, long tables 3 and 4, small table 5 on the left; draggable layout.
-- Local Masa, counter Gel-Al and phone-to-pickup orders, kitchen batches and added products.
-- Source-derived product menu from `../nohut-menu/menu-data.js`: currently 51 products, 44 with configured prices. Products without prices remain unavailable until configured.
-- PC cashier recording of Nakit or Kart and partial payments, even multi-guest splitting in kuruş. Card entries do **not** send payment to a real bank terminal.
-- Five-table occupancy, staff active toggles, print job queue, basic reports, read-only platform order listings.
-- Embedded Dart LAN HTTP server on port **8787** — no separate Python server needed.
-- **SQLite on the laptop**, persisted by default to `%APPDATA%\NohutFalafel\nohut-pos.sqlite3`.
-- Staff QR screen detects local private IPv4 addresses, lets you select the correct Wi-Fi IP and displays a scannable QR.
-- Staff phones continue to use the **existing Chrome/Safari employee order UI**, bundled in the Windows release. The phone UI talks to the Flutter-embedded server's `/api/bootstrap`, `/api/state` and `/api/health`. All orders go to the same SQLite data.
-- Optimistic version protection to reject stale writes instead of silently overwriting another device's change.
+## Windows download
 
-## What is NOT converted or live yet
+Open the successful **Build Flutter Windows POS** Actions run for this branch/PR and download **NohutFalafel-Windows-Flutter**. Extract the entire ZIP before starting `nohut_falafel_desktop.exe`. Keep all DLLs and `data` beside the EXE. `build-manifest.json` identifies the source revision and SHA-256 of packaged files. An artifact being uploaded is not proof of physical-device integration.
 
-The previous HTML concept is extensive; this is **the first native Windows MVP**, not a claim of 1:1 feature parity. In particular, cash shift opening/closing, full product-level guest allocation, refunds, full platform menu/store/claim/review/invoice management, detailed CSV reports, auto thermal printing, a fiscal ÖKC and bank POS integration are not yet fully ported/connected in native Flutter. **Yemeksepeti and Trendyol Go APIs are simulated only.** Platform couriers handle delivery; the restaurant has no own courier.
+The release includes the employee page and menu inside Flutter assets. There is no separate `site` folder or Python server to install. The PC opens the manager directly; the prototype has no role chooser or passwords.
 
-Phone staff ordering intentionally remains HTML in Chrome for now; only the **manager's Windows application** is Flutter-native. Flutter does not run on GitHub Pages as a Windows EXE: GitHub stores source and Actions builds a Windows release folder.
+## Worker phones
 
-## Download Windows app from GitHub
+1. Keep the Windows app running and the laptop awake, on trusted private staff Wi-Fi.
+2. Open **Personel Wi-Fi**, choose the actual Wi-Fi IPv4 and scan the QR in Chrome.
+3. The URL is `http://<LAPTOP_IP>:8787/personel`. Choose an active worker name.
+4. Submit a Masa 1–5 or Gel-Al order. Telephone orders are pickup-only. Occupied-table orders become additional batches.
+5. Wait for the confirmed SQLite order number. On a lost response, use **Aynı İsteği Yeniden Dene**. The persisted request ID prevents double submission. On a revision conflict, fetch current data, inspect the retained cart and resubmit.
 
-Open **Actions → Build Flutter Windows POS** in this repository, choose a successful run, and download the `NohutFalafel-Windows-Flutter` artifact. Extract the **entire ZIP**, keep its DLL / data / `site` folders next to the EXE, and double-click `nohut_falafel_desktop.exe`.
+Payments and management are native PC workflows. The LAN server does not serve the old manager HTML and rejects snapshot PUT requests. The HTTP prototype is still password-free and unencrypted; this is not production authentication. Keep it off guest Wi-Fi/public Internet. A real two-phone Wi-Fi test is still required. Windows Firewall private-network permission must be handled on the actual laptop. Do not run the older Python server on port 8787 at the same time.
 
-**You must extract the ZIP.** A Windows Flutter desktop release is a **folder** containing the EXE and required DLLs, not a standalone EXE.
+## Native workflows
 
-If no successful run is available, use the build instructions below or check the action logs.
+- Exactly five interactive tables with saved draggable floor positions.
+- Local catalog/category selection, notes/removals, added batches, quantity/full cancellation with correction tickets, pickup details and independent service completion.
+- Cash/card/partial/mixed entries, change, partial/full refunds, product-level guest shares, equal cent-conserving splits and mapping earlier payments to guests.
+- Opening/closing cash sessions, counted variance, cash in/out and historical refund dates.
+- Staff creation/editing/activation, local price configuration, filtered history and collection/product/staff reports, CSV exports, consistent SQLite backups.
+- Single kitchen printer queue and native previews with explicit simulated success/failure; informational bill summary.
+- Explicit platform simulation tabs for orders, acceptance/status/cancellation, store hours, catalog/mapping/prices, claims, reviews, invoice links and sync request log; settlements under Reports, configuration under Settings.
 
-## Build on your own Windows laptop
+**No Yemeksepeti/Trendyol Go API, bank POS, physical printer or fiscal ÖKC is connected.** Card and platform entries are prototypes. Courier delivery and platform collections remain with the platforms; the restaurant has no courier workflow. Yemeksepeti unverified management capabilities stay gated. Invoice-link submission does not generate a fiscal invoice. The example 15% commission is not an accounting rate.
 
-Prerequisites: Flutter stable, Dart supported by Flutter stable, Visual Studio with Desktop development with C++ installed, Windows 10/11.
+## Storage and concurrency
+
+Default database: `%APPDATA%\NohutFalafel\nohut-pos.sqlite3`. `NOHUT_POS_DATABASE` can select a separate test database before launch. The app never silently imports the old Python database or fake HTML seed orders.
+
+SQLite uses WAL, FULL synchronous commits, a busy timeout and immediate writer transactions. PC writes compare revisions. Phones submit validated order commands rather than replacing the database. Request receipts and orders commit atomically, so retries survive restarts. The state remains a versioned JSON aggregate in SQLite, with explicit domain validation and typed report/check projections; it is not a certified accounting ledger.
+
+Use **Ayarlar → Tutarlı SQLite Yedeği Oluştur** for a consistent single-file backup while WAL is active. Keep a backup before replacing any existing database. Restoring old data is a deliberate offline operation, not an automatic merge.
+
+## Build and test on Windows
+
+Prerequisites: Flutter stable and Visual Studio C++ Desktop development tools. Native runner source is committed; do not regenerate it over customizations.
 
 ```powershell
 cd flutter_desktop
-flutter create --platforms=windows --project-name=nohut_falafel_desktop .
 flutter pub get
-flutter test
+flutter analyze
+flutter test --reporter expanded
 flutter build windows --release
 ```
 
-When building manually, copy the web staff files into the Release folder:
-- `Release/site/pos-demo/index.html`
-- `Release/site/pos-demo/split-bill.html`
-- `Release/site/pos-demo/vendor/qrcode.min.js`
-- `Release/site/nohut-menu/` (the full existing website assets/menu).
-
-GitHub Actions packages them automatically.
-
-## Connect worker phones
-
-1. Run Flutter on the **laptop**. Its local server starts automatically.
-2. Ensure PC and phones are on the same **private staff Wi-Fi**. Approve Windows Firewall **Private network** access if prompted. Don't enable public-network firewall access.
-3. Go to **Personel Wi-Fi** in the Flutter app. If multiple IPs are shown, select the correct Wi-Fi IPv4.
-4. Scan QR with a staff phone's Chrome/Safari. The URL has this form: `http://<LAPTOP_LAN_IP>:8787/pos-demo/?panel=personel`.
-5. On the phone, choose worker's name, take a Masa 1–5 or Gel-Al order. The native Flutter admin and phone load/modify the same SQLite state.
-6. Keep laptop awake and Flutter open. Stop the app to shut down the LAN server.
-
-**There are no passwords/roles enforced on the HTTP endpoint in this prototype.** The UI separation is **not security**. Do not publish the local server on the Internet, forward port 8787, expose it on guest Wi-Fi, or enter sensitive customer/payment-card details. To operate real transactions, add authentication, authorization, encrypted links, backups, transaction/audit trails and official payment/fiscal integrations.
-
-## Existing SQLite data
-
-The older Python prototype stores a database at `pos-demo/local-data/nohut-pos.sqlite3`. Flutter creates a new database in Windows AppData by default. It does **not** automatically import the old demo into Flutter; back up existing restaurant data before any later migration.
-
-## Tests and source of truth
+At repository root:
 
 ```powershell
-cd flutter_desktop
-flutter analyze
-flutter test
+node pos-demo/tests/logic.test.cjs
+python -m unittest discover -s pos-demo/tests -p test_local_server.py -v
 ```
 
-The native Windows build is verified in GitHub Actions. The previous HTML regression suite remains active and unchanged. Flutter's `assets/menu.json` is generated from the current QR menu source; refresh it when menu prices change.
-
-## Safety constraints
-
-- The restaurant has **no own delivery**. Phone orders are Gel-Al only; deliveries belong to Yemeksepeti / Trendyol Go.
-- PC always acts as **Kasa (PC)**, staff selects a name on Chrome phone once.
-- No duplicate KOPYA FİŞ path.
-- Only five physical tables.
-- No payment terminal automation until the actual device model and integration are available.
+GitHub Actions runs strict Flutter analysis, domain/SQLite/HTTP/widget tests, the preserved HTML regressions and a Windows release build, then uploads the whole release folder. Tests use isolated temporary databases. They do not establish real phone, printer, fiscal or platform readiness. Keep the HTML demo until the acceptance checks in the parity matrix are completed.

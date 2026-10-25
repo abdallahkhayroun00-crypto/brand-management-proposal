@@ -2,6 +2,7 @@
 """Nohut Falafel offline LAN prototype: one Windows laptop, SQLite, phone QR."""
 from __future__ import annotations
 
+from contextlib import closing
 import argparse
 import ipaddress
 import json
@@ -62,7 +63,7 @@ def connect() -> sqlite3.Connection:
 
 def initialize() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    with connect() as conn:
+    with closing(connect()) as conn:
         conn.execute(
             "CREATE TABLE IF NOT EXISTS state_snapshot ("
             "id INTEGER PRIMARY KEY CHECK (id=1), "
@@ -76,7 +77,7 @@ def initialize() -> None:
 
 
 def snapshot() -> tuple[int, dict, str]:
-    with connect() as conn:
+    with closing(connect()) as conn:
         revision, payload, updated = conn.execute(
             "SELECT revision, payload, updated_at FROM state_snapshot WHERE id=1"
         ).fetchone()
@@ -109,7 +110,7 @@ def write_snapshot(expected: int, obj: dict) -> tuple[bool, int, dict | None]:
     validate_state(obj)
     payload = json.dumps(obj, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
     with LOCK:
-        with connect() as conn:
+        with closing(connect()) as conn:
             conn.execute("BEGIN IMMEDIATE")
             current, old_payload = conn.execute(
                 "SELECT revision, payload FROM state_snapshot WHERE id=1"

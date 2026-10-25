@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="tr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nohut Falafel · Personel</title>
+<style>
+body{font:16px system-ui;background:#f5f7f1;color:#193f2c;margin:0;padding:16px;max-width:680px;margin-inline:auto}h1{font-size:24px}section{background:white;padding:16px;border-radius:16px;margin:12px 0}button,input,select,textarea{font:inherit;padding:10px;border:1px solid #b5c8b8;border-radius:8px;box-sizing:border-box}input,textarea{width:100%;margin:4px 0}button{background:#e8f2e7;color:#193f2c;cursor:pointer}button:disabled{opacity:.4}label{display:block;margin:8px 0}select{max-width:100%}.product{border-bottom:1px solid #dde7dc;padding:12px 0}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#notice{position:sticky;top:0;background:#fff1d9;padding:12px;border-radius:10px}#submit{width:100%;background:#193f2c;color:white}.qty{width:85px}.muted{font-size:13px;color:#607266}details{margin-top:8px}
+</style>
+<h1>NOHUT FALAFEL · Personel</h1><p id="notice" role="status">Laptopa bağlanılıyor…</p>
+<section><label>Çalışan <select id="staff"></select></label><p class="muted">Şifre yok. Kasa ve yönetim Windows PC üzerindedir.</p>
+<div class="row"><label>Sipariş <select id="source"><option>Masa</option><option>Gel-Al</option></select></label>
+<label id="table-label">Masa <select id="table"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+<label id="pickup-label" hidden>Gel-Al <select id="pickup"><option>Tezgahtan</option><option>Telefon</option></select></label></div>
+<div id="customer" hidden><input id="customer-name" placeholder="Gel-Al müşteri adı"><input id="customer-phone" placeholder="Telefon"><input id="customer-time" placeholder="Teslim alma saati"></div><p class="muted">Dolu masaya ek sipariş olarak kaydedilir. Telefon siparişleri yalnızca Gel-Al.</p></section>
+<section><input id="search" placeholder="Ürün ara" aria-label="Ürün ara"><div id="menu"></div></section>
+<section><h2 id="total">Toplam 0,00 ₺</h2><button id="submit" disabled>Siparişi Laptopa Kaydet</button>
+<button id="retry" hidden>Aynı İsteği Yeniden Dene</button><button id="reload">Güncel Veriyi Al</button>
+<p class="muted">Başarı mesajı ve sipariş numarası gelmeden kayıt onaylanmış sayılmaz. Bağlantı kesilirse aynı isteği yeniden deneyin.</p></section>
+<section><h2>Açık Siparişler</h2><div id="orders"></div></section>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),cart=new Map();let state=null,revision=-1,busy=false,online=false;
+let pending=JSON.parse(sessionStorage.getItem('nohut-pending')||'null');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>(n/100).toLocaleString('tr-TR',{minimumFractionDigits:2})+' ₺';
+function notice(text){$('notice').textContent=text}
+function controls(){ $('submit').disabled=!online||busy||!!pending||![...cart.values()].some(r=>r.qty>0);$('retry').hidden=!pending;$('retry').disabled=busy; }
+function render(){
+ const selected=$('staff').value||localStorage.getItem('nohut-staff')||'';
+ $('staff').innerHTML='<option value="">Adınızı seçin</option>'+state.employees.filter(e=>e.active).map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join('');$('staff').value=selected;
+ renderMenu();
+ $('orders').innerHTML=state.orders.filter(o=>!o.closed&&!o.cancelled&&['Masa','Gel-Al'].includes(o.source)).map(o=>`<p>#${o.id} · ${esc(o.source)} ${o.table??''} · ${esc(o.serviceStatus)} · ${o.batches.reduce((n,b)=>n+b.lines.filter(l=>!l.voided&&!l.correction).reduce((a,l)=>a+l.qty,0),0)} ürün</p>`).join('')||'<p>Açık sipariş yok.</p>';controls();
+}
+function renderMenu(){
+ const search=$('search').value.toLocaleLowerCase('tr-TR');
+ $('menu').innerHTML=(state.localMenu||[]).filter(p=>p.name.toLocaleLowerCase('tr-TR').includes(search)).map(p=>{
+ const row=cart.get(p.id)||{qty:0,note:'',removed:[]};return `<div class="product"><div class="row"><b>${esc(p.name)}</b><span>${p.price==null?'Fiyat belirlenmedi':money(Math.round(p.price*100))}</span><input class="qty" type="number" min="0" max="1000" data-qty="${p.id}" value="${row.qty}" aria-label="${esc(p.name)} adet" ${p.price==null?'disabled':''}></div><details><summary>Not / çıkarılan malzeme</summary><input data-note="${p.id}" placeholder="Ürün notu" value="${esc(row.note)}"><input data-removed="${p.id}" placeholder="Çıkarılan malzeme (virgülle)" value="${esc(row.removed.join(', '))}"></details></div>`;
+ }).join('');total();
+}
+function total(){let sum=0;for(const [id,row]of cart){const p=state.localMenu.find(p=>p.id===id);sum+=Math.round((p?.price||0)*100)*row.qty}$('total').textContent='Toplam '+money(sum);controls()}
+$('menu').addEventListener('input',e=>{const el=e.target,key=el.dataset.qty??el.dataset.note??el.dataset.removed;if(key==null)return;const id=Number(key),row=cart.get(id)||{productId:id,qty:0,note:'',removed:[]};if(el.dataset.qty!=null)row.qty=Number(el.value);if(el.dataset.note!=null)row.note=el.value;if(el.dataset.removed!=null)row.removed=el.value.split(',').map(s=>s.trim()).filter(Boolean);cart.set(id,row);total()});
+$('staff').onchange=()=>localStorage.setItem('nohut-staff',$('staff').value);
+$('source').onchange=()=>{$('table-label').hidden=$('source').value!=='Masa';$('pickup-label').hidden=$('source').value!=='Gel-Al';$('customer').hidden=$('source').value!=='Gel-Al'};
+$('search').oninput=renderMenu;
+async function refresh(){if(busy)return;try{const r=await fetch('/api/bootstrap',{cache:'no-store'});if(!r.ok)throw Error();const b=await r.json();state=b.state;revision=b.revision;online=true;render();if(!pending)notice('● Laptop SQLite bağlı · Kayıtlar güncel');else notice('Onayı bekleyen bir istek var. Aynı isteği yeniden deneyin.')}catch{online=false;notice('⛔ Laptop / Wi-Fi bağlantısı yok. Sipariş kaydedilemez.');controls()}}
+async function send(){if(!pending||busy)return;busy=true;notice('Kaydediliyor…');controls();try{
+ const r=await fetch('/api/staff/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pending)});const b=await r.json();
+ if(r.status===409){pending=null;sessionStorage.removeItem('nohut-pending');notice('Başka cihaz değişiklik yaptı. Sepet korundu; güncel veriyi alın ve yeniden gönderin.');online=false;return}
+ if(!r.ok){pending=null;sessionStorage.removeItem('nohut-pending');notice(b.message||'İstek reddedildi');return}
+ pending=null;sessionStorage.removeItem('nohut-pending');cart.clear();notice('✓ Laptop SQLite kaydı onaylandı · Sipariş #'+b.orderId);revision=b.revision;
+ // Refresh separately so the confirmed order number remains visible.
+ const next=await fetch('/api/bootstrap',{cache:'no-store'});if(next.ok){const data=await next.json();state=data.state;revision=data.revision;render()}
+ }catch{online=false;notice('Onay alınamadı. Aynı isteği yeniden deneyin; çift sipariş oluşturulmaz.')}finally{busy=false;controls()}}
+$('submit').onclick=()=>{if(!$('staff').value){notice('Önce çalışan adınızı seçin');return}pending={requestId:Date.now().toString(36)+'_'+Math.random().toString(36).slice(2),expectedRevision:revision,staffId:Number($('staff').value),source:$('source').value,table:$('source').value==='Masa'?Number($('table').value):null,pickupChannel:$('pickup').value,customer:{name:$('customer-name').value,phone:$('customer-phone').value,time:$('customer-time').value},lines:[...cart.values()].filter(r=>r.qty>0)};sessionStorage.setItem('nohut-pending',JSON.stringify(pending));send()};
+$('retry').onclick=send;$('reload').onclick=refresh;
+if(pending){for(const row of pending.lines||[])cart.set(row.productId,row);$('source').value=pending.source;$('table').value=String(pending.table||1);$('pickup').value=pending.pickupChannel||'Tezgahtan';$('customer-name').value=pending.customer?.name||'';$('customer-phone').value=pending.customer?.phone||'';$('customer-time').value=pending.customer?.time||'';$('source').onchange()}
+refresh();setInterval(refresh,5000);
+</script></html>
