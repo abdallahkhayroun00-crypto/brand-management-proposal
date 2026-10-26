@@ -2,6 +2,8 @@
 
 **Stage:** C++ proof-of-concept targeting **Espressif ESP32-S3-DevKitC-1** + **standalone Waveshare 1.9inch LCD Module**, controller ST7789V2, 170×320 SPI IPS (landscape 320×170). This is the *separate 8-pin LCD breakout*, not the combined Waveshare ESP32-S3-LCD-1.9 development board. Their wiring/firmware are **not interchangeable**.
 
+> **Do not flash this configuration with the researched 2.4-inch LCD:** The [Türkiye BOM](../docs/BOM_TURKIYE.md) recommends considering a **Waveshare 2.4-inch ILI9341 SPI (SKU 18366)** for the bigger eyes, but **this firmware still builds for the 1.9-inch ST7789V2 SPI (SKU 23822)**. An explicit display-driver profile, 320×240 geometry adjustments, corrected offsets/rotation and verification with actual hardware are required first.
+
 ## Project files
 
 - [platformio.ini](platformio.ini) — Arduino framework and Arduino_GFX library dependency.
