@@ -71,9 +71,15 @@ const fakeVoice={
 for(const key of ['welcome','thanks','love','goodbye','falafel','birthday']){
   const el=document.createElement('button');el.dataset.voice=key;
 }
-const context={document,window:{NohutcukAudio:fakeAudio,NohutcukVoice:fakeVoice,addEventListener(){}},console,Date,Math,Number,String,Object,
+const browser={NohutcukAudio:fakeAudio,NohutcukVoice:fakeVoice,addEventListener(){}};
+const context={document,window:browser,console,Date,Math,Number,String,Object,Set,
   clearTimeout(){},setTimeout(){return 1;},requestAnimationFrame(){return 1;}};
+vm.runInNewContext(readFileSync(new URL('../day.js',import.meta.url),'utf8'),context,{filename:'day.js',timeout:2000});
 vm.runInNewContext(source,context,{filename:'app.js',timeout:1500});
+assert.equal(Number(document.getElementById('dayCaseTotal').textContent),browser.NohutcukDay.scenarios.length,'shop-day panel count');
+assert.equal(Number(document.getElementById('dayPassed').textContent),browser.NohutcukDay.scenarios.length,'scenario model passes');
+document.getElementById('runDayTests').emit('click');
+assert.ok(document.getElementById('dayCaseList').children.length>0,'phase case listing populated');
 
 const byId=id=>document.getElementById(id);
 const moods=byId('emotionGrid').children;
