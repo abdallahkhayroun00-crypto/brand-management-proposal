@@ -13,6 +13,7 @@ static Arduino_GFX* gfx = new Arduino_ST7789(
   nohut::PANEL_NATIVE_W, nohut::PANEL_NATIVE_H,
   nohut::PANEL_OFFSET_X, 0, nohut::PANEL_OFFSET_X, 0);
 static nohut::Character character;
+static bool displayReady=false;
 
 static uint16_t rgb(uint8_t r,uint8_t g,uint8_t b){
   return static_cast<uint16_t>(((r&0xf8)<<8)|((g&0xfc)<<3)|(b>>3));
@@ -239,7 +240,8 @@ void setup(){
   // supply. Use its pin with the provisional control map after checking wiring.
   pinMode(nohut::LCD_BL,OUTPUT);
   digitalWrite(nohut::LCD_BL,HIGH);
-  if(!gfx->begin(24000000)){
+  displayReady=gfx->begin(24000000);
+  if(!displayReady){
     Serial.println("ERROR: LCD begin failed. Verify SPI pinout, display revision.");
     return;
   }
@@ -261,6 +263,6 @@ void loop(){
     character.show(static_cast<nohut::Mood>(demoIndex++%nohut::MOOD_COUNT),now,3300);
   }
   character.update(now);
-  if(nohut::elapsed(now,lastFrame,100)){lastFrame=now;faceFrame(now);}
+  if(displayReady&&nohut::elapsed(now,lastFrame,100)){lastFrame=now;faceFrame(now);}
   delay(1);
 }
