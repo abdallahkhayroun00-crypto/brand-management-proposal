@@ -7,20 +7,23 @@
 
 **Live preview:** https://abdallahkhayroun00-crypto.github.io/brand-management-proposal/nohutcuk/
 
-Built with [index.html](index.html), [styles.css](styles.css), [app.js](app.js), and the original [Web Audio synthesizer](audio.js) in HTML, CSS, JavaScript and SVG. No additional build tools or external song libraries are necessary.
+Built with [index.html](index.html), [styles.css](styles.css), [app.js](app.js), the original [Web Audio synthesizer](audio.js) and a separate [selective voice engine](voice.js) in HTML, CSS, JavaScript and SVG. No additional build tools or external song libraries are necessary.
 
 - **20 animated facial moods:** happy, shy, laughing, love, sleeping, surprised and 14 more, with neon cyan, pink, orange, green and purple; rainbow and custom color modes.
 - **Character interactions:** simulated touch, proximity welcome, waving, friendship, funny reactions, social modes and seasonal celebrations.
-- **Music & SFX tab** replaces the old restaurant/platform simulation tab. There are **no Yemeksepeti/Trendyol Go/Migros buttons** in the mascot's browser experience; the PC-system integration specification remains documented separately for future work.
+- **Voice & Sounds tab** replaces the old restaurant/platform simulation tab. It includes small replayable speech cards, music and SFX. There are **no Yemeksepeti/Trendyol Go/Migros buttons** in the mascot's browser experience; the PC-system integration specification remains documented separately for future work.
 - **Four original synthesized tunes:** Nohutçuk Theme, Tiny Dance, Sleepy Stars and Happy Hello, plus 10 manually playable samples and optional reactive sounds for emotions.
-- **Audio controls:** Play / Stop, volume, effects opt-in, quiet mode, browser speech in Turkish/English/Arabic, and preview of your own local audio file without uploading it.
+- **Talking, but only occasionally:** 7 short phrases (welcome, thanks, 3× head touch/love, goodbye, falafel, photo and birthday) in Turkish, English and Moroccan Arabic. Only specially triggered reactions speak; ordinary eye movements and most touches are silent. The simulated robot enforces a **22-second pause between automatic voice cues** and a **60-second repeat limit on the same phrase**. Test buttons bypass the timing so we can hear each phrase on demand. Browser speech is initially enabled; Quiet mode stops all speech.
+- **Audio controls:** Music Play / Stop, main volume for sound and voice, effects opt-in, selective browser voice and private preview of your own audio file without uploading it.
 - **No copyrighted tracks bundled:** Web Audio creates original playful instrument tones directly in the browser; for richer samples, use the local audio picker or later add licensed audio files.
 - **No physical hardware:** face, touch and head movement are browser previews, not actual sensors/servos. Browser audio only plays after user input; system voice availability varies by platform.
 - **No games:** the product's approved one-build scope remains unchanged.
 
 **Run locally:** open nohutcuk/index.html in any modern browser, or serve the repository root using `python -m http.server 8000` and visit `http://localhost:8000/nohutcuk/`.
 
-**Run automated checks:** `node --check nohutcuk/app.js`, `node --check nohutcuk/audio.js`, `node nohutcuk/tests/smoke.mjs` and `node nohutcuk/tests/audio.mjs`; GitHub Actions also executes these checks.
+**Run automated checks:** `node --check nohutcuk/app.js`, `node --check nohutcuk/audio.js`, `node nohutcuk/tests/smoke.mjs`, `node nohutcuk/tests/audio.mjs` and `node nohutcuk/tests/voice.mjs`; GitHub Actions also executes these checks.
+
+**Audio realism:** browser speech uses voices installed in the visitor’s operating system and may sound synthetic. For a consistent cute mascot voice in the physical build, use licensed or self-recorded short clips, a small speaker and an appropriate audio amplifier. No microphone or always-listening recognition is required. The PC simulator does not output actual ESP32-S3 firmware.
 
 **Hardware requirement:** simultaneous multicolor eyes require an actual **color OLED or TFT/IPS display** rather than a monochrome OLED. Display hardware, speaker circuitry, ESP32-S3 firmware, power and mechanics need dedicated tests before the 3D print is approved.
 
