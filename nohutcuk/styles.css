@@ -71,3 +71,21 @@ a{color:inherit;text-decoration:none}.ambient{position:fixed;pointer-events:none
 .audio-volume strong{font-size:12px;color:#b0e7a1;font-variant-numeric:tabular-nums}
 .audio-volume input{grid-column:1/-1;width:100%;accent-color:#a1e088;cursor:pointer}
 @media(max-width:700px){.song-grid{gap:8px}.song-button{padding:12px;min-height:128px}.song-button strong{font-size:12px}.song-button small{font-size:10px}.song-button b{font-size:9px;right:8px;top:8px}.audio-status{font-size:10px;padding:9px}.stop-music{font-size:10px;padding:7px 9px}}
+
+/* Selective talking: quiet character voice previews, no automatic chatter */
+.voice-box{background:radial-gradient(ellipse at 90% 0,#4b57411a,transparent 50%),#14251a;border:1px solid #4b6b51;border-radius:15px;padding:14px;margin:13px 0 22px}
+.voice-heading{display:flex;align-items:center;justify-content:space-between;gap:9px;color:#ecf9e3;font-size:15px}
+.voice-light{font-size:9px;color:#b7efa7;border:1px solid #538358;background:#24442c;border-radius:99px;padding:6px 8px;letter-spacing:.6px;font-weight:800}
+.voice-box p{margin:11px 0 14px;color:#bdd2b4;font-size:11px;line-height:1.65}
+.voice-samples{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.voice-samples button{background:#0c1911;border:1px solid #3a5842;border-radius:12px;color:#edf7e9;text-align:left;padding:10px 11px;display:grid;grid-template-columns:auto 1fr;column-gap:9px;row-gap:2px;align-items:center;min-height:67px}
+.voice-samples button:hover{background:#243c28;border-color:#9cdb8b}
+.voice-samples button>span{font-size:18px;grid-row:span 2}
+.voice-samples button strong{font-size:11px;line-height:1.25}
+.voice-samples button small{font-size:10px;color:#a2b99f}
+.voice-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#aed6a8;font-size:11px;margin-top:13px}
+.voice-footer #voiceStatus{flex:1;line-height:1.45}
+.voice-footer button{border:1px solid #566747;background:#263b2b;border-radius:8px;padding:8px 10px;color:#eef9e8;font-size:10px;white-space:nowrap}
+.voice-footer button:hover{background:#37513a}
+.voice-note{display:block;margin-top:11px;font-size:10px;line-height:1.6;color:#91b093}
+@media(max-width:390px){.voice-samples{grid-template-columns:1fr 1fr}.voice-samples button{padding:8px 6px;column-gap:5px}.voice-samples button strong{font-size:10px}}
