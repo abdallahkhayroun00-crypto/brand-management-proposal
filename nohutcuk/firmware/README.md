@@ -1,10 +1,10 @@
 # Nohutçuk — ESP32-S3 color eyes firmware (bench project)
 
-**Selected hardware (27 October 2026):** Espressif **ESP32-S3-DevKitC-1** plus the **standalone Waveshare 2.4-inch LCD Module (SKU 18366)**, SPI **ILI9341**, rotated to **320x240** landscape. This is **not a touchscreen shield**, and it is not the combined ESP32-S3-LCD-1.9 development board.
+**Selected screen (27 October 2026):** **3.2-inch ILI9341 SPI TFT 240×320** rotated to **320×240** with **ESP32-S3-DevKitC-1**. Concrete candidate in Türkiye: **Voltaj MZK-6 no-touch, 4-wire SPI**; seller lists a PCB of 89.3×55.04mm in landscape. The exact breakout connector/pin order and voltage **must be verified before wiring**. Do not substitute a 16-bit parallel Arduino Mega shield because it says ILI9341.
 
-**Default PlatformIO profile:** `esp32-s3-ili9341-24` — builds the 2.4-inch ILI9341 geometry. **Legacy software-only profile:** `esp32-s3-st7789-19` — 1.9-inch ST7789V2, not needed for our purchase. Both profiles passed automated GitHub compilation. **Neither has been verified with a physically connected LCD.** Confirm VCC and all 8 signals against the exact board before applying power.
+**Default PlatformIO profile:** `esp32-s3-ili9341-32` — selected **3.2-inch SPI ILI9341, 320×240**. Software reference profiles `esp32-s3-ili9341-24` and `esp32-s3-st7789-19` remain for regression testing only. The ILI9341 source code already handles 320×240 pixels; physical 3.2-inch pinout, viewing angle, rotation, backlight and mount have not been tested. **A successful firmware build is not a hardware compatibility certificate.**
 
-**Mechanical restriction:** The selected display active area is 48.96x36.72 mm (landscape), while the current CAD bezel aperture is 77x34 mm. **Enlarge the viewing height and redesign the mount** before printing. See [BOM_TURKIYE.md](../docs/BOM_TURKIYE.md).
+**Mechanical restriction:** 3.2-inch active image ~64.8×48.6mm (landscape), retail breakout PCB ~89.3×55.04mm, and current head outer ~100×58mm/aperture 77×34mm. This leaves practically no mounting clearance in height. **Resize the head and enlarge the view window** before any final printing; an outer head ~115×75–80mm is a concept starting point, not validated CAD. See [BOM_TURKIYE.md](../docs/BOM_TURKIYE.md).
 
 
 ## Project files
@@ -42,7 +42,7 @@ To try the **optional** TTP223, change \`-D NOHUT_ENABLE_TOUCH=0\` to \`1\` only
 - It renders all 20 named emotions using colored geometric primitives. These are first-pass reproductions, not full pixel-perfect ports of the browser SVG artwork. The face refresh uses simple full-screen drawing, to be optimized after actual performance measurements.
 - **No servo output; no audio amplifier/MP3 playback; no live Wi-Fi / restaurant PC integration.** Speaker/servo pins are reserved but not active. Silence setting is stored but has nothing yet to mute in this initial build.
 - There is no RTC or shop schedule on hardware. Operating-hours cases still run solely in the *browser* day simulator.
-- The screen model is an initial bench candidate. The 2.4-inch selected active image needs a larger face opening; validate it physically before final 3D printing.
+- The screen model is an initial bench candidate. The 3.2-inch active image and PCB require a significantly taller head and view opening; validate it physically before final 3D printing.
 - A successful build is not a successful hardware test. Do not power servo or speaker from the ESP32 GPIO or 3.3V pin. Use the separate electronics plan.
 
 **No games; one approved product scope.**
