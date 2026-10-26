@@ -11,7 +11,7 @@
 | STL set validated with chosen hardware | prototype STL set committed; **not validated against selected real hardware** |
 | 3MF/G-code / print profile | **not yet created** |
 | Wiring diagram, verified power design | **provisional GPIO table in docs/ELECTRONICS_BENCH.md**, not an electrically verified schematic or power budget |
-| ESP32-S3 firmware, unit and hardware tests | **firmware/ C++ LCD renderer + portable tests created; CI compilation running / hardware tests not performed** |
+| ESP32-S3 firmware, unit and hardware tests | **firmware/ C++ LCD renderer + portable tests created; native tests and PlatformIO ESP32-S3 compilation passed in GitHub Actions; hardware tests not performed** |
 | Restaurant integration | **planned, not deployed** |
 | Assembly manual and maintenance | **planned** |
 | Separate GitHub assets | upload status tracked in assets/README.md |
