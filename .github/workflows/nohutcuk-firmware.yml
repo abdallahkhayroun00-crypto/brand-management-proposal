@@ -1,0 +1,40 @@
+name: Nohutçuk ESP32-S3 Firmware
+
+on:
+  push:
+    paths:
+      - 'nohutcuk/firmware/**'
+      - '.github/workflows/nohutcuk-firmware.yml'
+  pull_request:
+    paths:
+      - 'nohutcuk/firmware/**'
+      - '.github/workflows/nohutcuk-firmware.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-logic:
+    name: Portable C++ character contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run native behavior tests
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror -I nohutcuk/firmware/include nohutcuk/firmware/tests/character_test.cpp -o /tmp/nohut-character-test
+          /tmp/nohut-character-test
+
+  esp32-build:
+    name: Build ESP32-S3 170x320 color face
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PlatformIO
+        run: python -m pip install -q platformio
+      - name: Compile for ESP32-S3 (does not flash hardware)
+        run: pio run -d nohutcuk/firmware
