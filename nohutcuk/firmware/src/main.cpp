@@ -9,7 +9,8 @@
 static Arduino_DataBus* bus = new Arduino_HWSPI(
   nohut::LCD_DC, nohut::LCD_CS, nohut::LCD_SCLK, nohut::LCD_MOSI);
 #if NOHUT_DISPLAY_ILI9341
-// Selected purchase target: Waveshare 2.4" ILI9341, portrait panel in landscape.
+// Selected face target: 3.2" SPI ILI9341, portrait panel rotated landscape.
+// IMPORTANT: software-compatible pixels do not prove breakout/pinout compatibility.
 static Arduino_GFX* gfx = new Arduino_ILI9341(bus, nohut::LCD_RST, 1 /* 320x240 landscape */);
 #else
 // Old reference only: Waveshare 1.9" ST7789V2 with RAM offset.
@@ -255,7 +256,7 @@ void setup(){
   }
   gfx->fillScreen(BLACK);
 #if NOHUT_DISPLAY_ILI9341
-  Serial.println("Nohutcuk ESP32-S3 2.4in ILI9341 320x240 COLOR EYES bench build (no audio or servo).");
+  Serial.println("Nohutcuk ESP32-S3 ILI9341 320x240 COLOR EYES bench build for 3.2-inch (no audio or servo).");
 #else
   Serial.println("Nohutcuk ESP32-S3 legacy 1.9in ST7789 320x170 COLOR EYES bench build.");
 #endif
