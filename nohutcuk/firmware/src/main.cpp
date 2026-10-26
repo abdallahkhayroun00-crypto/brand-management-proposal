@@ -8,10 +8,16 @@
 // Code is open-loop and must be validated on actual chosen hardware.
 static Arduino_DataBus* bus = new Arduino_HWSPI(
   nohut::LCD_DC, nohut::LCD_CS, nohut::LCD_SCLK, nohut::LCD_MOSI);
+#if NOHUT_DISPLAY_ILI9341
+// Selected purchase target: Waveshare 2.4" ILI9341, portrait panel in landscape.
+static Arduino_GFX* gfx = new Arduino_ILI9341(bus, nohut::LCD_RST, 1 /* 320x240 landscape */);
+#else
+// Old reference only: Waveshare 1.9" ST7789V2 with RAM offset.
 static Arduino_GFX* gfx = new Arduino_ST7789(
   bus, nohut::LCD_RST, 1 /* landscape */, 0 /* IPS */,
   nohut::PANEL_NATIVE_W, nohut::PANEL_NATIVE_H,
   nohut::PANEL_OFFSET_X, 0, nohut::PANEL_OFFSET_X, 0);
+#endif
 static nohut::Character character;
 static bool displayReady=false;
 
@@ -116,27 +122,29 @@ static void drawEye(nohut::Mood mood,int x,int y,bool left,uint16_t col,bool bli
   }
 }
 static void faceFrame(uint32_t now){
+  // Keep both eyes proportional on either 320x240 or legacy 320x170.
+  const int verticalOffset=(nohut::FACE_H-170)/2;
   const auto mood=character.mood();
   const uint16_t col=colorFor(mood);
   // No transparent overlays or bitmaps; every frame is drawn from primitives.
   gfx->fillScreen(BLACK);
   const bool blink=inBlink(now);
-  drawEye(mood,103,76,true,col,blink);
-  drawEye(mood,217,76,false,col,blink);
+  drawEye(mood,103,76+verticalOffset,true,col,blink);
+  drawEye(mood,217,76+verticalOffset,false,col,blink);
   if(mood==nohut::Mood::Shy||mood==nohut::Mood::Kissing){
-    bar(36,130,32,8,4,rgb(250,104,158));
-    bar(250,130,32,8,4,rgb(250,104,158));
+    bar(36,130+verticalOffset,32,8,4,rgb(250,104,158));
+    bar(250,130+verticalOffset,32,8,4,rgb(250,104,158));
   }
   if(mood==nohut::Mood::Celebrating){
-    gfx->fillCircle(35,25,6,pink());
-    gfx->fillCircle(289,136,6,rgb(122,240,155));
+    gfx->fillCircle(35,25+verticalOffset,6,pink());
+    gfx->fillCircle(289,136+verticalOffset,6,rgb(122,240,155));
   }
   if(mood==nohut::Mood::Sleeping){
     gfx->setTextColor(rgb(144,181,248));
-    gfx->setTextSize(2);gfx->setCursor(275,18);gfx->print("zZ");
+    gfx->setTextSize(2);gfx->setCursor(275,18+verticalOffset);gfx->print("zZ");
   }
   // Bright ambient indicator; no touch/servo/audio operation implied.
-  gfx->fillCircle(160,152,3,col);
+  gfx->fillCircle(160,152+verticalOffset,3,col);
 }
 
 #if NOHUT_ENABLE_TOUCH
@@ -246,7 +254,11 @@ void setup(){
     return;
   }
   gfx->fillScreen(BLACK);
-  Serial.println("Nohutcuk ESP32-S3 COLOR EYES bench build (no audio or servo).");
+#if NOHUT_DISPLAY_ILI9341
+  Serial.println("Nohutcuk ESP32-S3 2.4in ILI9341 320x240 COLOR EYES bench build (no audio or servo).");
+#else
+  Serial.println("Nohutcuk ESP32-S3 legacy 1.9in ST7789 320x170 COLOR EYES bench build.");
+#endif
   help();
 }
 void loop(){
