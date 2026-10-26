@@ -8,6 +8,7 @@
   <title>Nohutçuk | Eye Studio</title>
   <link rel="stylesheet" href="./styles.css">
   <script src="./audio.js" defer></script>
+  <script src="./voice.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
@@ -89,7 +90,7 @@
         <div class="tabs" role="tablist" aria-label="Reaction categories">
           <button type="button" role="tab" data-tab="emotions" aria-selected="true">Emotions</button>
           <button type="button" role="tab" data-tab="interactions" aria-selected="false">Interactions</button>
-          <button type="button" role="tab" data-tab="sounds" aria-selected="false">Music & SFX</button>
+          <button type="button" role="tab" data-tab="sounds" aria-selected="false">Voice & Sounds</button>
           <button type="button" role="tab" data-tab="special" aria-selected="false">Special</button>
         </div>
         <div class="tab-panel" id="panel-emotions" role="tabpanel">
@@ -102,7 +103,22 @@
           <div class="inline-stat">Friendship interactions <strong id="friendCount">0 / 4</strong></div>
         </div>
         <div class="tab-panel" id="panel-sounds" role="tabpanel" hidden>
-          <p class="panel-help">Four original Nohutçuk tunes + colorful emotion sound effects. Press Play to hear them. Nothing is uploaded.</p>
+          <p class="panel-help">Nohutçuk only speaks a few words on special interactions, not nonstop. Music and effects are separate.</p>
+          <div class="voice-box">
+            <div class="voice-heading"><span>🗣️ <strong>Mini voice lines</strong></span><span class="voice-light">OCCASIONAL</span></div>
+            <p>Short phrases for welcoming someone, 3× head touch, goodbye, falafel or a birthday. Normal expressions stay silent. The robot waits at least 22 seconds between automatic phrases.</p>
+            <div class="voice-samples">
+              <button type="button" data-voice="welcome"><span>👋</span><strong>Hoş geldin!</strong><small>Welcome</small></button>
+              <button type="button" data-voice="thanks"><span>💚</span><strong>Teşekkür ederim!</strong><small>Thanks</small></button>
+              <button type="button" data-voice="love"><span>💕</span><strong>Çok tatlısın!</strong><small>3× touch</small></button>
+              <button type="button" data-voice="goodbye"><span>👋</span><strong>Yine beklerim!</strong><small>Goodbye</small></button>
+              <button type="button" data-voice="falafel"><span>🧆</span><strong>Afiyet olsun!</strong><small>Falafel</small></button>
+              <button type="button" data-voice="birthday"><span>🎂</span><strong>İyi ki doğdun!</strong><small>Birthday</small></button>
+            </div>
+            <div class="voice-footer"><span id="voiceStatus" role="status">Tap a phrase to test speech. Language follows Voice language below.</span><button type="button" id="stopVoice">Stop voice</button></div>
+            <small class="voice-note">Preview uses your device's Turkish, English or Arabic text-to-speech voice. Recorded robot voice files can be added after we choose the final sound.</small>
+          </div>
+          <h3 class="sound-heading">Optional original tunes <span>Play only when selected</span></h3>
           <div class="audio-status" aria-live="polite"><span class="audio-led"></span><span id="musicStatus">Choose a song to start listening 🎵</span><button type="button" id="stopMusic" class="stop-music">■ Stop</button></div>
           <div class="song-grid">
             <button type="button" class="song-button" data-song="theme"><span class="song-icon">🌿</span><strong>Nohutçuk Theme</strong><small>Playful little melody</small><b>▶ Play</b></button>
@@ -135,10 +151,10 @@
         <div class="toggle-stack">
           <label class="switch-label"><input id="autoBlink" type="checkbox" checked><span>Natural blink & glance</span></label>
           <label class="switch-label"><input id="autoSleep" type="checkbox"><span>Sleep after 30 seconds idle</span></label>
-          <label class="switch-label"><input id="voiceEnabled" type="checkbox"><span>Voice preview (browser speech)</span></label>
+          <label class="switch-label"><input id="voiceEnabled" type="checkbox" checked><span>Occasional talking (short phrases)</span></label>
           <label class="switch-label"><input id="effectsEnabled" type="checkbox"><span>Sound effects on reactions</span></label>
           <label class="switch-label"><input id="quietMode" type="checkbox"><span>Quiet mode (mute + reduce motion)</span></label>
-          <div class="audio-volume"><label for="volumeRange">🔊 Sound volume</label><strong id="volumeValue">50%</strong><input id="volumeRange" aria-label="Sound volume" type="range" min="0" max="100" step="5" value="50"></div>
+          <div class="audio-volume"><label for="volumeRange">🔊 Sound & voice volume</label><strong id="volumeValue">50%</strong><input id="volumeRange" aria-label="Sound volume" type="range" min="0" max="100" step="5" value="50"></div>
       </aside>
     </div>
     <section class="bottom-grid">
