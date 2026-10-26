@@ -1,20 +1,22 @@
-01_head_front_bezel             volume=  33933.1 mm3, triangles=  2576, watertight=True, bodies=1
-02_head_rear_housing            volume=  58478.3 mm3, triangles=  3108, watertight=True, bodies=1
-03_universal_screen_carrier     volume=   3675.5 mm3, triangles=   736, watertight=True, bodies=1
-04_optional_display_blank       volume=   4387.1 mm3, triangles=   716, watertight=True, bodies=1
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/cadquery/utils.py:82: FutureWarning: save will be removed in the next release.
+  warn(f"{f.__name__} will be removed in the next release.", FutureWarning)
+01_head_front_bezel             volume=  61127.7 mm3, triangles=  2576, watertight=True, bodies=1
+02_head_rear_housing            volume=  83195.5 mm3, triangles=  2596, watertight=True, bodies=1
+03_universal_screen_carrier     volume=   9171.6 mm3, triangles=   544, watertight=True, bodies=1
+04_optional_display_blank       volume=   6097.1 mm3, triangles=   716, watertight=True, bodies=1
 15_optional_left_eye_overlay    volume=     62.9 mm3, triangles=   220, watertight=True, bodies=1
 16_optional_right_eye_overlay   volume=     62.9 mm3, triangles=   220, watertight=True, bodies=1
-05_lower_body_shell             volume=  51486.9 mm3, triangles=  2532, watertight=True, bodies=1
-06_base_bottom_cover            volume=  12420.0 mm3, triangles=  2300, watertight=True, bodies=1
-07_underglow_diffuser_ring      volume=   2136.7 mm3, triangles=   544, watertight=True, bodies=1
+05_lower_body_shell             volume=  66486.1 mm3, triangles=  2532, watertight=True, bodies=1
+06_base_bottom_cover            volume=  15623.1 mm3, triangles=  2300, watertight=True, bodies=1
+07_underglow_diffuser_ring      volume=   2414.4 mm3, triangles=   544, watertight=True, bodies=1
 08_neck_with_cable_channel      volume=   4383.8 mm3, triangles=   288, watertight=True, bodies=1
-09_electronics_tray_generic     volume=   5735.7 mm3, triangles=  1084, watertight=True, bodies=1
+09_electronics_tray_generic     volume=   7535.5 mm3, triangles=  1148, watertight=True, bodies=1
 10_servo_cradle_generic         volume=   5279.8 mm3, triangles=   836, watertight=True, bodies=1
 11_leaf_sprout_top              volume=   1844.8 mm3, triangles=   872, watertight=True, bodies=1
 12_top_button_cap               volume=    145.5 mm3, triangles=   500, watertight=True, bodies=1
 13_top_button_cap               volume=    145.5 mm3, triangles=   500, watertight=True, bodies=1
 14_front_logo_badge             volume=   1333.1 mm3, triangles=  1704, watertight=True, bodies=1
-ALL_PARTS_ASSEMBLED_REFERENCE: 18736 triangles, watertight per component: True components: 16
-One-piece CAD shape 1 valid True volume 509028.9031674704
+ALL_PARTS_ASSEMBLED_REFERENCE: 18096 triangles, watertight per component: True components: 16
+One-piece CAD shape 1 valid True volume 850104.9161405392
 One-piece mesh watertight: True components: 1 Euler: 2
 Wrote 16 parts to nohutcuk

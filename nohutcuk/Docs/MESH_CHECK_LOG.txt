@@ -1,19 +1,28 @@
-Validated print-oriented 16 files plus 2 merged models.
-01_head_front_bezel.stl watertight= True bodies= 1 size(mm)= 100.0 58.0 11.0
-02_head_rear_housing.stl watertight= True bodies= 1 size(mm)= 100.0 58.0 39.0
-03_universal_screen_carrier.stl watertight= True bodies= 1 size(mm)= 87.0 43.0 3.0
-04_optional_display_blank.stl watertight= True bodies= 1 size(mm)= 75.0 32.0 2.4
-05_lower_body_shell.stl watertight= True bodies= 1 size(mm)= 74.0 58.0 47.0
-06_base_bottom_cover.stl watertight= True bodies= 1 size(mm)= 74.0 58.0 3.0
-07_underglow_diffuser_ring.stl watertight= True bodies= 1 size(mm)= 74.0 58.0 2.0
-08_neck_with_cable_channel.stl watertight= True bodies= 1 size(mm)= 17.0 15.0 22.0
-09_electronics_tray_generic.stl watertight= True bodies= 1 size(mm)= 62.0 43.0 2.5
-10_servo_cradle_generic.stl watertight= True bodies= 1 size(mm)= 34.0 26.0 16.5
-11_leaf_sprout_top.stl watertight= True bodies= 1 size(mm)= 42.21 38.5 4.0
-12_top_button_cap.stl watertight= True bodies= 1 size(mm)= 6.7 6.7 4.8
-13_top_button_cap.stl watertight= True bodies= 1 size(mm)= 6.7 6.7 4.8
-14_front_logo_badge.stl watertight= True bodies= 1 size(mm)= 43.0 17.0 2.4
-15_optional_left_eye_overlay.stl watertight= True bodies= 1 size(mm)= 19.7 8.84 0.8
-16_optional_right_eye_overlay.stl watertight= True bodies= 1 size(mm)= 19.7 8.84 0.8
-NOHUTCUK_ALL_PARTS_ASSEMBLED_REFERENCE.stl watertight= False bodies= 17 size(mm)= 100.0 60.9 155.0
-NOHUTCUK_ONE_PIECE_SOLID_STATUE.stl watertight= True bodies= 1 size(mm)= 100.0 59.9 155.0
+Traceback (most recent call last):
+  File "/home/runner/work/brand-management-proposal/brand-management-proposal/nohutcuk/CAD_Source/prepare_print_and_verify.py", line 51, in <module>
+    records.append({'file':f.name,'watertight':mesh.is_watertight,'connected_components':len(mesh.split(only_watertight=False)),
+                                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/trimesh/base.py", line 1458, in split
+    return graph.split(self, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/trimesh/graph.py", line 397, in split
+    return mesh.submesh(
+           ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/trimesh/base.py", line 2943, in submesh
+    return util.submesh(
+           ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/trimesh/util.py", line 1688, in submesh
+    watertight = [len(i.faces) >= 4 and i.fill_holes() for i in result]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/trimesh/util.py", line 1688, in <listcomp>
+    watertight = [len(i.faces) >= 4 and i.fill_holes() for i in result]
+                                        ^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/trimesh/base.py", line 1985, in fill_holes
+    return repair.fill_holes(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/trimesh/repair.py", line 246, in fill_holes
+    holes = nx.cycle_basis(nx.from_edgelist(boundary))
+            ^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/trimesh/exceptions.py", line 35, in __getattribute__
+    raise exc_type(*exc_args)
+ModuleNotFoundError: No module named 'networkx'
