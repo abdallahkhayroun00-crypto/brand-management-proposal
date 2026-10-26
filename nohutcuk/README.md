@@ -20,6 +20,21 @@ The mascot now includes a completely simulated operating-day rule engine in [day
 
 **Important:** this proves the specified simulated software state transitions, **not** operation with real touch/proximity sensors, actual speaker/servo electronics, real-time Wi-Fi events or the restaurant POS application. Those remain separate hardware/integration tasks.
 
+## 🔌 ESP32-S3 multicolor hardware and C++ firmware (bench stage)
+
+**We have started actual embedded development**, not just browser simulations.
+
+- [Electronics & wiring bench plan](docs/ELECTRONICS_BENCH.md) — component candidates, official sources, safe sequence, dimensions, provisional GPIO pin map.
+- [PlatformIO project](firmware/) — ESP32-S3 board configuration and dependencies.
+- [Actual 20-expression C++ face renderer](firmware/src/main.cpp) — 320×170 multicolor eyes for an SPI ST7789V2 display, nonblocking blink/idle/serial controls.
+- [Portable C++ character state machine](firmware/include/character.hpp) — 20 moods, hello cooldown, touch gestures and photo hold.
+- [Host C++ tests](firmware/tests/character_test.cpp) — 20 emotion roundtrips, 30-second hello debounce, photo lock, sleep, quiet mode, uint32 clock rollover.
+- [Firmware build CI](https://github.com/abdallahkhayroun00-crypto/brand-management-proposal/actions/workflows/nohutcuk-firmware.yml) — checks native logic and attempts an actual PlatformIO ESP32-S3 compilation.
+
+**Proposed color face:** the **standalone 8-pin Waveshare 1.9inch IPS LCD Module, ST7789V2 170×320** rotated to 320×170, plus **Espressif ESP32-S3-DevKitC-1**. The module measures about 51.2×27.3 mm and its visible area about 42.72×22.70 mm. This fits nominally within the CAD prototype's placeholder opening (77×34 mm), but may **look too small compared to the artwork**; do not lock the outer shell without seeing the real panel first. This is a test-platform selection, not the final confirmed hardware package.
+
+**Safety:** servo, amplifier and Wi-Fi-PC integration are NOT turned on in this initial firmware. TTP223 head touch and VL53L0X carrier distance sensor are future opt-in flags. This code is **not yet confirmed on a physically wired screen**; the GitHub C++/PlatformIO build is only a compile test. Browser JavaScript remains separate and operational.
+
 ## 🌈 Multicolor Eye & Sound Studio — live browser simulator
 
 **Live preview:** https://abdallahkhayroun00-crypto.github.io/brand-management-proposal/nohutcuk/
