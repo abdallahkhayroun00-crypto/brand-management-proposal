@@ -2,29 +2,28 @@
 
 **Updated:** 2026-10-27. **Status: engineering shortlist, NOT a validated/approved final basket.** This document records the complete component research discussed for one physical Nohut Falafel mascot. **Do not buy every item based on this list yet.** Check prices, stock and electrical compatibility at purchase. The retailer figures below are **historical approximate quotes from project research**, not live confirmed prices on this page.
 
-> **DECISION — 27 October 2026:** Purchase **one Waveshare 2.4-inch ILI9341 LCD (SKU 18366)** as the first face module. Do **not** purchase the 1.9-inch alternative. The 2.4-inch ILI9341 is the **default PlatformIO build target**, and its firmware CI passed, but **no physical unit has been bought, connected or tested**. Update the CAD front cutout before printing: display active area is 48.96 x 36.72 mm versus the old 77 x 34 mm aperture. Other components remain provisional.
+> **SUPERSEDING DECISION — 27 October 2026:** User selected ONE **3.2-inch ILI9341 SPI 240x320 display** for Nohutçuk. **Do not buy the old 2.4-inch Waveshare SKU 18366 or 1.9-inch ST7789V2.** Suggested **specific retail candidate**, pending photo/pinout verification: **Voltaj MZK-6 3.2-inch 4-wire SPI, without touch**, [seller listing](https://www.voltaj.net/tft-lcd-spi-seri-arayuzlu3.2-incili9341-ekran-modulu-dokunmatiksiz). Seller lists a PCB of **55.04 x 89.3 mm**; landscape orientation makes it **89.3 mm wide x 55.04 mm high**. Active area **64.8 x 48.6 mm**, compared with current CAD head ~100 x 58 mm and *opening* 77 x 34 mm. The old head CANNOT safely fit this PCB with mounting and wall allowance. **Enlarge/rebuild head and bezel** before final 3D printing. **No purchase or physical validation has happened.** Default firmware target is now `esp32-s3-ili9341-32`, same 320x240 driver pixel layout as 2.4-inch, but **pinout, voltage, backlight and connector are NOT interchangeable without checking the actual module**.
 
-## Display specs and fit conditions
 
-**Selected display:** **Waveshare 2.4inch LCD Module, SKU 18366, ILI9341, SPI, TFT, 240×320 pixels, 65K RGB**, used horizontally at **320×240**. [Manufacturer](https://www.waveshare.com/product/displays/lcd-oled/2.4inch-lcd-module.htm) · [datasheet/wiki](https://www.waveshare.com/wiki/2.4inch_LCD_Module)
 
-- **Official board dimensions:** 70.50 × 43.30 mm.
-- **Official active display dimensions:** 48.96 × 36.72 mm in landscape.
-- CAD prototype head: ~100 × 58 × 50 mm; **placeholder screen cutout 77 × 34 mm**.
-- **Important clearance conflict:** the *active image* is **36.72 mm high**, already **2.72 mm taller than the cutout**. The whole board is **43.30 mm high**, requiring sufficient head interior space, standoffs and an updated bezel. Merely fitting its width is not enough.
-- A bigger, eye-friendlier active display is attractive, but **Waveshare describes this exact 2.4-inch SKU as TFT, not IPS**. Check viewing angle/contrast in real lighting before committing.
-- **Earlier benchmark firmware targeted a DIFFERENT module:** Waveshare 1.9inch LCD Module SKU 23822, **IPS ST7789V2, 170×320**, rotated to **320×170**; board 51.2 × 27.3 mm, active image 42.72 × 22.70 mm in landscape. [Manufacturer](https://www.waveshare.com/1.9inch-LCD-Module.htm) · [Wiki](https://www.waveshare.com/wiki/1.9inch_LCD_Module).
-- **2.4-inch ILI9341 now has its own default C++/PlatformIO profile, with CI build passing.** Wiring, actual screen appearance, orientation and mechanical fit have not been physically tested.
+## Display choice and mechanical fit (3.2-inch ILI9341)
 
-**Purchase choice:** one 2.4-inch ILI9341 module, zero 1.9-inch modules; no order placed by ChatGPT. Real-world fit and viewing-angle acceptance remain open.
+- **Selected specification:** 3.2-inch ILI9341, native 240x320, SPI breakout, used as **320x240 landscape**.
+- **Shortlisted exact retail SKU:** Voltaj **MZK-6 (no touchscreen)**. Vendor lists **55.04 x 89.3 mm PCB**, 4-wire SPI, 3.3/5V supply (verify onboard regulator/level shifter and the specific connector before wiring). [Retailer](https://www.voltaj.net/tft-lcd-spi-seri-arayuzlu3.2-incili9341-ekran-modulu-dokunmatiksiz).
+- **Display active image:** about **64.8 x 48.6 mm** in landscape, as supported by 3.2-inch ILI9341 display specifications ([Raystar](https://www.raystar-optronics.com/3.2-3.5-3.9-tft-lcd-display/240x320-ili9341.html)).
+- **Current body constraint:** head outer ~100 x 58 x 50 mm, LCD aperture 77 x 34 mm. In landscape the retail module PCB height ~55 mm leaves just 3 mm total within the outer shell height, **not enough for walls/mounts/wire relief**; opening height also hides ~14.6 mm of the image. Consider a redesigned **~115 x 75–80 mm outer head** as an *engineering starting envelope*, NOT final validated CAD.
+- **Beware misleading listings:** The [Alkatronik touch module](https://alkatronik.com/tr/product/lcd/3-2-tft-lcd-modul-381) mentions Arduino Mega, **16-bit data bus** AND SPI, so do not assume that version uses the same simple SPI wiring. The [Waveshare 3.2-inch Touch LCD (D)](https://www.waveshare.com/3.2inch-320x240-touch-lcd-d.htm) uses parallel display wiring even though touch uses SPI; **not a drop-in SPI module**.
+- **Legacy:** 2.4-inch Waveshare ILI9341 and 1.9-inch ST7789V2 are preserved in source as **old software targets only**, quantity **0** for procurement.
+- **Firmware:** same ILI9341 320x240 eye renderer works at the pixel level with 3.2-inch panels. PlatformIO 3.2 profile compiles in CI; it does **not** prove physical wiring or that a supplier’s board is actually 4-wire SPI.
+- **Safety:** verify ESP32-S3 3.3V GPIO levels and LCD electrical requirements; never connect a 5V output signal to ESP32 pins.
 
 ## Controller and active components (1 robot)
 
 | ID | Component | Exact candidate/specification | Qty | Status / caveat | Research links |
 |---|---|---|---:|---|---|
 | E01 | Controller | **Espressif ESP32-S3-DevKitC-1-N8R8** (8 MB flash / 8 MB PSRAM version), 3.3 V GPIO | 1 | Selected test target; verify original board/module revision | [Espressif](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/user_guide_v1.0.html) · [Türkiye](https://www.beti.com.tr/urun/esp32-s3-devkitc-1-n8r8-gelistirme-karti) |
-| E02 | Selected color LCD | **Waveshare 2.4inch LCD Module SKU 18366**, ILI9341, 240×320, SPI | 1 | Selected for purchase and code build ready; **physical fit not verified** | [Maker](https://www.waveshare.com/product/displays/lcd-oled/2.4inch-lcd-module.htm) · [Türkiye listing](https://www.ankarobot.com/2.4-240x320-ili9341-tft-lcd-ekran) (seller's exact manufacturer SKU must be confirmed) |
-| E02a | Legacy alternative (do not buy) | Waveshare **1.9inch LCD Module SKU 23822**, IPS ST7789V2, 170×320 | 0 unless bench testing | No purchase. Old software fallback only | [Maker](https://www.waveshare.com/1.9inch-LCD-Module.htm) |
+| E02 | **Selected 3.2-inch LCD (1 piece)** | **ILI9341 SPI 240x320, no touch**, provisional retail SKU Voltaj MZK-6 | 1 | **Selected display size/driver; verify exact SPI pinout and dimensions; head redesign required** | [Voltaj MZK-6](https://www.voltaj.net/tft-lcd-spi-seri-arayuzlu3.2-incili9341-ekran-modulu-dokunmatiksiz) |
+| E02a | Old displays **not to buy** | 2.4-inch ILI9341 / 1.9-inch ST7789V2 | 0 | Historical software reference only | — |
 | E03 | Touch | **TTP223** capacitive touch breakout, 3.3 V output, active-high verified | 1 | Prototype candidate; test through PETG/PLA and debounce | [Türkiye](https://www.robotistan.com/ttp223-tekli-dokunmatik-anahtar-1-way-touch-switch) |
 | E04 | Guest approach | **VL53L0X** ToF I²C **carrier/breakout with safe power/logic levels**, not bare IC | 1 | Candidate; vendor-specific power circuitry to verify. Does not recognize waves | [Adafruit documentation](https://learn.adafruit.com/adafruit-vl53l0x-micro-lidar-distance-sensor-breakout/pinouts) · [Türkiye example](https://alkatronik.com/tr/product/vl53l0xv2-lazer-mesafe-sensoru-1802/sensorler-2) |
 | E05 | Hand wave (optional) | **APDS-9960 / GY-APDS-9960** proximity/gesture breakout, 3.3 V-compatible | 0–1 | Optional **short-range** gesture sensing, not reliable across restaurant room; shared I²C electrical address/optical interference testing required | [Türkiye](https://www.tlsrobotik.com/urun/gy-9960-3-3-apds-9960-renk-ve-temassiz-hareket-tanima-sensor-modulu/) |
@@ -42,11 +41,11 @@
 | ID | Item | Qty / condition | Decision gate |
 |---|---|---|---|
 | M01 | PETG/PLA for black body + green leaf; removable front bezel | As printed | **Only after** exact LCD dimensions + screen view opening are reconciled |
-| M02 | LCD bracket + standoffs + opaque face lens/clear protector | 1 kit | Avoid blocking 2.4-inch **36.72-mm-tall active image** |
+| M02 | 3.2-inch LCD bracket + standoffs + opaque face lens/clear protector | 1 kit | Redesign opening for active image 64.8 x 48.6 mm and PCB 89.3 x 55.04 mm (landscape) |
 | M03 | Stable base and head-pivot support (bearing/shaft or mechanical support as needed) | 1 | Servo shaft should not bear unverified whole head weight |
 | M04 | Servo horn, screw/collar and safe end stops | 1 set | Validate real servo and travel |
 | M05 | M2/M3 stainless screws, nuts, thermal inserts and spacers | Sized kit | Confirm CAD hole/thread sizes |
-| M06 | Matching JST/PH/GH wiring harness depending on chosen modules | 1 harness | **Do not assume 1.9-inch GH and 2.4-inch PH cables match** |
+| M06 | Connector and cabling matched to purchased 3.2-inch breakout | 1 harness | **Actual pin names, pitch, voltage to be verified on real MZK-6**, not borrowed from 2.4-inch cable map |
 | M07 | Jumper wires + breadboard for first tests | 1 pack | Not for permanent vibration-resistant install |
 | M08 | Perfboard / custom PCB with protected 5 V/3.3 V distribution, connector strain relief | 1 | Electrical schematic and load test required |
 | M09 | Suitable separate servo supply branch, decoupling caps (e.g. 470–1000 µF as an engineering starting point), protection and shared reference | Design-dependent | Size only using measured peak currents |
@@ -61,7 +60,7 @@ These are **approximate historical Turkish offers discussed in this project**, n
 | ID | Approx. Turkish reference price |
 |---|---:|
 | E01 ESP32-S3 N8R8 | 1,418 TL |
-| E02 2.4-inch screen | 1,351 TL |
+| E02 3.2-inch MZK-6 display | 838.83 TL research listing price; recheck at checkout |
 | E03 TTP223 | 55 TL |
 | E04 VL53L0XV2 budget breakout | 149 TL |
 | E05 APDS-9960 | 200 TL |
@@ -85,7 +84,7 @@ These are **approximate historical Turkish offers discussed in this project**, n
 
 ## Purchase decision gates
 
-**Stage A — choose physical face FIRST.** Check real module type, active view dimensions vs head/bezel and view angle. Pick **either E02 or E02a**, not both unless deliberately comparing displays. Rebuild the correct display driver and test with the exact purchased breakout.
+**Stage A — purchase exactly one 3.2-inch ILI9341 **SPI** breakout (prefer non-touch, verify Voltaj MZK-6 pins before ordering); do not buy either smaller screen.** Test 320x240 face firmware and check LCD dimensions, connector and real viewing angle. Redesign head and bezel before printing.
 
 **Stage B — sensing and speech.** Add E03, E04, E06, E07; gesture E05 only if needed after near-field range test. Select prerecorded Turkish/Nohutçuk voice. Confirm file storage and audio volume.
 
@@ -96,10 +95,10 @@ These are **approximate historical Turkish offers discussed in this project**, n
 | Software / hardware layer | Reality |
 |---|---|
 | Browser SVG face and 82 shop-day scenarios | Implemented; automated tests passed |
-| ESP32-S3 C++ face | 2.4-inch ILI9341 is the successful default CI build; old 1.9-inch profile remains optional. Neither physically tested |
-| Selected 2.4-inch ILI9341 face | Selected for purchase; 320x240 source and build verified, physical test pending |
+| ESP32-S3 C++ face | Default 3.2-inch ILI9341 profile; same 320x240 pixel driver family as prior 2.4-inch. Software compilation ≠ physical validation |
+| Selected 3.2-inch ILI9341 face | One panel to purchase, not ordered. Real wiring, enclosure enlargement, viewing-angle and reliability tests pending |
 | TTP223 / VL53L0X / APDS-9960 | Touch/ToF scaffolding for initial sensor candidates; not bench verified; gesture integration absent |
 | MAX98357A, voice, head servo | Names shortlisted; drivers/hardware safety/actual robot assembly not completed |
 | CAD | Prototype exists; final screen/servo/speaker-fit must be reworked |
 
-The next implementation change should be **an explicit new hardware profile for 2.4-inch ILI9341, followed by compilation and a physical LCD-only bench test**. Avoid silently replacing the existing known-compiled 1.9-inch profile.
+Next gate: compile new 3.2-inch default profile in GitHub Actions; then verify a supplier-specific SPI pinout and real LCD prototype. Do not print CAD based on the old 100x58 mm head.
