@@ -2,14 +2,14 @@
 
 **Status: preliminary engineering selection, not a verified wiring diagram or shopping order.** The real restaurant mascot is one complete product; these are internal verification stages, not product versions. No games.
 
-> **2026-10-27 purchasing update:** This page intentionally describes the **already compiled 1.9-inch ST7789V2 LCD bench target**. The updated [Türkiye BOM and purchasing decisions](BOM_TURKIYE.md) shortlist a **larger 2.4-inch ILI9341 SKU 18366** for the face. It requires a **different firmware driver and a modified bezel**, because its active panel is **36.72 mm high** whereas the placeholder cutout is **34 mm high**. Do not mistake the 1.9-inch GPIO/display firmware for a validated 2.4-inch implementation.
+> **Newest purchase choice, 2026-10-27:** One **3.2-inch ILI9341 4-wire SPI TFT**, non-touch preferred (Voltaj MZK-6 candidate), rather than either 2.4-inch or 1.9-inch. Default code profile is `esp32-s3-ili9341-32`, matching ILI9341 pixel protocol and 320×240 geometry. **Seller-specific header/pinout, electrical levels and real rendering are not verified**, and the current head/bezel must be enlarged. See [BOM_TURKIYE.md](BOM_TURKIYE.md).
 
 ## First purchase / test candidates
 
 | Part | Candidate | Why | Current software |
 |---|---|---|---|
 | Main controller | Genuine Espressif **ESP32-S3-DevKitC-1** (ideally **N8R8** if available) | Official development board, Wi-Fi, accessible pins; ESP32-S3 family is already in the approved design | PlatformIO board ID \`esp32-s3-devkitc-1\` |
-| **Color face** | **Waveshare 1.9inch LCD Module** (the **separate 8-pin module**, SKU 23822), ST7789V2, **170×320** IPS, SPI | Original controller supports multiple simultaneously colored moods; portrait panel can rotate to 320×170 landscape. Board footprint **51.2×27.3mm**, viewable display **42.72×22.70mm** — fits inside the existing *placeholder* 77×34mm opening, but may look smaller than concept art | **Implemented bench display renderer**, subject to compile + real screen testing |
+| **Color face** | **3.2-inch ILI9341 SPI TFT 240×320**, no touch, shortlist **Voltaj MZK-6** | User-selected 3.2-inch face; about 89.3×55mm PCB in landscape, 64.8×48.6mm active view. Current 100×58mm head and 77×34mm aperture need redesign | Default 320×240 ILI9341 firmware profile; physical fit and wiring **not yet tested** |
 | Pet sensor | 1× TTP223 capacitive touch breakout, active-high version (verify seller module) | One head-touch point; counts single/double/triple or long in software | Disabled by default, opt-in with \`NOHUT_ENABLE_TOUCH=1\` |
 | Guest detection | 1× **VL53L0X breakout with onboard regulator and safe level shifting**, e.g. Adafruit or equivalent tested carrier | ToF distance detection without camera or face recognition | Optional, \`NOHUT_ENABLE_TOF=1\` and library after wiring tests |
 | Sound amp | 1× **MAX98357A I2S mono** breakout | Intended for short **pre-recorded character voice clips** without continuous online speech | **Not implemented**; pins only reserved |
