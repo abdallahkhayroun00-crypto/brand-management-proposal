@@ -31,3 +31,7 @@ jobs:
         run: node nohutcuk/tests/smoke.mjs
       - name: Run original song and sound-effect tests
         run: node nohutcuk/tests/audio.mjs
+      - name: Check spoken-voice module syntax
+        run: node --check nohutcuk/voice.js
+      - name: Verify sparse speech and multilingual snippets
+        run: node nohutcuk/tests/voice.mjs
