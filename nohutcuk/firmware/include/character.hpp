@@ -56,7 +56,7 @@ public:
   void photo(uint32_t now,bool selfie){show(selfie?Mood::Shy:Mood::Happy,now,10000);}
   void stopPose(uint32_t now){show(Mood::Normal,now,0);}
   void update(uint32_t now){
-    if(hold_&&!(!elapsed(now,poseAt_,hold_))) {
+    if(hold_ && elapsed(now,poseAt_,hold_)) {
       hold_=0;mood_=Mood::Normal;
     }
     if(!hold_&&mood_==Mood::Normal&&elapsed(now,lastInteraction_,30000))
