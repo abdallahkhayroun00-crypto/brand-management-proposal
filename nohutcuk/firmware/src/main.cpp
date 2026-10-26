@@ -245,10 +245,12 @@ void setup(){
   tofReady=tof.begin();
   Serial.printf("VL53L0X %s\n",tofReady?"ready":"NOT FOUND");
 #endif
-  // The Waveshare breakout BL pin is a backlight CONTROL input, not an LED
-  // supply. Use its pin with the provisional control map after checking wiring.
+  // The selected 3.2" SPI breakout's BL wiring is NOT independently confirmed.
+  // Never drive GPIO7 into a possible backlight supply pin by default.
+#if NOHUT_ENABLE_LCD_BL
   pinMode(nohut::LCD_BL,OUTPUT);
-  digitalWrite(nohut::LCD_BL,HIGH);
+  digitalWrite(nohut::LCD_BL,HIGH); // Enable only after physical pinout verification.
+#endif
   displayReady=gfx->begin(24000000);
   if(!displayReady){
     Serial.println("ERROR: LCD begin failed. Verify SPI pinout, display revision.");
