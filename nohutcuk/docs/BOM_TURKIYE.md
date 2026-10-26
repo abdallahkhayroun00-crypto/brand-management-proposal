@@ -2,7 +2,9 @@
 
 **Updated:** 2026-10-27. **Status: engineering shortlist, NOT a validated/approved final basket.** This document records the complete component research discussed for one physical Nohut Falafel mascot. **Do not buy every item based on this list yet.** Check prices, stock and electrical compatibility at purchase. The retailer figures below are **historical approximate quotes from project research**, not live confirmed prices on this page.
 
-## Important decision: display MUST be reviewed before ordering
+> **DECISION — 27 October 2026:** Purchase **one Waveshare 2.4-inch ILI9341 LCD (SKU 18366)** as the first face module. Do **not** purchase the 1.9-inch alternative. The 2.4-inch ILI9341 is the **default PlatformIO build target**, and its firmware CI passed, but **no physical unit has been bought, connected or tested**. Update the CAD front cutout before printing: display active area is 48.96 x 36.72 mm versus the old 77 x 34 mm aperture. Other components remain provisional.
+
+## Display specs and fit conditions
 
 **Recommended next candidate:** **Waveshare 2.4inch LCD Module, SKU 18366, ILI9341, SPI, TFT, 240×320 pixels, 65K RGB**, used horizontally at **320×240**. [Manufacturer](https://www.waveshare.com/product/displays/lcd-oled/2.4inch-lcd-module.htm) · [datasheet/wiki](https://www.waveshare.com/wiki/2.4inch_LCD_Module)
 
