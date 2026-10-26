@@ -494,6 +494,148 @@
   });
   els.screen.addEventListener('pointerleave',()=>{state.lastPointer=0;state.glanceX=0;state.glanceY=0;});
   els.screen.addEventListener('click',()=>runAction('touch1'));
+  // SHOP DAY TEST LAB. Fully simulated and intentionally disconnected from POS.
+  const day=window.NohutcukDay;
+  let selectedDayPhase='open',dayTimers=[],dayRunId=0,selectedDayCase=null;
+  const dayCases=day.scenarios;
+  const dayPassed=()=>day.validate().filter(x=>x.passed).length;
+  const clockString=seconds=>{
+    const h=Math.floor(seconds/3600),m=Math.floor(seconds%3600/60);
+    return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  };
+  function stopDayPlayback(){
+    dayRunId++;
+    dayTimers.forEach(clearTimeout);
+    dayTimers=[];
+    $('playDay').disabled=false;
+    $('playDay').textContent='▶ Preview day';
+  }
+  function renderDayPhases(){
+    const wrap=$('dayPhases');
+    wrap.replaceChildren();
+    day.phases.forEach(phase=>{
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.setAttribute('aria-pressed',String(selectedDayPhase===phase.id));
+      const h=document.createElement('strong'),sub=document.createElement('span');
+      h.textContent=phase.clock;sub.textContent=phase.title;
+      btn.append(h,sub);
+      btn.addEventListener('click',()=>{
+        selectedDayPhase=phase.id;
+        renderDayPhases();renderDayList();
+      });
+      wrap.appendChild(btn);
+    });
+  }
+  function previewDayCase(test,automatic=false){
+    const out=day.evaluate(test).output;
+    selectedDayCase=test.id;
+    $('scene').classList.toggle('is-power-off',test.event==='powerOff');
+    if(out.mode==='shown'){
+      setMood(out.mood||'normal',{
+        label:'Shop Day '+test.id+' • '+test.name,
+        duration:0,interactive:false,log:false,sound:false
+      });
+    }
+    bubble((out.mode==='shown'?'✓ ':'⊘ ')+test.name+' • '+out.reason,automatic?1800:3500);
+    $('dayResult').textContent=test.id+' · '+clockString(test.at)+' · '+test.name+
+      ' → '+(out.mode==='shown'?'Reaction shown':'Intentionally suppressed')+
+      (out.say?' · Planned short voice: '+out.say:' · Silent')+
+      (out.quiet?' · Quiet mode':'')+'.';
+    $('dayResult').classList.remove('has-fail');
+    if(!automatic)log('Shop-day '+test.id+' • '+out.reason+' → '+out.mode);
+    renderDayList();
+  }
+  function renderDayList(){
+    const wrap=$('dayCaseList');
+    const query=$('dayCaseSearch').value.trim().toLowerCase();
+    wrap.replaceChildren();
+    const tests=dayCases.filter(s=>(query||s.phase===selectedDayPhase)&&
+      (!query||(s.name+' '+s.event+' '+s.phase+' '+s.id+' '+s.note).toLowerCase().includes(query)));
+    if(!tests.length){
+      const empty=document.createElement('p');
+      empty.className='day-result';empty.textContent='No matching situations in this view.';
+      wrap.appendChild(empty);return;
+    }
+    tests.forEach(test=>{
+      const info=day.evaluate(test).output;
+      const btn=document.createElement('button');btn.type='button';
+      btn.className='day-case-button';
+      btn.classList.toggle('is-selected',selectedDayCase===test.id);
+      const tm=document.createElement('span');
+      tm.className='case-time';tm.textContent=clockString(test.at);
+      const mid=document.createElement('span');mid.className='case-middle';
+      const name=document.createElement('span');name.className='case-name';name.textContent=test.id+' · '+test.name;
+      const hint=document.createElement('span');hint.className='case-expect';hint.textContent=info.reason;
+      mid.append(name,hint);
+      const verdict=document.createElement('span');
+      verdict.className='case-result'+(info.mode==='suppressed'?' blocked':'');
+      verdict.textContent=info.mode===test.expect?(info.mode==='shown'?'✓ Show':'✓ Ignore'):'✕ Wrong';
+      btn.append(tm,mid,verdict);
+      btn.addEventListener('click',()=>{stopDayPlayback();previewDayCase(test);});
+      wrap.appendChild(btn);
+    });
+  }
+  function runDayChecks(){
+    stopDayPlayback();
+    const verdict=day.validate();
+    const passes=verdict.filter(item=>item.passed);
+    $('dayCaseTotal').textContent=String(verdict.length);
+    $('dayPassed').textContent=String(passes.length);
+    const ok=passes.length===verdict.length;
+    $('dayResult').classList.toggle('has-fail',!ok);
+    $('dayResult').textContent=ok?
+      '✓ '+passes.length+' / '+verdict.length+' named shop-day situations matched expected behavior. This tests software rules, NOT real sensors, hardware, or POS integrations.':
+      '✕ '+(verdict.length-passes.length)+' scenario mismatches: '+verdict.filter(item=>!item.passed).map(x=>x.id).join(', ');
+    log('Day test: '+passes.length+'/'+verdict.length+' predefined behaviors matched');
+    renderDayList();
+  }
+  function playShopDay(){
+    stopDayPlayback();
+    const scripted=[
+      'Open shop at 10:45','First guest comes in','Single head tap',
+      'Three taps show love','Photo pose 10 seconds',
+      'Rush-hour silent mode starts','Welcome without voice in rush',
+      'No dance to distract workers','Crowd over restores normal movement',
+      'Rest after 5 min inactivity','Staff starts cleaning',
+      'Touch while cleaning ignored','Cleaning finished',
+      'Birthday only with staff action','Evening guests welcomed normally',
+      'Sensor reports fault','Fault cleared by worker',
+      'Shop closes exactly at 21:30','No guest welcome after closing',
+      'No accidental night speech'
+    ].map(name=>dayCases.find(test=>test.name===name)).filter(Boolean);
+    const id=dayRunId;
+    $('playDay').disabled=true;
+    $('playDay').textContent='Playing full day…';
+    $('dayResult').textContent='▶ Playing a quiet accelerated simulation of a full day. No real audio, money, or order signals.';
+    voice.stop();audio.stopSong();stopLocal();
+    scripted.forEach((test,i)=>{
+      dayTimers.push(setTimeout(()=>{
+        if(id!==dayRunId)return;
+        selectedDayPhase=test.phase;
+        renderDayPhases();
+        previewDayCase(test,true);
+        if(i===scripted.length-1){
+          dayTimers.push(setTimeout(()=>{
+            if(id!==dayRunId)return;
+            $('playDay').disabled=false;
+            $('playDay').textContent='▶ Preview day';
+            $('dayResult').textContent='✓ Full sample day finished. Run all checks to validate every named case.';
+          },1000));
+        }
+      },i*1100));
+    });
+  }
+  $('dayCaseSearch').addEventListener('input',renderDayList);
+  $('runDayTests').addEventListener('click',runDayChecks);
+  $('playDay').addEventListener('click',playShopDay);
+  $('stopDay').addEventListener('click',()=>{stopDayPlayback();$('dayResult').textContent='■ Day playback stopped. Choose a case or run all checks.';});
+  renderDayPhases();
+  runDayChecks();
+  // Avoid hidden playback carrying on if leaving the test tab.
+  document.querySelectorAll('[data-tab]').forEach(tab=>tab.addEventListener('click',()=>{
+    if(tab.dataset.tab!=='day')stopDayPlayback();
+  }));
   function tick(ts){
     if(ts-state.frame<45){requestAnimationFrame(tick);return;}
     state.frame=ts;
