@@ -1,0 +1,128 @@
+name: Nohutçuk 3.2-inch CAD regenerate and validate
+
+on:
+  push:
+    paths:
+      - 'nohutcuk/CAD_Source/build_nohutcuk.py'
+      - 'nohutcuk/CAD_Source/prepare_print_and_verify.py'
+      - 'nohutcuk/CAD_Source/requirements.txt'
+      - '.github/workflows/nohutcuk-cad-32.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nohutcuk-cad-regeneration
+  cancel-in-progress: false
+
+jobs:
+  rebuild-prototype:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: nohutcuk/CAD_Source/requirements.txt
+      - name: Install CadQuery and mesh validators
+        run: python -m pip install -r nohutcuk/CAD_Source/requirements.txt
+      - name: Rebuild all 16 modular STLs and both merged STLs and STEPs
+        run: |
+          mkdir -p nohutcuk/Docs
+          python nohutcuk/CAD_Source/build_nohutcuk.py nohutcuk 2>&1 | tee nohutcuk/Docs/CAD_BUILD_LOG.txt
+      - name: Generate all 16 slicer-oriented parts and validation reports
+        run: |
+          python nohutcuk/CAD_Source/prepare_print_and_verify.py nohutcuk 2>&1 | tee nohutcuk/Docs/MESH_CHECK_LOG.txt
+      - name: Verify critical 3.2-inch envelope and package outputs
+        run: |
+          python - <<'PY'
+          import ast,json,pathlib,trimesh
+          root=pathlib.Path('nohutcuk')
+          source=(root/'CAD_Source/build_nohutcuk.py').read_text()
+          vars={}
+          for stmt in ast.parse(source).body:
+            if isinstance(stmt,ast.Assign) and isinstance(stmt.value,ast.Constant):
+              for tgt in stmt.targets:
+                if isinstance(tgt,ast.Name) and isinstance(stmt.value.value,(int,float)):
+                  vars[tgt.id]=stmt.value.value
+          for k in ('HEAD_W','HEAD_H','BODY_W','BODY_H','SCREEN_WINDOW_W','SCREEN_WINDOW_H','DISPLAY_PCB_W','DISPLAY_PCB_H','DISPLAY_ACTIVE_W','DISPLAY_ACTIVE_H'):
+            assert k in vars,(k,vars)
+          assert vars['HEAD_W']>=114 and vars['HEAD_H']>=75
+          assert vars['SCREEN_WINDOW_W']>vars['DISPLAY_ACTIVE_W']
+          assert vars['SCREEN_WINDOW_H']>vars['DISPLAY_ACTIVE_H']
+          assert vars['HEAD_W']>vars['DISPLAY_PCB_W']+16
+          assert vars['HEAD_H']>vars['DISPLAY_PCB_H']+16
+          targets=[
+            'STL_Individual/01_head_front_bezel.stl',
+            'STL_Individual/02_head_rear_housing.stl',
+            'STL_Individual/03_universal_screen_carrier.stl',
+            'STL_Individual/05_lower_body_shell.stl',
+            'STL_Print_Oriented/01_head_front_bezel.stl',
+            'STL_Print_Oriented/03_universal_screen_carrier.stl',
+            'STL_Merged/NOHUTCUK_ONE_PIECE_SOLID_STATUE.stl',
+            'STEP/NOHUTCUK_MODULAR_ASSEMBLY.step',
+            'STEP/NOHUTCUK_ONE_PIECE_SOLID_STATUE.step',
+          ]
+          for target in targets:
+            f=root/target
+            assert f.exists() and f.stat().st_size>500,(target, f.exists())
+          modular=list((root/'STL_Individual').glob('*.stl'))
+          oriented=list((root/'STL_Print_Oriented').glob('*.stl'))
+          assert len(modular)==len(oriented)==16,(len(modular),len(oriented))
+          for f in modular+oriented:
+            m=trimesh.load(str(f),force='mesh')
+            assert m.is_watertight and m.is_winding_consistent,(f,m.is_watertight)
+            assert len(m.split(only_watertight=False))==1,(f,"not connected")
+          assert (root/'STL_Merged/NOHUTCUK_ONE_PIECE_SOLID_STATUE.stl').stat().st_size>10000
+          report=json.loads((root/'Docs/Mesh_Validation_Report.json').read_text())
+          assert report['real_hardware_fit_verified'] is False
+          print('16 modular +16 print oriented parts manifold; key envelope assertions passed')
+          print('head dimensions',vars['HEAD_W'],vars['HEAD_H'],'display PCB',vars['DISPLAY_PCB_W'],vars['DISPLAY_PCB_H'])
+          PY
+      - name: Assemble replacement ZIP of current STL/STEP/CAD files
+        run: |
+          python - <<'PY'
+          import pathlib,zipfile
+          root=pathlib.Path('nohutcuk')
+          dest=root/'downloads/NOHUTCUK_CAD_STL_COMPLETE_PROTOTYPE.zip'
+          dest.parent.mkdir(exist_ok=True)
+          subdirs=('CAD_Source','STEP','STL_Individual','STL_Print_Oriented','STL_Merged','Docs')
+          with zipfile.ZipFile(dest,'w',zipfile.ZIP_DEFLATED,compresslevel=7) as z:
+            for sub in subdirs:
+              for path in sorted((root/sub).rglob('*')):
+                if path.is_file() and '__pycache__' not in path.parts:
+                  z.write(path,path.relative_to(root))
+          with zipfile.ZipFile(dest) as z:
+            assert len(z.namelist())>=40
+          print('Rebuilt',dest,'bytes',dest.stat().st_size)
+          PY
+      - name: Upload regenerated CAD files as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nohutcuk-provisional-3_2-inch-stl-step
+          path: |
+            nohutcuk/CAD_Source/build_nohutcuk.py
+            nohutcuk/STEP/
+            nohutcuk/STL_Individual/
+            nohutcuk/STL_Print_Oriented/
+            nohutcuk/STL_Merged/
+            nohutcuk/Docs/
+            nohutcuk/downloads/NOHUTCUK_CAD_STL_COMPLETE_PROTOTYPE.zip
+          if-no-files-found: error
+      - name: Commit fully validated refreshed meshes and STEP to default branch
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add nohutcuk/STL_Individual nohutcuk/STL_Print_Oriented nohutcuk/STL_Merged nohutcuk/STEP nohutcuk/Docs nohutcuk/downloads/NOHUTCUK_CAD_STL_COMPLETE_PROTOTYPE.zip
+          if ! git diff --cached --quiet; then
+            git commit -m "build(nohutcuk): regenerate 3.2-inch prototype STL, STEP, print orientations and zip"
+            git push origin HEAD:main
+          else
+            echo "All 3.2-inch STL and STEP assets are already up to date"
+          fi
