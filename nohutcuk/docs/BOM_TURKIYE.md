@@ -6,25 +6,25 @@
 
 ## Display specs and fit conditions
 
-**Recommended next candidate:** **Waveshare 2.4inch LCD Module, SKU 18366, ILI9341, SPI, TFT, 240×320 pixels, 65K RGB**, used horizontally at **320×240**. [Manufacturer](https://www.waveshare.com/product/displays/lcd-oled/2.4inch-lcd-module.htm) · [datasheet/wiki](https://www.waveshare.com/wiki/2.4inch_LCD_Module)
+**Selected display:** **Waveshare 2.4inch LCD Module, SKU 18366, ILI9341, SPI, TFT, 240×320 pixels, 65K RGB**, used horizontally at **320×240**. [Manufacturer](https://www.waveshare.com/product/displays/lcd-oled/2.4inch-lcd-module.htm) · [datasheet/wiki](https://www.waveshare.com/wiki/2.4inch_LCD_Module)
 
 - **Official board dimensions:** 70.50 × 43.30 mm.
 - **Official active display dimensions:** 48.96 × 36.72 mm in landscape.
 - CAD prototype head: ~100 × 58 × 50 mm; **placeholder screen cutout 77 × 34 mm**.
 - **Important clearance conflict:** the *active image* is **36.72 mm high**, already **2.72 mm taller than the cutout**. The whole board is **43.30 mm high**, requiring sufficient head interior space, standoffs and an updated bezel. Merely fitting its width is not enough.
 - A bigger, eye-friendlier active display is attractive, but **Waveshare describes this exact 2.4-inch SKU as TFT, not IPS**. Check viewing angle/contrast in real lighting before committing.
-- **Firmware is currently built and CI-compiled for a DIFFERENT module:** Waveshare 1.9inch LCD Module SKU 23822, **IPS ST7789V2, 170×320**, rotated to **320×170**; board 51.2 × 27.3 mm, active image 42.72 × 22.70 mm in landscape. [Manufacturer](https://www.waveshare.com/1.9inch-LCD-Module.htm) · [Wiki](https://www.waveshare.com/wiki/1.9inch_LCD_Module).
-- **DO NOT CONNECT THE 2.4-INCH DISPLAY AND FLASH THE 1.9-INCH FIRMWARE AS-IS.** Change Arduino_GFX driver/rotation, resolution, geometry, possible pins/backlight, frame pacing and tests first. No 2.4-inch hardware implementation has been validated.
+- **Earlier benchmark firmware targeted a DIFFERENT module:** Waveshare 1.9inch LCD Module SKU 23822, **IPS ST7789V2, 170×320**, rotated to **320×170**; board 51.2 × 27.3 mm, active image 42.72 × 22.70 mm in landscape. [Manufacturer](https://www.waveshare.com/1.9inch-LCD-Module.htm) · [Wiki](https://www.waveshare.com/wiki/1.9inch_LCD_Module).
+- **2.4-inch ILI9341 now has its own default C++/PlatformIO profile, with CI build passing.** Wiring, actual screen appearance, orientation and mechanical fit have not been physically tested.
 
-**Current decision:** 2.4-inch ILI9341 is a **candidate for the production face**; the 1.9-inch ST7789V2 remains the **software-compiled bench reference**. Neither is a confirmed production part until real hardware/fit tests. Compare physical display modules before purchasing a final faceplate.
+**Purchase choice:** one 2.4-inch ILI9341 module, zero 1.9-inch modules; no order placed by ChatGPT. Real-world fit and viewing-angle acceptance remain open.
 
 ## Controller and active components (1 robot)
 
 | ID | Component | Exact candidate/specification | Qty | Status / caveat | Research links |
 |---|---|---|---:|---|---|
 | E01 | Controller | **Espressif ESP32-S3-DevKitC-1-N8R8** (8 MB flash / 8 MB PSRAM version), 3.3 V GPIO | 1 | Selected test target; verify original board/module revision | [Espressif](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/user_guide_v1.0.html) · [Türkiye](https://www.beti.com.tr/urun/esp32-s3-devkitc-1-n8r8-gelistirme-karti) |
-| E02 | Color LCD (larger candidate) | **Waveshare 2.4inch LCD Module SKU 18366**, ILI9341, 240×320, SPI | 1 | **Preferred visual candidate, not firmware-ready**. Bezel/board-fit conflict to solve | [Maker](https://www.waveshare.com/product/displays/lcd-oled/2.4inch-lcd-module.htm) · [Türkiye listing](https://www.ankarobot.com/2.4-240x320-ili9341-tft-lcd-ekran) (seller's exact manufacturer SKU must be confirmed) |
-| E02a | **Alternative** display | Waveshare **1.9inch LCD Module SKU 23822**, IPS ST7789V2, 170×320 | 0 unless bench testing | **Not additional purchase**. Compiled firmware uses THIS module | [Maker](https://www.waveshare.com/1.9inch-LCD-Module.htm) |
+| E02 | Selected color LCD | **Waveshare 2.4inch LCD Module SKU 18366**, ILI9341, 240×320, SPI | 1 | Selected for purchase and code build ready; **physical fit not verified** | [Maker](https://www.waveshare.com/product/displays/lcd-oled/2.4inch-lcd-module.htm) · [Türkiye listing](https://www.ankarobot.com/2.4-240x320-ili9341-tft-lcd-ekran) (seller's exact manufacturer SKU must be confirmed) |
+| E02a | Legacy alternative (do not buy) | Waveshare **1.9inch LCD Module SKU 23822**, IPS ST7789V2, 170×320 | 0 unless bench testing | No purchase. Old software fallback only | [Maker](https://www.waveshare.com/1.9inch-LCD-Module.htm) |
 | E03 | Touch | **TTP223** capacitive touch breakout, 3.3 V output, active-high verified | 1 | Prototype candidate; test through PETG/PLA and debounce | [Türkiye](https://www.robotistan.com/ttp223-tekli-dokunmatik-anahtar-1-way-touch-switch) |
 | E04 | Guest approach | **VL53L0X** ToF I²C **carrier/breakout with safe power/logic levels**, not bare IC | 1 | Candidate; vendor-specific power circuitry to verify. Does not recognize waves | [Adafruit documentation](https://learn.adafruit.com/adafruit-vl53l0x-micro-lidar-distance-sensor-breakout/pinouts) · [Türkiye example](https://alkatronik.com/tr/product/vl53l0xv2-lazer-mesafe-sensoru-1802/sensorler-2) |
 | E05 | Hand wave (optional) | **APDS-9960 / GY-APDS-9960** proximity/gesture breakout, 3.3 V-compatible | 0–1 | Optional **short-range** gesture sensing, not reliable across restaurant room; shared I²C electrical address/optical interference testing required | [Türkiye](https://www.tlsrobotik.com/urun/gy-9960-3-3-apds-9960-renk-ve-temassiz-hareket-tanima-sensor-modulu/) |
@@ -96,8 +96,8 @@ These are **approximate historical Turkish offers discussed in this project**, n
 | Software / hardware layer | Reality |
 |---|---|
 | Browser SVG face and 82 shop-day scenarios | Implemented; automated tests passed |
-| ESP32-S3 C++ face | Compiles for **1.9-inch ST7789V2**; **not physically tested** |
-| Proposed larger 2.4-inch ILI9341 face | **Research only**; NOT compiled or tested with current firmware |
+| ESP32-S3 C++ face | 2.4-inch ILI9341 is the successful default CI build; old 1.9-inch profile remains optional. Neither physically tested |
+| Selected 2.4-inch ILI9341 face | Selected for purchase; 320x240 source and build verified, physical test pending |
 | TTP223 / VL53L0X / APDS-9960 | Touch/ToF scaffolding for initial sensor candidates; not bench verified; gesture integration absent |
 | MAX98357A, voice, head servo | Names shortlisted; drivers/hardware safety/actual robot assembly not completed |
 | CAD | Prototype exists; final screen/servo/speaker-fit must be reworked |
