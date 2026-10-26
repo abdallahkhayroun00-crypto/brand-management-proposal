@@ -33,10 +33,12 @@ jobs:
         run: python -m pip install -r nohutcuk/CAD_Source/requirements.txt
       - name: Rebuild all 16 modular STLs and both merged STLs and STEPs
         run: |
+          set -euo pipefail
           mkdir -p nohutcuk/Docs
           python nohutcuk/CAD_Source/build_nohutcuk.py nohutcuk 2>&1 | tee nohutcuk/Docs/CAD_BUILD_LOG.txt
       - name: Generate all 16 slicer-oriented parts and validation reports
         run: |
+          set -euo pipefail
           python nohutcuk/CAD_Source/prepare_print_and_verify.py nohutcuk 2>&1 | tee nohutcuk/Docs/MESH_CHECK_LOG.txt
       - name: Verify critical 3.2-inch envelope and package outputs
         run: |
@@ -81,6 +83,14 @@ jobs:
           assert (root/'STL_Merged/NOHUTCUK_ONE_PIECE_SOLID_STATUE.stl').stat().st_size>10000
           report=json.loads((root/'Docs/Mesh_Validation_Report.json').read_text())
           assert report['real_hardware_fit_verified'] is False
+          assert len(report['items'])==18, "Expected 16 oriented + 2 merged models"
+          metrics={x['file']:x for x in report['items']}
+          assert metrics['01_head_front_bezel.stl']['size_x_mm']==vars['HEAD_W'], "Stale or incorrect bezel!"
+          assert metrics['01_head_front_bezel.stl']['size_y_mm']==vars['HEAD_H'], "Stale or incorrect head!"
+          assert metrics['03_universal_screen_carrier.stl']['size_x_mm']>=100, "Old 1.9-inch screen carrier persisted"
+          assert metrics['05_lower_body_shell.stl']['size_x_mm']==vars['BODY_W'], "Stale body shell!"
+          assert metrics['NOHUTCUK_ONE_PIECE_SOLID_STATUE.stl']['size_x_mm']==vars['HEAD_W'], "Stale one-piece mesh!"
+          assert 'Traceback' not in (root/'Docs/MESH_CHECK_LOG.txt').read_text(), "Mesh check failed"
           print('16 modular +16 print oriented parts manifold; key envelope assertions passed')
           print('head dimensions',vars['HEAD_W'],vars['HEAD_H'],'display PCB',vars['DISPLAY_PCB_W'],vars['DISPLAY_PCB_H'])
           PY
