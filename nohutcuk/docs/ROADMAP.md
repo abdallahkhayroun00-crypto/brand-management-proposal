@@ -1,6 +1,6 @@
 # Nohutçuk — Roadmap, package contract and acceptance plan
 
-> **27 October 2026 decision:** The user chose to purchase the Waveshare **2.4-inch ILI9341 SKU 18366** directly and skip the 1.9-inch panel. **Default 320x240 ILI9341 firmware and legacy 1.9-inch builds passed GitHub CI.** Hardware not ordered, connected or physically tested. The 77x34 mm front aperture must be redesigned for the 48.96x36.72 mm active image. Full component shortlist: [BOM_TURKIYE.md](BOM_TURKIYE.md).
+> **Latest 27 October 2026 screen decision:** Buy **ONE 3.2-inch ILI9341 4-wire SPI TFT**, not the old 2.4-inch or 1.9-inch displays. Candidate: Voltaj MZK-6 (non-touch, PCB 89.3×55.04mm landscape). The software now defaults to `esp32-s3-ili9341-32` at 320×240; connector and voltage must be verified on the exact retailer PCB. Current 100×58mm head and 77×34mm viewing aperture need a **mechanical redesign**. No product is ordered or hardware-tested. See [BOM_TURKIYE.md](BOM_TURKIYE.md).
 
 ## Scope and delivery status (2026-10-27 — verified GitHub assets vs physical tests)
 
@@ -8,7 +8,7 @@
 |---|---|
 | Brand visuals & two infographics | concept references supplied |
 | Product feature list (moods, guest interactions, PC-app reactions) | documented |
-| Electronics / selected exact components | **provisional bench selections**: ESP32-S3-DevKitC-1 + Waveshare selected 2.4-inch ILI9341 color TFT, VL53L0X/TTP223/MAX98357A candidates; physical fit and power unverified |
+| Electronics / selected exact components | **provisional bench selections**: ESP32-S3-DevKitC-1 + selected 3.2-inch ILI9341 SPI color TFT (retailer board candidate Voltaj MZK-6), VL53L0X/TTP223/MAX98357A candidates; physical fit and power unverified |
 | CAD source / STEP | **prototype assets now in repository**, see main README and CAD_Source/STEP; hardware-fit unverified |
 | STL set validated with chosen hardware | prototype STL set committed; **not validated against selected real hardware** |
 | 3MF/G-code / print profile | **not yet created** |
@@ -62,7 +62,7 @@ Only real, verified artifacts should be put into engineering folders; do not cre
 
 ## Immediate engineering decisions
 
-1. **Display selected for purchase:** Waveshare standalone **2.4-inch ILI9341 SKU 18366**, 240x320 TFT, module 70.5x43.3 mm. Verify orientation and viewing angles on actual hardware; redesign the old aperture.
+1. **Display selected for purchase:** **3.2-inch SPI TFT ILI9341**, native 240×320 rotated to 320×240 landscape, with Voltaj MZK-6 non-touch as a candidate. Verify SPI-only header pinout, voltage and 89.3×55mm module fit; expand the head before printing.
 2. **Bench controller selected:** ESP32-S3-DevKitC-1 using Arduino + PlatformIO; confirm exact purchased board/module variant.
 3. Choose capacitive touch sensor, proximity sensor and audio solution; optional worker control button is not a game input.
 4. Measure servo travel, torque, current and mounting screws.
