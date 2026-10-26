@@ -35,3 +35,7 @@ jobs:
         run: node --check nohutcuk/voice.js
       - name: Verify sparse speech and multilingual snippets
         run: node nohutcuk/tests/voice.mjs
+      - name: Check shop-day simulation syntax
+        run: node --check nohutcuk/day.js
+      - name: Run 80+ daily scenarios and stress tests
+        run: node nohutcuk/tests/day.mjs
