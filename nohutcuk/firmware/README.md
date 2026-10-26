@@ -1,8 +1,11 @@
 # Nohutçuk — ESP32-S3 color eyes firmware (bench project)
 
-**Stage:** C++ proof-of-concept targeting **Espressif ESP32-S3-DevKitC-1** + **standalone Waveshare 1.9inch LCD Module**, controller ST7789V2, 170×320 SPI IPS (landscape 320×170). This is the *separate 8-pin LCD breakout*, not the combined Waveshare ESP32-S3-LCD-1.9 development board. Their wiring/firmware are **not interchangeable**.
+**Selected hardware (27 October 2026):** Espressif **ESP32-S3-DevKitC-1** plus the **standalone Waveshare 2.4-inch LCD Module (SKU 18366)**, SPI **ILI9341**, rotated to **320x240** landscape. This is **not a touchscreen shield**, and it is not the combined ESP32-S3-LCD-1.9 development board.
 
-> **Do not flash this configuration with the researched 2.4-inch LCD:** The [Türkiye BOM](../docs/BOM_TURKIYE.md) recommends considering a **Waveshare 2.4-inch ILI9341 SPI (SKU 18366)** for the bigger eyes, but **this firmware still builds for the 1.9-inch ST7789V2 SPI (SKU 23822)**. An explicit display-driver profile, 320×240 geometry adjustments, corrected offsets/rotation and verification with actual hardware are required first.
+**Default PlatformIO profile:** `esp32-s3-ili9341-24` — builds the 2.4-inch ILI9341 geometry. **Legacy software-only profile:** `esp32-s3-st7789-19` — 1.9-inch ST7789V2, not needed for our purchase. Both profiles passed automated GitHub compilation. **Neither has been verified with a physically connected LCD.** Confirm VCC and all 8 signals against the exact board before applying power.
+
+**Mechanical restriction:** The selected display active area is 48.96x36.72 mm (landscape), while the current CAD bezel aperture is 77x34 mm. **Enlarge the viewing height and redesign the mount** before printing. See [BOM_TURKIYE.md](../docs/BOM_TURKIYE.md).
+
 
 ## Project files
 
@@ -39,7 +42,7 @@ To try the **optional** TTP223, change \`-D NOHUT_ENABLE_TOUCH=0\` to \`1\` only
 - It renders all 20 named emotions using colored geometric primitives. These are first-pass reproductions, not full pixel-perfect ports of the browser SVG artwork. The face refresh uses simple full-screen drawing, to be optimized after actual performance measurements.
 - **No servo output; no audio amplifier/MP3 playback; no live Wi-Fi / restaurant PC integration.** Speaker/servo pins are reserved but not active. Silence setting is stored but has nothing yet to mute in this initial build.
 - There is no RTC or shop schedule on hardware. Operating-hours cases still run solely in the *browser* day simulator.
-- The screen model is an initial bench candidate. The 1.9-inch active image is small compared to the robot's concept render; validate it physically before final 3D printing.
+- The screen model is an initial bench candidate. The 2.4-inch selected active image needs a larger face opening; validate it physically before final 3D printing.
 - A successful build is not a successful hardware test. Do not power servo or speaker from the ESP32 GPIO or 3.3V pin. Use the separate electronics plan.
 
 **No games; one approved product scope.**
