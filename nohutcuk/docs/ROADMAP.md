@@ -1,5 +1,7 @@
 # Nohutçuk — Roadmap, package contract and acceptance plan
 
+> **Hardware procurement update, 2026-10-27:** See [BOM_TURKIYE.md](BOM_TURKIYE.md) for the exact candidate parts, retailer research references, approximate Turkish quotes, mechanical fit gates and stages. Proposed final-face display is **2.4-inch ILI9341 (research candidate only)**. **Compiled screen firmware remains 1.9-inch ST7789V2**, and neither physical setup is bench tested. Next: decide display visually and adapt the 2.4-inch driver/CAD before purchase.
+
 ## Scope and delivery status (2026-10-27 — verified GitHub assets vs physical tests)
 
 | Workstream | Status |
