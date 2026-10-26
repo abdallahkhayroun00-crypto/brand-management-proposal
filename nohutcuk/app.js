@@ -61,7 +61,7 @@
     autoBlink:true,autoSleep:false,voice:true,quiet:false,effects:false,volume:.5,language:'tr-TR',
     blinkStarted:0,nextBlink:Date.now()+2400,glanceX:0,glanceY:0,lastPointer:0,
     lastInteraction:Date.now(),lastGlance:Date.now(),lastWelcome:0,friendship:0,
-    previewSequence:0,frame:0
+    previewSequence:0,frame:0,poseUntil:0
   };
   const phrases = {
     welcome:{'tr-TR':'Hoş geldin!','en-US':'Welcome!','ar-MA':'مرحبا بيك!'},
@@ -127,6 +127,7 @@
     markSelected();
     motion(options.motion||'',options.duration||2000);
     if(options.bubble)bubble(options.bubble,options.duration||3000);
+    else bubble(''); // Prevent stale bubbles from leaking into the next expression.
     if(options.say)say(options.say);
     if(options.sound!==false&&!options.say&&options.interactive!==false&&state.effects&&!state.quiet)audio.playEffect(id);
     if(options.log!==false)log(state.label+' → '+BY_ID[id].name);
@@ -142,8 +143,19 @@
   function runAction(action) {
     const t=Date.now();
     state.previewSequence++;
+    if(action==='stopPose'){
+      state.poseUntil=0;clearMotion();
+      setMood('normal',{label:'Pose cancelled by worker',duration:0});
+      return;
+    }
+    // An accidental sensor touch must not destroy a worker's photo/selfie pose.
+    const guestEvents=['welcome','touch1','touch2','touch3','touchLong','wave'];
+    if(t<state.poseUntil&&guestEvents.includes(action)){
+      log('Sensor ignored: photo/social pose is still active.');
+      return;
+    }
     if(action==='welcome'){
-      if(t-state.lastWelcome<12000){log('Welcome cooldown — prevents repeated greetings (12s).');return;}
+      if(t-state.lastWelcome<30000){log('Welcome cooldown — prevents repeated greetings (30s).');return;}
       state.lastWelcome=t;
       setMood('hello',{label:'Proximity sensor • simulated',motion:'nod',bubble:phrases.welcome[state.language],say:'welcome'});return;
     }
@@ -171,10 +183,10 @@
     if(action==='cool'){setMood('cool',{label:'Cool mode',motion:'tilt',bubble:'Çok havalı! 😎'});return;}
     if(action==='loveAttack'){setMood('love',{label:'Love attack',motion:'nod',bubble:'💗💗💗'});return;}
     if(action==='falafel'){setMood('hungry',{label:'Falafel lover',motion:'nod',bubble:'Afiyet olsun! 🧆',say:'falafel'});return;}
-    if(action==='photo'){setMood('happy',{label:'Photo mode • holds pose 10s',duration:10000,motion:'tilt',bubble:'Gülümse! 📸',say:'photo'});return;}
-    if(action==='selfie'){setMood('shy',{label:'Selfie pose',duration:5000,motion:'tilt',bubble:'Selfie! 🤳'});return;}
-    if(action==='instagram'){setMood('love',{label:'Instagram mode',motion:'nod',bubble:'Beni etiketle! #Nohutçuk'});return;}
-    if(action==='reels'){setMood('celebrating',{label:'Reels performance',motion:'dance',duration:6000,bubble:'Nohutçuk Reels 🎬',sound:false});if(state.effects&&!state.quiet)startSong('dance');return;}
+    if(action==='photo'){state.poseUntil=t+10000;setMood('happy',{label:'Photo mode • holds pose 10s',duration:10000,motion:'tilt',bubble:'Gülümse! 📸',say:'photo'});return;}
+    if(action==='selfie'){state.poseUntil=t+10000;setMood('shy',{label:'Selfie pose',duration:10000,motion:'tilt',bubble:'Selfie! 🤳'});return;}
+    if(action==='instagram'){state.poseUntil=t+10000;setMood('love',{label:'Instagram mode',duration:10000,bubble:'Beni etiketle! #Nohutçuk'});return;}
+    if(action==='reels'){state.poseUntil=t+6000;setMood('celebrating',{label:'Reels performance',motion:'dance',duration:6000,bubble:'Nohutçuk Reels 🎬',sound:false});if(state.effects&&!state.quiet)startSong('dance');return;}
     const holidays={ramadan:['thinking','Ramazan mübarek olsun! 🌙'],eid:['celebrating','İyi Bayramlar! ✨'],newyear:['celebrating','Mutlu yıllar! 🎄'],birthday:['love',phrases.birthday[state.language]]};
     if(holidays[action]){
       const entry=holidays[action];setMood(entry[0],{label:'Special event • '+action,motion:'nod',bubble:entry[1],say:action==='birthday'?'birthday':null});return;
@@ -310,7 +322,7 @@
   }));
   document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>runAction(b.dataset.action)));
   $('resetBtn').addEventListener('click',()=>{
-    state.previewSequence++;state.lastWelcome=0;state.friendship=0;els.friendCount.textContent='0 / 4';
+    state.previewSequence++;state.lastWelcome=0;state.poseUntil=0;state.friendship=0;els.friendCount.textContent='0 / 4';
     setMood('normal',{label:'Idle • Blink • Glance',duration:0,bubble:'Merhaba! Ben Nohutçuk 💚'});
   });
   $('clearLog').addEventListener('click',()=>{els.eventLog.replaceChildren();log('History cleared (demo only).');});
@@ -544,6 +556,10 @@
       (out.quiet?' · Quiet mode':'')+'.';
     $('dayResult').classList.remove('has-fail');
     if(!automatic)log('Shop-day '+test.id+' • '+out.reason+' → '+out.mode);
+    // Safety or closing must immediately cancel any continuing audio preview.
+    if(['close','powerOff','fault','clean'].includes(test.event)){
+      voice.stop();audio.stopSong();stopLocal();clearMotion();state.poseUntil=0;
+    }
     renderDayList();
   }
   function renderDayList(){
@@ -634,7 +650,10 @@
   runDayChecks();
   // Avoid hidden playback carrying on if leaving the test tab.
   document.querySelectorAll('[data-tab]').forEach(tab=>tab.addEventListener('click',()=>{
-    if(tab.dataset.tab!=='day')stopDayPlayback();
+    if(tab.dataset.tab!=='day'){
+      stopDayPlayback();
+      $('scene').classList.remove('is-power-off');
+    }
   }));
   function tick(ts){
     if(ts-state.frame<45){requestAnimationFrame(tick);return;}
