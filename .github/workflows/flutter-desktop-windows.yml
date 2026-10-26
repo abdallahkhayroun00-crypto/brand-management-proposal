@@ -4,10 +4,12 @@ on:
   pull_request:
     paths:
       - 'flutter_desktop/**'
+      - 'integration_gateway/**'
       - '.github/workflows/flutter-desktop-windows.yml'
   push:
     paths:
       - 'flutter_desktop/**'
+      - 'integration_gateway/**'
       - 'pos-demo/index.html'
       - 'pos-demo/split-bill.html'
       - 'pos-demo/vendor/**'
@@ -46,6 +48,14 @@ jobs:
           node-version: '22'
       - name: Preserved HTML prototype regression
         run: node pos-demo/tests/logic.test.cjs
+      - name: Staff Chrome category and basket workflows
+        working-directory: flutter_desktop/ui-tests
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install chromium
+          npm test
+      - name: Authenticated webhook gateway tests
+        run: python -m unittest discover -s integration_gateway -p "test_*.py" -v
       - name: Compile Windows desktop release
         working-directory: flutter_desktop
         run: flutter build windows --release

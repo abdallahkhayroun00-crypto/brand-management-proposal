@@ -1,0 +1,11 @@
+{
+  "name": "nohut-staff-ui-tests",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node staff_browser_test.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

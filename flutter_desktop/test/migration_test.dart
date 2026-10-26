@@ -91,6 +91,10 @@ void main() {
       final closed = asMaps(cashBook(s)['sessions']).first;
       expect(closed['differenceCents'], -100);
       openCash(s, 10000);
+      // Reproduce Windows clock granularity deterministically: an earlier
+      // refund and next-shift opening can have the same timestamp.
+      ((cashBook(s)['sessions'] as List).last as Map)['openedAt'] =
+          ((o['payments'] as List).first['refunds'] as List).first['createdAt'];
       refundPayment(o, 0, 1000, 'Geç iade');
       expect(expectedCash(s, activeCash(s)!), 9000);
       expect(asMaps(cashBook(s)['sessions']).first['expectedCents'], 54000);
@@ -595,12 +599,17 @@ void main() {
         await server.start();
         expect(server.running, true);
         final client = HttpClient();
+        final code = server.auth.issue(2);
+        final session = server.auth.activate(code.token, 'Test Telefon');
         Future<(int, Json)> post(Json p) async {
           final req = await client.postUrl(
             Uri.parse('http://127.0.0.1:${server.port}/api/staff/orders'),
           );
           req.headers.contentType = ContentType.json;
-          req.write(jsonEncode(p));
+          req.cookies.add(Cookie('nf_session', session.token));
+          req.headers.set('X-CSRF-Token', session.principal.csrf);
+          final payload = {...p}..remove('staffId');
+          req.write(jsonEncode(payload));
           final response = await req.close(),
               body = await response.transform(utf8.decoder).join();
           return (

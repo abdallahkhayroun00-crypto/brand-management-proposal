@@ -1,10 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as paths;
 import 'package:sqlite3/sqlite3.dart';
 import 'pos_logic.dart';
 import 'operations.dart';
+import 'ticket_document.dart';
+
+part 'staff_auth.dart';
 
 /// Compatible with the Python LAN prototype's state_snapshot schema.
 /// All order data lives on the restaurant laptop, not in GitHub Pages.
@@ -64,6 +69,15 @@ class PosStore extends ChangeNotifier {
     _db.execute(
       'CREATE TABLE IF NOT EXISTS command_receipts (request_id TEXT PRIMARY KEY, payload TEXT NOT NULL, result TEXT NOT NULL)',
     );
+    _db.execute('''CREATE TABLE IF NOT EXISTS staff_access (
+      employee_id INTEGER PRIMARY KEY, enabled INTEGER NOT NULL DEFAULT 1,
+      enrollment_hash TEXT, enrollment_expires TEXT, enrollment_used TEXT
+    )''');
+    _db.execute('''CREATE TABLE IF NOT EXISTS staff_sessions (
+      id TEXT PRIMARY KEY, employee_id INTEGER NOT NULL, token_hash TEXT UNIQUE NOT NULL,
+      csrf TEXT NOT NULL, device_name TEXT NOT NULL, created_at TEXT NOT NULL,
+      last_seen TEXT NOT NULL, expires_at TEXT NOT NULL, revoked_at TEXT
+    )''');
   }
 
   late final String filePath;
@@ -139,7 +153,13 @@ class PosStore extends ChangeNotifier {
       }
       if (isPlatform(order) &&
           order['platformPackageId'] != null &&
-          !packages.add('${order['source']}:${order['platformPackageId']}')) {
+          !packages.add(
+            jsonEncode([
+              order['source'],
+              order['integrationScope'],
+              order['platformPackageId'],
+            ]),
+          )) {
         throw const FormatException('Duplicate platform package');
       }
       final batches = <int>{};
@@ -261,6 +281,7 @@ class PosStore extends ChangeNotifier {
       }
       final current = read(), next = copyJson(read().data);
       result = change(next);
+      freezeKitchenTickets(next);
       validate(next);
       final revision = current.revision + 1;
       result['revision'] = revision;
@@ -291,6 +312,7 @@ class PosStore extends ChangeNotifier {
   }
 
   WriteResult replace(Map<String, dynamic> next, int expectedRevision) {
+    freezeKitchenTickets(next);
     validate(next);
     _db.execute('BEGIN IMMEDIATE');
     try {

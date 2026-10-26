@@ -375,6 +375,9 @@ void openCash(Json s, int opening) {
     'openedAt': utcNow(),
     'openingCents': opening,
     'openedBy': 'Kasa (PC)',
+    // Exclude pre-existing events even when the OS clock gives opening and
+    // previous-shift refunds the exact same timestamp. Preserve multiplicity.
+    'openingLedger': ledger(s).map((e) => e.identity).toList(),
     'closedAt': null,
   });
 }
@@ -391,6 +394,7 @@ class LedgerEntry {
   );
   final int orderId, amount;
   final String source, method, kind, stamp, staff;
+  String get identity => '$orderId|$source|$method|$kind|$amount|$stamp|$staff';
 }
 
 List<LedgerEntry> ledger(Json state) => [
@@ -479,7 +483,17 @@ String salesCsv(Iterable<SaleEntry> rows) =>
 int expectedCash(Json s, Json c, {String? end}) {
   final stop = end ?? c['closedAt'] as String? ?? utcNow();
   final start = c['openedAt'] as String;
+  final baseline = <String, int>{};
+  for (final key in c['openingLedger'] as List? ?? []) {
+    baseline['$key'] = (baseline['$key'] ?? 0) + 1;
+  }
   final receipts = ledger(s)
+      .where((e) {
+        final existing = baseline[e.identity] ?? 0;
+        if (existing == 0) return true;
+        baseline[e.identity] = existing - 1;
+        return false;
+      })
       .where(
         (e) =>
             e.method == 'Nakit' &&

@@ -268,11 +268,15 @@ Json? importPlatform(Json s, Json packet) {
     throw const FormatException('Geçersiz platform paketi');
   }
   final lines = expandPlatformLines(packet);
-  if (lines.isEmpty) throw const FormatException('Platform ürünü yok');
+  if (lines.isEmpty &&
+      !['Delivered', 'Cancelled', 'UnSupplied'].contains(packet['status'])) {
+    throw const FormatException('Platform ürünü yok');
+  }
   final existing = asMaps(s['orders'])
       .where(
         (o) =>
             o['source'] == source &&
+            o['integrationScope'] == packet['integrationScope'] &&
             o['platformPackageId'] == packet['packageId'],
       )
       .firstOrNull;
@@ -351,6 +355,7 @@ Json? importPlatform(Json s, Json packet) {
       'events': <dynamic>[],
       'platformSnapshot': copyJson(packet),
       'platformPackageId': packet['packageId'],
+      'integrationScope': packet['integrationScope'],
       'platformCollection': 'Pending',
       'platformCancelledAmount': 0,
     };
@@ -434,6 +439,14 @@ Json queuePlatform(
   if (!platformSources.contains(source)) {
     throw const FormatException('Platform geçersiz');
   }
+  final order = asMaps(
+    s['orders'],
+  ).where((o) => '${o['id']}' == '$target').firstOrNull;
+  if (order != null && ['stage', 'live'].contains(order['integrationMode'])) {
+    throw const FormatException(
+      'Gerçek platform siparişi DEMO işlemiyle değiştirilemez',
+    );
+  }
   if (source == 'Yemeksepeti' && !['accept', 'ready', 'sync'].contains(type)) {
     throw const FormatException(
       'Yemeksepeti restoran yeteneği doğrulanmadı; kapalı',
@@ -489,6 +502,14 @@ void retryPlatform(Json s, String id, {DateTime? now}) {
 
 void resolvePlatform(Json s, String id, {bool fail = false}) {
   final j = findRecord(s, 'jobs', id);
+  final order = asMaps(
+    s['orders'],
+  ).where((o) => '${o['id']}' == '${j['target']}').firstOrNull;
+  if (order != null && ['stage', 'live'].contains(order['integrationMode'])) {
+    throw const FormatException(
+      'Gerçek platform siparişi DEMO işlemiyle değiştirilemez',
+    );
+  }
   if (j['status'] != 'Bekliyor') {
     throw const FormatException('İstek beklemiyor');
   }

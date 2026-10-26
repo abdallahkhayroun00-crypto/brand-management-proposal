@@ -10,15 +10,17 @@ Open the successful **Build Flutter Windows POS** Actions run for this branch/PR
 
 The release includes the employee page and menu inside Flutter assets. There is no separate `site` folder or Python server to install. The PC opens the manager directly; the prototype has no role chooser or passwords.
 
+See [UI_DESIGN.md](UI_DESIGN.md) for the Chrome-inspired visual revision, unified staff destination and shared phone floor plan.
+
 ## Worker phones
 
 1. Keep the Windows app running and the laptop awake, on trusted private staff Wi-Fi.
-2. Open **Personel Wi-Fi**, choose the actual Wi-Fi IPv4 and scan the QR in Chrome.
-3. The URL is `http://<LAPTOP_IP>:8787/personel`. Choose an active worker name.
-4. Submit a Masa 1–5 or Gel-Al order. Telephone orders are pickup-only. Occupied-table orders become additional batches.
+2. Open **Personel & QR**. Its shared Wi-Fi settings section selects the actual laptop Wi-Fi IPv4.
+3. In **Personel & QR → Telefon Bağlantıları**, select the worker and press **Telefon Bağla · QR Oluştur**. Scan the large inline QR in Chrome. Activate the device once within ten minutes. The URL uses the same laptop server, `http://<LAPTOP_IP>:8787/personel`. Later visits retain the worker’s device session; no name chooser or password.
+4. Choose a table on the shared floor plan (or Gel-Al), open a menu section such as Dürümler / Porsiyonlar / İçecekler and tap product cards. Review quantities and optional notes in Sepet, then send. Telephone orders are pickup-only; occupied-table orders become additional batches.
 5. Wait for the confirmed SQLite order number. On a lost response, use **Aynı İsteği Yeniden Dene**. The persisted request ID prevents double submission. On a revision conflict, fetch current data, inspect the retained cart and resubmit.
 
-Payments and management are native PC workflows. The LAN server does not serve the old manager HTML and rejects snapshot PUT requests. The HTTP prototype is still password-free and unencrypted; this is not production authentication. Keep it off guest Wi-Fi/public Internet. A real two-phone Wi-Fi test is still required. Windows Firewall private-network permission must be handled on the actual laptop. Do not run the older Python server on port 8787 at the same time.
+Payments and management are native PC workflows. The LAN server does not serve the old manager HTML and rejects snapshot PUT requests. Device sessions use HttpOnly/SameSite cookies, server-side hashed tokens, CSRF checks, expiry and immediate manager revocation. LAN HTTP remains unencrypted; use trusted private Wi-Fi. Keep it off guest Wi-Fi/public Internet. A real two-phone Wi-Fi test is still required. Windows Firewall private-network permission must be handled on the actual laptop. Do not run the older Python server on port 8787 at the same time.
 
 ## Native workflows
 
@@ -27,10 +29,11 @@ Payments and management are native PC workflows. The LAN server does not serve t
 - Cash/card/partial/mixed entries, change, partial/full refunds, product-level guest shares, equal cent-conserving splits and mapping earlier payments to guests.
 - Opening/closing cash sessions, counted variance, cash in/out and historical refund dates.
 - Staff creation/editing/activation, local price configuration, filtered history and collection/product/staff reports, CSV exports, consistent SQLite backups.
-- Single kitchen printer queue and native previews with explicit simulated success/failure; informational bill summary.
+- Table floor and selected check side by side; searchable order list with a fixed check summary/actions and separate product, guest split, receipt/refund and history tabs.
+- Single kitchen printer queue with pending/error/completed filters, selected-batch preview and explicit simulated success/failure/retry; informational bill summary.
 - Explicit platform simulation tabs for orders, acceptance/status/cancellation, store hours, catalog/mapping/prices, claims, reviews, invoice links and sync request log; settlements under Reports, configuration under Settings.
 
-**No Yemeksepeti/Trendyol Go API, bank POS, physical printer or fiscal ÖKC is connected.** Card and platform entries are prototypes. Courier delivery and platform collections remain with the platforms; the restaurant has no courier workflow. Yemeksepeti unverified management capabilities stay gated. Invoice-link submission does not generate a fiscal invoice. The example 15% commission is not an accounting rate.
+**No restaurant account, bank POS, physical printer or fiscal ÖKC has been connected or verified.** API adapters and encrypted credential settings are implemented, with explicit capability gates. See [INTEGRATIONS.md](INTEGRATIONS.md) for the exact supported contracts and outstanding live requirements. Trendyol Go order polling is implemented; its Meal accept/ready/reject mutations remain blocked pending the current official contract. Yemeksepeti restaurant callbacks require an approved account and an HTTPS webhook gateway; generic Delivery Hero support is not proof of Yemeksepeti account access. Card and platform entries are prototypes. Courier delivery and platform collections remain with the platforms; the restaurant has no courier workflow. Yemeksepeti unverified management capabilities stay gated. Invoice-link submission does not generate a fiscal invoice. The example 15% commission is not an accounting rate.
 
 ## Storage and concurrency
 
@@ -57,6 +60,20 @@ At repository root:
 ```powershell
 node pos-demo/tests/logic.test.cjs
 python -m unittest discover -s pos-demo/tests -p test_local_server.py -v
+python -m unittest discover -s integration_gateway -p "test_*.py" -v
 ```
 
 GitHub Actions runs strict Flutter analysis, domain/SQLite/HTTP/widget tests, the preserved HTML regressions and a Windows release build, then uploads the whole release folder. Tests use isolated temporary databases. They do not establish real phone, printer, fiscal or platform readiness. Keep the HTML demo until the acceptance checks in the parity matrix are completed.
+
+Browser order-entry checks (also run in Actions):
+
+```powershell
+cd ui-tests
+npm ci --ignore-scripts
+npx playwright install chromium
+npm test
+```
+
+## 0.7.0 — branded tickets and invoice documents
+
+See [PRINTING_AND_INVOICES.md](PRINTING_AND_INVOICES.md) for the new native **Fiş & Fatura** destination, branded immutable preparation batches, 80 mm PDF exports, one Windows USB driver, uncertain-output reconciliation and externally issued invoice registration. The Trendyol Meal invoice-link adapter is implemented and mock-tested; no credentials or live account test are available. Yemeksepeti invoice upload and fiscal issuance remain unavailable. Physical printer output is unverified. This supersedes earlier descriptions of all printing and invoice-link operations as simulation-only. The original HTML demo remains unchanged.

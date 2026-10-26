@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'floor_plan.dart';
 import 'lan_server.dart';
 import 'pos_logic.dart';
@@ -10,10 +9,23 @@ import 'pos_store.dart';
 import 'operations.dart';
 import 'operations_ui.dart';
 import 'platform_workflows.dart';
+import 'staff_qr_ui.dart';
+import 'platform_api.dart';
+import 'platform_runtime.dart';
+import 'settings_workspace.dart';
+import 'reports_workspace.dart';
+import 'cash_workspace.dart';
+import 'staff_directory.dart';
+import 'print_service.dart';
+import 'documents_workspace.dart';
+import 'dashboard_insights.dart';
 import 'platform_ui.dart';
+import 'order_action_ui.dart';
+import 'order_workspace.dart';
+import 'printer_workspace.dart';
 
-const dark = Color(0xff193f2c);
-const cream = Color(0xfff5f7f1);
+const dark = Color(0xff183b2c);
+const cream = Color(0xfff6f6f2);
 const emerald = Color(0xff3b7550);
 
 void main() {
@@ -54,9 +66,11 @@ class NohutFalafelApp extends StatelessWidget {
     super.key,
     this.databaseFile,
     this.startServer = true,
+    this.secretStore,
   });
   final String? databaseFile;
   final bool startServer;
+  final SecretStore? secretStore;
   @override
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
@@ -65,7 +79,31 @@ class NohutFalafelApp extends StatelessWidget {
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(seedColor: dark, surface: cream),
       scaffoldBackgroundColor: cream,
+      dividerColor: const Color(0xffe3e9e6),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(0, 46),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(0, 44),
+          side: const BorderSide(color: Color(0xffd8e2dc)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
       fontFamily: 'Segoe UI',
+      textTheme: const TextTheme(
+        bodyMedium: TextStyle(fontSize: 13, color: Color(0xff213429)),
+        bodyLarge: TextStyle(fontSize: 14, color: Color(0xff213429)),
+        labelLarge: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+        titleMedium: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+      ),
       cardTheme: CardThemeData(
         color: Colors.white,
         elevation: 0,
@@ -75,19 +113,33 @@ class NohutFalafelApp extends StatelessWidget {
         ),
       ),
       inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
         isDense: true,
         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       ),
     ),
-    home: ManagerDesktop(databaseFile: databaseFile, startServer: startServer),
+    home: ManagerDesktop(
+      databaseFile: databaseFile,
+      startServer: startServer,
+      secretStore: secretStore,
+    ),
   );
 }
 
 class ManagerDesktop extends StatefulWidget {
-  const ManagerDesktop({super.key, this.databaseFile, this.startServer = true});
+  const ManagerDesktop({
+    super.key,
+    this.databaseFile,
+    this.startServer = true,
+    this.secretStore,
+  });
   final String? databaseFile;
   final bool startServer;
+  final SecretStore? secretStore;
   @override
   State<ManagerDesktop> createState() => _ManagerDesktopState();
 }
@@ -95,6 +147,7 @@ class ManagerDesktop extends StatefulWidget {
 class _ManagerDesktopState extends State<ManagerDesktop> {
   late final PosStore store;
   late final PosLanServer lan;
+  late final PlatformRuntime runtime;
   List<Product> menu = const [];
   String page = 'dashboard';
   int? selectedTable, selectedOrder;
@@ -114,9 +167,9 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     ('online', Icons.delivery_dining_outlined, 'Online Siparişler'),
     ('payments', Icons.point_of_sale_outlined, 'Kasa & Ödemeler'),
     ('printer', Icons.print_outlined, 'Yazdırma Kuyruğu'),
-    ('staff', Icons.people_alt_outlined, 'Personel Yönetimi'),
+    ('documents', Icons.description_outlined, 'Fiş & Fatura'),
+    ('staff', Icons.qr_code_rounded, 'Personel & QR'),
     ('reports', Icons.bar_chart_outlined, 'Raporlar'),
-    ('wifi', Icons.wifi_tethering_outlined, 'Personel Wi-Fi'),
     ('settings', Icons.settings_outlined, 'Ayarlar'),
   ];
 
@@ -125,15 +178,27 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     super.initState();
     store = PosStore(databaseFile: widget.databaseFile);
     lan = PosLanServer(store);
+    runtime = PlatformRuntime(
+      store,
+      CredentialVault(widget.secretStore ?? WindowsSecretStore()),
+    );
+    store.addListener(_onStoreChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Menu initialization precedes staff order acceptance.
       unawaited(_startLan());
     });
   }
 
+  void _onStoreChange() {
+    if (widget.startServer) unawaited(runtime.runOnce());
+  }
+
   Future<void> _startLan() async {
     await _loadMenu();
-    if (mounted && widget.startServer) await lan.start();
+    if (mounted && widget.startServer) {
+      await lan.start();
+      runtime.start();
+    }
   }
 
   Future<void> _loadMenu() async {
@@ -163,6 +228,8 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
 
   @override
   void dispose() {
+    runtime.dispose();
+    store.removeListener(_onStoreChange);
     lan.dispose();
     store.dispose();
     super.dispose();
@@ -404,12 +471,6 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     }
   }
 
-  void _equalSplit(Json order, int people) {
-    _edit(
-      (data) => splitEqually(mutableOrder(data, order['id'] as int)!, people),
-    );
-  }
-
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: Listenable.merge([store, lan]),
@@ -420,7 +481,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
       return Scaffold(
         body: Row(
           children: [
-            SizedBox(width: condensed ? 74 : 235, child: _sidebar(condensed)),
+            SizedBox(width: condensed ? 74 : 255, child: _sidebar(condensed)),
             Expanded(
               child: Column(
                 children: [
@@ -462,13 +523,19 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                         const SizedBox(width: 8),
                         Text(
                           lan.running
-                              ? 'Local Server · AKTİF'
-                              : 'Local Server · KAPALI',
+                              ? 'Telefon bağlantısı açık'
+                              : 'Telefon bağlantısı kapalı',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
                             color: lan.running ? emerald : Colors.orange,
                           ),
+                        ),
+                        const SizedBox(width: 14),
+                        OutlinedButton.icon(
+                          onPressed: () => setState(() => page = 'staff'),
+                          icon: const Icon(Icons.qr_code_rounded, size: 18),
+                          label: const Text('Personel QR'),
                         ),
                         const SizedBox(width: 14),
                         const CircleAvatar(
@@ -482,12 +549,28 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                     ),
                   ),
                   Expanded(
-                    child: SingleChildScrollView(
+                    child: Padding(
                       padding: const EdgeInsets.all(24),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1400),
-                        child: _page(data),
-                      ),
+                      child:
+                          [
+                            'tables',
+                            'orders',
+                            'printer',
+                            'settings',
+                            'reports',
+                            'payments',
+                            'online',
+                            'documents',
+                          ].contains(page)
+                          ? _page(data)
+                          : SingleChildScrollView(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 1400,
+                                ),
+                                child: _page(data),
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -507,7 +590,15 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           padding: const EdgeInsets.fromLTRB(14, 24, 14, 20),
           child: Row(
             children: [
-              const Icon(Icons.restaurant, color: Color(0xfff0d6a7), size: 30),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Image.asset(
+                  'assets/brand-logo.jpeg',
+                  width: 45,
+                  height: 45,
+                  fit: BoxFit.cover,
+                ),
+              ),
               if (!condensed) ...[
                 const SizedBox(width: 10),
                 const Expanded(
@@ -523,7 +614,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                         ),
                       ),
                       Text(
-                        'WINDOWS İŞLETME PANELİ',
+                        'İŞLETME SİSTEMİ',
                         style: TextStyle(
                           color: Color(0xffb4cebc),
                           fontSize: 9,
@@ -541,7 +632,31 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 9),
             children: [
-              for (final item in sections)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 18),
+                child: FilledButton(
+                  onPressed: () => _composer(),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xffdcead8),
+                    foregroundColor: dark,
+                  ),
+                  child: Text(condensed ? '+' : '+ Sipariş Al'),
+                ),
+              ),
+              for (final item in sections) ...[
+                if (!condensed && ['dashboard', 'staff'].contains(item.$1))
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 15, 14, 10),
+                    child: Text(
+                      item.$1 == 'dashboard' ? 'GÜNLÜK İŞLEMLER' : 'İŞLETME',
+                      style: const TextStyle(
+                        color: Color(0xff87ac94),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 3),
                   child: Tooltip(
@@ -579,6 +694,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                     ),
                   ),
                 ),
+              ],
             ],
           ),
         ),
@@ -586,7 +702,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           const Padding(
             padding: EdgeInsets.fromLTRB(18, 0, 18, 24),
             child: Text(
-              'SQLite · Yalnızca güvenilir personel Wi-Fi\nBanka POS / ÖKC / API entegrasyonu yok',
+              'Kasa (PC)\nNohut Falafel',
               style: TextStyle(
                 color: Color(0xffa4c4af),
                 fontSize: 10,
@@ -610,12 +726,21 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
         return _payments(db);
       case 'printer':
         return _printer(db);
+      case 'documents':
+        return DocumentsWorkspace(
+          state: db,
+          edit: _edit,
+          runtime: runtime,
+          onOrder: (id) => setState(() {
+            selectedOrder = id;
+            page = 'orders';
+          }),
+          onPrinter: () => _switch('printer'),
+        );
       case 'staff':
         return _staff(db);
       case 'reports':
         return _reports(db);
-      case 'wifi':
-        return _wifi(db);
       case 'settings':
         return _settings(db);
       default:
@@ -661,33 +786,45 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     String amount,
     IconData icon, {
     Color color = dark,
+    VoidCallback? onTap,
   }) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    color: Color(0xff809081),
-                    fontSize: 12,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(17),
+      hoverColor: const Color(0xffedf5e9),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: Color(0xff809081),
+                      fontSize: 12,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            amount,
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900),
-          ),
-        ],
+                if (onTap != null)
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 17,
+                    color: Color(0xff9aac9d),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              amount,
+              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900),
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -738,7 +875,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                     ),
                     SizedBox(height: 6),
                     Text(
-                      'Windows Flutter · Lokal SQLite · Telefon siparişleri QR üzerinden',
+                      'Restoranın siparişleri, masaları ve ekibi tek yerde.',
                       style: TextStyle(color: Color(0xffbddec6), fontSize: 12),
                     ),
                   ],
@@ -768,27 +905,42 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                   'Aktif Sipariş',
                   '${active.length}',
                   Icons.receipt_outlined,
+                  onTap: () => _switch('orders'),
                 ),
                 _metric(
                   'Dolu Masa',
                   '$busy / 5',
                   Icons.table_restaurant_outlined,
+                  onTap: () => _switch('tables'),
                 ),
                 _metric(
                   'Restoran Tahsilatı · Demo',
                   formatTry(cash),
                   Icons.payments_outlined,
+                  onTap: () => _switch('payments'),
                 ),
                 _metric(
                   'Yazdırma Bekleyen',
-                  '${asMaps(db['printJobs']).where((j) => j['state'] != 'İşaretlendi').length}',
+                  '${asMaps(db['printJobs']).where((j) => !printCompleted(j)).length}',
                   Icons.print_outlined,
+                  onTap: () => _switch('printer'),
                 ),
               ],
             );
           },
         ),
         const SizedBox(height: 15),
+        DashboardInsights(
+          state: db,
+          onSource: (source) => setState(() {
+            orderFilter = source;
+            orderSearch = orderStatus = orderStaff = orderFrom = orderTo = '';
+            selectedOrder = null;
+            page = 'orders';
+          }),
+          onReport: () => _switch('reports'),
+        ),
+        const SizedBox(height: 18),
         Card(
           child: Padding(
             padding: const EdgeInsets.all(18),
@@ -883,233 +1035,114 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           ],
         ),
         const SizedBox(height: 15),
-        RestaurantFloorPlan(
-          state: db,
-          positions: positions,
-          editing: floorEditing,
-          selected: selectedTable,
-          onTable: _onTable,
-          onMove: (n, delta) => setState(() {
-            final r = draftFloor[n]!;
-            final left = (r.left + delta.dx)
-                .clamp(0.0, 1.0 - r.width)
-                .toDouble();
-            final top = (r.top + delta.dy)
-                .clamp(0.0, 1.0 - r.height)
-                .toDouble();
-            draftFloor[n] = Rect.fromLTWH(left, top, r.width, r.height);
-          }),
-        ),
-        const SizedBox(height: 17),
-        if (order != null && order['source'] == 'Masa') _orderDetail(order),
-        if (order == null)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(17),
-              child: Text(
-                floorEditing
-                    ? 'Masaları sürükleyin. Numaralar, hesaplar ve 5 masa değişmez.'
-                    : 'Boş masaya tıklayın: yeni sipariş. Dolu masaya tıklayın: hesap, ek sipariş ve ödeme.',
-                style: const TextStyle(color: Color(0xff647a67)),
-              ),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, c) => Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: RestaurantFloorPlan(
+                    state: db,
+                    positions: positions,
+                    editing: floorEditing,
+                    selected: selectedTable,
+                    onTable: _onTable,
+                    onMove: (n, delta) => setState(() {
+                      final r = draftFloor[n]!;
+                      final left = (r.left + delta.dx)
+                          .clamp(0.0, 1.0 - r.width)
+                          .toDouble();
+                      final top = (r.top + delta.dy)
+                          .clamp(0.0, 1.0 - r.height)
+                          .toDouble();
+                      draftFloor[n] = Rect.fromLTWH(
+                        left,
+                        top,
+                        r.width,
+                        r.height,
+                      );
+                    }),
+                  ),
+                ),
+                if (order != null &&
+                    order['source'] == 'Masa' &&
+                    !floorEditing) ...[
+                  const SizedBox(width: 16),
+                  SizedBox(
+                    width: c.maxWidth < 1100 ? 420 : 500,
+                    child: _orderDetail(order),
+                  ),
+                ],
+              ],
             ),
           ),
+        ),
       ],
     );
   }
 
-  Widget _orderDetail(Json o) {
-    final id = o['id'] as int;
-    final closed = o['closed'] == true;
-    final total = orderTotalCents(o), paid = orderPaidCents(o);
-    final split = asMaps(o['guestChecks']);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(19),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Sipariş #$id · ${o['source']}${o['table'] == null ? '' : ' · Masa ${o['table']}'}',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        closed
-                            ? 'Kapalı'
-                            : 'Açık · ${o['serviceStatus'] ?? 'Hazırlanıyor'}',
-                        style: const TextStyle(
-                          color: Color(0xff708273),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (!closed &&
-                    (o['source'] == 'Masa' || o['source'] == 'Gel-Al'))
-                  OutlinedButton.icon(
-                    onPressed: () =>
-                        _composer(table: o['table'] as int?, addToOrder: id),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Ek Sipariş'),
-                  ),
-              ],
-            ),
-            const Divider(height: 26),
-            for (final line in activeLines(o))
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: cream,
-                        borderRadius: BorderRadius.circular(9),
-                      ),
-                      child: Text(
-                        '${line['qty']}×',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(width: 11),
-                    Expanded(
-                      child: Text(
-                        '${line['name'] ?? line['productKey'] ?? 'Ürün'}',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Text(
-                      formatTry(
-                        cents(line['price']) *
-                            ((line['qty'] as num?)?.toInt() ?? 0),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            const Divider(height: 25),
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              runSpacing: 10,
-              children: [
-                Text(
-                  'Toplam: ${formatTry(total)}',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                Text(
-                  'Alınan: ${formatTry(paid)}',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  'Kalan: ${formatTry(orderDueCents(o))}',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    color: dark,
-                  ),
-                ),
-              ],
-            ),
-            if (split.isNotEmpty) ...[
-              const Divider(height: 24),
-              const Text(
-                'Kişi Hesapları',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-              ),
-              for (final guest in split)
-                Builder(
-                  builder: (context) {
-                    final allocated = asMaps(
-                      guest['allocations'],
-                    ).fold<int>(0, (sum, a) => sum + (a['cents'] as int));
-                    final rest = guestBalance(
-                      o,
-                      guest['id'] as int,
-                    ).clamp(0, allocated).toInt();
-                    return ListTile(
-                      title: Text(
-                        '${guest['name'] ?? 'Kişi'} · ${formatTry(allocated)}',
-                      ),
-                      subtitle: Text('Kalan ${formatTry(rest)}'),
-                      trailing: rest > 0 && !closed
-                          ? FilledButton(
-                              onPressed: () => _pay(
-                                o,
-                                guestId: guest['id'] as int,
-                                guestName: '${guest['name']}',
-                                maximumCents: rest,
-                              ),
-                              child: const Text('Öde'),
-                            )
-                          : const Icon(Icons.check_circle, color: emerald),
-                    );
-                  },
-                ),
-            ],
-            const SizedBox(height: 17),
-            if (!closed && (o['source'] == 'Masa' || o['source'] == 'Gel-Al'))
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (split.isEmpty && orderDueCents(o) > 0)
-                    FilledButton.icon(
-                      onPressed: () => _pay(o),
-                      icon: const Icon(Icons.payments),
-                      label: const Text('Nakit / Kart'),
-                    ),
-                  if (split.isEmpty && orderPaidCents(o) == 0)
-                    PopupMenuButton<int>(
-                      onSelected: (n) => _equalSplit(o, n),
-                      itemBuilder: (context) => [
-                        for (final n in [2, 3, 4, 5, 6, 7, 8, 9, 10])
-                          PopupMenuItem(
-                            value: n,
-                            child: Text('$n kişiye eşit böl'),
-                          ),
-                      ],
-                      child: const Chip(label: Text('⚖ Hesabı Eşit Böl')),
-                    ),
-                  if (o['source'] == 'Masa' && orderDueCents(o) == 0)
-                    OutlinedButton.icon(
-                      onPressed: () => _closeTable(o),
-                      icon: const Icon(Icons.done_all),
-                      label: const Text('Masayı Kapat'),
-                    ),
-                ],
-              ),
-            OrderOperations(order: o, edit: _edit),
-            if (closed)
-              const Padding(
-                padding: EdgeInsets.only(top: 12),
-                child: Text(
-                  'Bu hesap kapalı. Ek ürün ve yeni ödeme eklenemez.',
-                  style: TextStyle(color: Colors.teal),
-                ),
-              ),
-          ],
+  Widget _orderDetail(Json o) => OrderWorkspace(
+    key: ValueKey(o['id']),
+    order: o,
+    edit: _edit,
+    onAdd: () =>
+        _composer(table: o['table'] as int?, addToOrder: o['id'] as int),
+    onPay: () => _pay(o),
+    onClose: () => _closeTable(o),
+    onGuestPay: (guest) => _pay(
+      o,
+      guestId: guest['id'] as int,
+      guestName: '${guest['name']}',
+      maximumCents: guestBalance(o, guest['id'] as int),
+    ),
+  );
+
+  Widget _online(Json db) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Expanded(
+        child: PlatformPanel(
+          state: db,
+          edit: _edit,
+          onDocuments: () => _switch('documents'),
         ),
       ),
-    );
-  }
+      const SizedBox(height: 8),
+      Align(
+        alignment: Alignment.centerRight,
+        child: OutlinedButton.icon(
+          onPressed: () => showDialog<void>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Platform İşlem Kaydı'),
+              content: SizedBox(
+                width: 1000,
+                height: 500,
+                child: SingleChildScrollView(
+                  child: ListenableBuilder(
+                    listenable: store,
+                    builder: (context, _) => OrderActionLog(
+                      state: store.read().data,
+                      edit: _edit,
+                      initiallyExpanded: true,
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Kapat'),
+                ),
+              ],
+            ),
+          ),
+          icon: const Icon(Icons.history, size: 18),
+          label: const Text('İşlem Kaydı / Platform Senkronizasyonu'),
+        ),
+      ),
+    ],
+  );
 
   Widget _orders(Json db) {
     final all = asMaps(db['orders']).reversed.toList();
@@ -1144,420 +1177,245 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     final focused = selectedOrder == null
         ? null
         : all.where((o) => o['id'] == selectedOrder).firstOrNull;
+    final chosen = focused ?? filtered.firstOrNull;
+    if (selectedOrder == null && chosen != null) {
+      final initialId = chosen['id'] as int;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && page == 'orders' && selectedOrder == null) {
+          setState(() => selectedOrder = initialId);
+        }
+      });
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _sectionTitle(
           'Tüm Siparişler',
-          'Masa / Gel-Al / Online platform kayıtları.',
+          'Siparişi seçin; ürünler, kişi payları ve tahsilatlar sağda açılır.',
           action: FilledButton.icon(
             onPressed: () => _composer(),
             icon: const Icon(Icons.add),
             label: const Text('Sipariş Al'),
           ),
         ),
-        OutlinedButton(
-          onPressed: () async {
-            final v = await askFields(context, 'Sipariş Filtreleri', [
-              ('Sipariş / masa / müşteri / ürün ara', orderSearch),
-              (
-                'Durum: boş / Kalan / Ödendi / Kapalı / İptal / Hazır / Hazırlanıyor / Teslim Edildi',
-                orderStatus,
-              ),
-              ('Siparişi alan personel', orderStaff),
-              ('Başlangıç YYYY-MM-DD', orderFrom),
-              ('Bitiş YYYY-MM-DD', orderTo),
-            ]);
-            if (v != null && mounted) {
-              if (v
-                      .skip(3)
-                      .any(
-                        (d) =>
-                            d.isNotEmpty &&
-                            (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(d) ||
-                                DateTime.tryParse(d) == null),
-                      ) ||
-                  v[3].isNotEmpty &&
-                      v[4].isNotEmpty &&
-                      v[3].compareTo(v[4]) > 0) {
-                _notify('Tarih aralığı geçersiz', error: true);
-                return;
-              }
-              setState(() {
-                orderSearch = v[0];
-                orderStatus = v[1];
-                orderStaff = v[2];
-                orderFrom = v[3];
-                orderTo = v[4];
-                selectedOrder = null;
-              });
-            }
-          },
-          child: Text('Sipariş Filtreleri · ${filtered.length} kayıt'),
-        ),
-        Wrap(
-          spacing: 7,
-          children: [
-            for (final filter in [
-              'Tümü',
-              'Masa',
-              'Gel-Al',
-              'Yemeksepeti',
-              'Trendyol Go',
-            ])
-              ChoiceChip(
-                label: Text(filter),
-                selected: orderFilter == filter,
-                onSelected: (_) => setState(() => orderFilter = filter),
-              ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (focused != null) _orderDetail(focused),
-        Card(
-          child: Column(
-            children: [
-              if (filtered.isEmpty)
-                const ListTile(title: Text('Sipariş bulunamadı')),
-              for (final o in filtered)
-                ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: cream,
-                    child: Text('${o['table'] ?? '#'}'),
-                  ),
-                  title: Text('#${o['id']} · ${o['source']}'),
-                  subtitle: Text(
-                    o['closed'] == true
-                        ? 'Kapalı'
-                        : (o['serviceStatus'] ?? 'Açık').toString(),
-                  ),
-                  trailing: Text(formatTry(orderTotalCents(o))),
-                  onTap: () => setState(() => selectedOrder = o['id'] as int),
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _online(Json db) => PlatformPanel(state: db, edit: _edit);
-
-  Widget _payments(Json db) {
-    final locals = asMaps(db['orders'])
-        .where(
-          (o) =>
-              (o['source'] == 'Masa' || o['source'] == 'Gel-Al') &&
-              orderDueCents(o) > 0,
-        )
-        .toList();
-    final totalDue = locals.fold<int>(0, (s, o) => s + orderDueCents(o));
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _sectionTitle(
-          'Kasa & Ödemeler',
-          'Bütün ödemeler Kasa (PC) tarafından işlenir. Telefonlarda ödeme ekranı yoktur.',
-        ),
         Row(
           children: [
             Expanded(
-              child: _metric(
-                'Açık Hesaplar',
-                '${locals.length}',
-                Icons.receipt_long,
+              child: TextField(
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.search),
+                  hintText: 'Sipariş, masa, müşteri veya ürün ara…',
+                ),
+                onChanged: (v) => setState(() {
+                  orderSearch = v;
+                  selectedOrder = null;
+                }),
               ),
             ),
             const SizedBox(width: 12),
-            Expanded(
-              child: _metric(
-                'Restoran Alacağı',
-                formatTry(totalDue),
-                Icons.payments,
+            SizedBox(
+              width: 170,
+              child: DropdownButtonFormField<String>(
+                initialValue: orderStatus,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Durum'),
+                items: [
+                  for (final value in [
+                    '',
+                    'Kalan',
+                    'Ödendi',
+                    'Kapalı',
+                    'İptal',
+                    'Hazır',
+                    'Hazırlanıyor',
+                    'Teslim Edildi',
+                  ])
+                    DropdownMenuItem(
+                      value: value,
+                      child: Text(value.isEmpty ? 'Tüm Durumlar' : value),
+                    ),
+                ],
+                onChanged: (v) => setState(() {
+                  orderStatus = v ?? '';
+                  selectedOrder = null;
+                }),
               ),
+            ),
+            IconButton(
+              tooltip: 'Tarih / Personel Filtreleri',
+              icon: const Icon(Icons.tune),
+              onPressed: () async {
+                final v = await askFields(context, 'Tarih / Personel', [
+                  ('Personel', orderStaff),
+                  ('Başlangıç YYYY-MM-DD', orderFrom),
+                  ('Bitiş YYYY-MM-DD', orderTo),
+                ]);
+                if (v != null && mounted) {
+                  if (v
+                          .skip(1)
+                          .any(
+                            (d) =>
+                                d.isNotEmpty &&
+                                (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(d) ||
+                                    DateTime.tryParse(d) == null),
+                          ) ||
+                      v[1].isNotEmpty &&
+                          v[2].isNotEmpty &&
+                          v[1].compareTo(v[2]) > 0) {
+                    _notify('Tarih aralığı geçersiz', error: true);
+                    return;
+                  }
+                  setState(() {
+                    orderStaff = v[0];
+                    orderFrom = v[1];
+                    orderTo = v[2];
+                    selectedOrder = null;
+                  });
+                }
+              },
             ),
           ],
         ),
         const SizedBox(height: 12),
-        _notice(
-          'Kart tahsilatı bu sürümde banka POS terminaline otomatik aktarılmaz. Fiziksel mali fiş / ÖKC entegrasyonu yoktur.',
-        ),
-        const SizedBox(height: 13),
-        Card(
-          child: Column(
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
             children: [
-              if (locals.isEmpty)
-                const ListTile(title: Text('Açık ödeme bulunmuyor')),
-              for (final o in locals)
-                ListTile(
-                  title: Text(
-                    '#${o['id']} · ${o['source']}${o['table'] == null ? '' : ' · Masa ${o['table']}'}',
-                  ),
-                  subtitle: Text('Toplam ${formatTry(orderTotalCents(o))}'),
-                  trailing: FilledButton(
-                    onPressed: () {
-                      setState(() {
-                        selectedOrder = o['id'] as int;
-                        page = 'orders';
-                      });
-                    },
-                    child: Text('Kalan ${formatTry(orderDueCents(o))}'),
+              for (final filter in [
+                'Tümü',
+                'Masa',
+                'Gel-Al',
+                'Yemeksepeti',
+                'Trendyol Go',
+              ])
+                Padding(
+                  padding: const EdgeInsets.only(right: 7),
+                  child: ChoiceChip(
+                    label: Text(filter),
+                    selected: orderFilter == filter,
+                    onSelected: (_) => setState(() {
+                      orderFilter = filter;
+                      selectedOrder = null;
+                    }),
                   ),
                 ),
             ],
           ),
         ),
         const SizedBox(height: 12),
-        CashPanel(state: db, edit: _edit),
-      ],
-    );
-  }
-
-  Widget _printer(Json db) => PrinterPanel(state: db, edit: _edit);
-
-  Widget _staff(Json db) => StaffPanel(state: db, edit: _edit);
-
-  Widget _reports(Json db) => ReportsPanel(state: db, edit: _edit);
-
-  Widget _wifi(Json db) {
-    final url = lan.staffUrl;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _sectionTitle(
-          'Personel Wi-Fi · Yerel Sunucu',
-          'Windows Flutter programı laptop üzerinde SQLite ve HTTP sunucusunu başlatır. Personel Chrome QR ile bağlanır.',
-        ),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            lan.running
-                                ? Icons.check_circle
-                                : Icons.error_outline,
-                            color: lan.running ? Colors.green : Colors.orange,
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            lan.running
-                                ? 'Local Server çalışıyor'
-                                : 'Local Server kapalı',
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Port: ${lan.port}',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'SQLite: ${store.filePath}',
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                      const SizedBox(height: 16),
-                      if (lan.addresses.isNotEmpty)
-                        DropdownButtonFormField<String>(
-                          isExpanded: true,
-                          initialValue:
-                              lan.selectedIp != null &&
-                                  lan.addresses.contains(lan.selectedIp)
-                              ? lan.selectedIp
-                              : lan.addresses.first,
-                          decoration: const InputDecoration(
-                            labelText: 'Laptopun Wi-Fi IPv4 adresi',
-                          ),
-                          items: lan.addresses
-                              .map(
-                                (ip) => DropdownMenuItem(
-                                  value: ip,
-                                  child: Text(ip),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (ip) {
-                            if (ip != null) lan.chooseIp(ip);
-                          },
-                        ),
-                      if (lan.error != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Text(
-                            lan.error!,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      if (!lan.available)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 11),
-                          child: Text(
-                            'Yerel ağ IPv4 bulunamadı. Telefon QR çalışmayabilir.',
-                            style: TextStyle(color: Colors.deepOrange),
-                          ),
-                        ),
-                      const SizedBox(height: 15),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          OutlinedButton.icon(
-                            onPressed: () => lan.discover(),
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('IP Yenile'),
-                          ),
-                          if (!lan.running)
-                            FilledButton(
-                              onPressed: () => lan.start(),
-                              child: const Text('Sunucuyu Başlat'),
-                            ),
-                          if (lan.running)
-                            OutlinedButton(
-                              onPressed: () => lan.stop(),
-                              child: const Text('Sunucuyu Durdur'),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'Bağlantı Mantığı',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        '1. Laptop ve personel telefonları aynı Wi-Fi\n'
-                        '2. Flutter uygulaması açık ve sunucu çalışır\n'
-                        '3. Personel QR kodunu tarar, adını seçer\n'
-                        '4. 5 masanın siparişleri ortak SQLite veritabanına kaydedilir\n'
-                        '5. Kasa ve ödeme yalnızca laptopta',
-                        style: TextStyle(height: 1.8, fontSize: 12),
-                      ),
-                      const SizedBox(height: 11),
-                      const Text(
-                        'Şimdilik şifre yok. Misafir Wi-Fi, router izolasyonu ve internet port yönlendirme kullanmayın.',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.deepOrange,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(21),
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: 300,
+                child: Card(
+                  margin: EdgeInsets.zero,
                   child: Column(
                     children: [
-                      const Text(
-                        'PERSONEL GİRİŞ QR',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
+                      Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Siparişler',
+                                style: TextStyle(fontWeight: FontWeight.w800),
+                              ),
+                            ),
+                            Text(
+                              '${filtered.length} kayıt',
+                              style: const TextStyle(color: Color(0xff7c8b80)),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 17),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(17),
-                          border: Border.all(color: const Color(0xffdce7da)),
-                        ),
-                        child: lan.running && lan.available
-                            ? QrImageView(
-                                data: url,
-                                size: 215,
-                                errorCorrectionLevel: QrErrorCorrectLevel.M,
-                              )
-                            : const SizedBox(
-                                height: 215,
-                                width: 215,
-                                child: Center(
-                                  child: Text(
-                                    'Wi-Fi IP bekleniyor',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
+                      const Divider(height: 1),
+                      Expanded(
+                        child: filtered.isEmpty
+                            ? const Center(child: Text('Sipariş bulunamadı.'))
+                            : ListView.builder(
+                                itemCount: filtered.length,
+                                itemBuilder: (context, i) {
+                                  final order = filtered[i];
+                                  return ListTile(
+                                    key: ValueKey('order-row-${order['id']}'),
+                                    selected: chosen?['id'] == order['id'],
+                                    selectedTileColor: const Color(0xffedf5e9),
+                                    leading: CircleAvatar(
+                                      backgroundColor: cream,
+                                      child: Text('${order['table'] ?? '#'}'),
+                                    ),
+                                    title: Text(
+                                      '#${order['id']} · ${order['source']}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      '${order['closed'] == true ? 'Kapalı' : order['serviceStatus'] ?? order['demoRemoteStatus'] ?? 'Açık'} · ${formatTry(orderTotalCents(order))}',
+                                    ),
+                                    onTap: () => setState(
+                                      () => selectedOrder = order['id'] as int,
+                                    ),
+                                  );
+                                },
                               ),
                       ),
-                      const SizedBox(height: 13),
-                      SelectableText(
-                        lan.running ? url : 'Sunucu başlamadı',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 13),
-                      FilledButton.icon(
-                        onPressed: lan.running
-                            ? () {
-                                Clipboard.setData(ClipboardData(text: url));
-                                _notify('Personel URL kopyalandı');
-                              }
-                            : null,
-                        icon: const Icon(Icons.copy),
-                        label: const Text('Bağlantıyı Kopyala'),
-                      ),
-                      const SizedBox(height: 15),
-                      const Text(
-                        'Android Chrome · iPhone Safari',
-                        style: TextStyle(
-                          color: Color(0xff798e7b),
-                          fontSize: 11,
-                        ),
-                      ),
                     ],
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _notice(
-          'Gerçek fiziksel Windows laptopta test edilmelidir. Bu uygulama dış internete açılmamalıdır. QR menü sipariş vermek için değil, personel uygulamasını açmak içindir.',
+              const SizedBox(width: 16),
+              Expanded(
+                child: chosen == null
+                    ? const Card(
+                        child: Center(
+                          child: Text('Sipariş detayları burada açılır.'),
+                        ),
+                      )
+                    : _orderDetail(chosen),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _settings(Json db) =>
-      SettingsPanel(state: db, edit: _edit, store: store);
+  Widget _payments(Json db) => CashWorkspace(
+    state: db,
+    edit: _edit,
+    onOrder: (id) => setState(() {
+      selectedOrder = id;
+      page = 'orders';
+    }),
+  );
 
-  Widget _notice(String text) => Container(
-    padding: const EdgeInsets.all(15),
-    decoration: BoxDecoration(
-      color: const Color(0xfffff1d9),
-      border: Border.all(color: const Color(0xfff0dbb2)),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Text(
-      text,
-      style: const TextStyle(
-        color: Color(0xff775624),
-        fontSize: 12,
-        height: 1.5,
-      ),
-    ),
+  Widget _printer(Json db) =>
+      PrinterWorkspace(state: db, edit: _edit, service: PrintService(store));
+
+  Widget _staff(Json db) => StaffQrPanel(
+    server: lan,
+    editor: StaffDirectory(state: db, edit: _edit),
+  );
+
+  Widget _reports(Json db) => ReportsWorkspace(
+    state: db,
+    edit: _edit,
+    onOrder: (id) => setState(() {
+      selectedOrder = id;
+      page = 'orders';
+    }),
+  );
+
+  Widget _settings(Json db) => SettingsWorkspace(
+    state: db,
+    edit: _edit,
+    store: store,
+    runtime: runtime,
+    onStaff: () => _switch('staff'),
+    onPrinter: () => _switch('printer'),
   );
 }
 
@@ -1576,289 +1434,680 @@ class _OrderComposer extends StatefulWidget {
 }
 
 class _OrderComposerState extends State<_OrderComposer> {
+  final searchController = TextEditingController();
   final counts = <int, int>{};
   final notes = <int, String>{};
-  Json pickupCustomer = {};
   final removed = <int, List<String>>{};
-  String category = 'all', source = 'Masa', pickup = 'Tezgahtan';
+  Json pickupCustomer = {};
+  String category = 'wrap', source = 'Masa', pickup = 'Tezgahtan', search = '';
   int? table;
+  static const categories = {
+    'wrap': 'Dürümler',
+    'plate': 'Porsiyonlar',
+    'drink': 'İçecekler',
+    'meze': 'Mezeler',
+    'fatte': 'Fatte',
+    'side': 'Yan Ürünler',
+    'salad': 'Salatalar',
+    'dessert': 'Tatlılar',
+  };
+  IconData icon(String category) => switch (category) {
+    'wrap' => Icons.lunch_dining_rounded,
+    'plate' => Icons.dinner_dining_rounded,
+    'drink' => Icons.local_drink_rounded,
+    'dessert' => Icons.cake_outlined,
+    'salad' => Icons.eco_outlined,
+    _ => Icons.restaurant_menu_rounded,
+  };
   @override
   void initState() {
     super.initState();
     table = widget.table;
     if (widget.adding) source = widget.table == null ? 'Gel-Al' : 'Masa';
+    if (!widget.products.any((p) => p.category == category) &&
+        widget.products.isNotEmpty) {
+      category = widget.products.first.category;
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final filtered = widget.products
-        .where((p) => (category == 'all' || p.category == category))
-        .toList();
-    final totalCents = counts.entries.fold<int>(0, (sum, e) {
-      final p = widget.products.firstWhere((x) => x.id == e.key);
-      return sum + cents(p.price) * e.value;
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  int get total => counts.entries.fold(
+    0,
+    (sum, e) =>
+        sum +
+        cents(widget.products.firstWhere((p) => p.id == e.key).price) * e.value,
+  );
+  int get quantity => counts.values.fold(0, (a, b) => a + b);
+  String searchKey(String value) => value
+      .toLowerCase()
+      .replaceAll('ı', 'i')
+      .replaceAll('ü', 'u')
+      .replaceAll('ö', 'o')
+      .replaceAll('ç', 'c')
+      .replaceAll('ş', 's')
+      .replaceAll('ğ', 'g')
+      .replaceAll('\u0307', '');
+  void change(Product p, int delta) {
+    if (p.price == null) return;
+    setState(() {
+      final n = ((counts[p.id] ?? 0) + delta).clamp(0, 1000);
+      if (n == 0) {
+        counts.remove(p.id);
+        notes.remove(p.id);
+        removed.remove(p.id);
+      } else {
+        counts[p.id] = n;
+      }
     });
-    return Dialog(
-      child: SizedBox(
-        width: 820,
-        height: 650,
-        child: Padding(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.adding
-                          ? 'Ek Sipariş · Kasa (PC)'
-                          : 'Yeni Sipariş · Kasa (PC)',
-                      style: const TextStyle(
-                        fontSize: 21,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
+  }
+
+  Future<void> customize(Product p) async {
+    final v = await askFields(context, '${p.name} · Not / Malzeme', [
+      ('Ürün notu', notes[p.id] ?? ''),
+      ('Çıkarılacak malzemeler (virgülle)', (removed[p.id] ?? []).join(', ')),
+    ]);
+    if (v != null && mounted) {
+      setState(() {
+        notes[p.id] = v[0];
+        removed[p.id] = v[1]
+            .split(',')
+            .map((s) => s.trim())
+            .where((s) => s.isNotEmpty)
+            .toList();
+      });
+    }
+  }
+
+  void save() {
+    if (counts.isEmpty || (source == 'Masa' && table == null)) return;
+    Navigator.pop(
+      context,
+      OrderRequest(
+        source: source,
+        table: source == 'Masa' ? table : null,
+        pickupChannel: pickup,
+        customer: pickupCustomer,
+        lines: [
+          for (final e in counts.entries)
+            (() {
+              final p = widget.products.firstWhere((p) => p.id == e.key);
+              return <String, dynamic>{
+                'productId': p.id,
+                'productKey': p.name,
+                'name': p.name,
+                'price': p.price,
+                'qty': e.value,
+                'removed': removed[p.id] ?? <String>[],
+                'note': notes[p.id] ?? '',
+              };
+            })(),
+        ],
+      ),
+    );
+  }
+
+  Widget categoryButton(String id, String label) => Padding(
+    padding: const EdgeInsets.only(bottom: 7, right: 7),
+    child: ChoiceChip(
+      key: ValueKey('category-$id'),
+      showCheckmark: false,
+      avatar: Icon(
+        icon(id),
+        size: 18,
+        color: category == id ? Colors.white : dark,
+      ),
+      label: Text(label),
+      selected: category == id && search.isEmpty,
+      selectedColor: dark,
+      labelStyle: TextStyle(
+        color: category == id && search.isEmpty ? Colors.white : dark,
+        fontWeight: FontWeight.w700,
+      ),
+      onSelected: (_) => setState(() {
+        category = id;
+        search = '';
+        searchController.clear();
+      }),
+    ),
+  );
+  Widget basket() => Container(
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(color: const Color(0xffe4e9e3)),
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.shopping_bag_outlined),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'Sipariş Sepeti',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  if (!widget.adding)
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        initialValue: source,
-                        decoration: const InputDecoration(
-                          labelText: 'Sipariş Türü',
-                        ),
-                        items: ['Masa', 'Gel-Al']
-                            .map(
-                              (v) => DropdownMenuItem(value: v, child: Text(v)),
-                            )
-                            .toList(),
-                        onChanged: (v) => setState(() => source = v ?? 'Masa'),
+            ),
+            Text(
+              '$quantity ürün',
+              style: const TextStyle(color: Color(0xff7c8b80)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          source == 'Masa'
+              ? (table == null
+                    ? 'Önce masa seçin'
+                    : 'Masa $table${widget.adding ? ' · Ek Sipariş' : ''}')
+              : 'Gel-Al · $pickup',
+          style: const TextStyle(color: emerald, fontWeight: FontWeight.w700),
+        ),
+        const Divider(height: 24),
+        Expanded(
+          child: counts.isEmpty
+              ? const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.add_shopping_cart_rounded,
+                        size: 46,
+                        color: Color(0xffa6bca8),
                       ),
-                    ),
-                  if (!widget.adding) const SizedBox(width: 12),
-                  if (source == 'Masa')
-                    Expanded(
-                      child: DropdownButtonFormField<int>(
-                        initialValue: table,
-                        decoration: const InputDecoration(labelText: 'Masa'),
-                        items: List.generate(
-                          5,
-                          (i) => DropdownMenuItem(
-                            value: i + 1,
-                            child: Text('Masa ${i + 1}'),
-                          ),
+                      SizedBox(height: 14),
+                      Text('Sepet henüz boş'),
+                      SizedBox(height: 6),
+                      Text(
+                        'Ürün kartına dokunarak ekleyin.',
+                        style: TextStyle(
+                          color: Color(0xff7c8b80),
+                          fontSize: 12,
                         ),
-                        onChanged: widget.adding
-                            ? null
-                            : (v) => setState(() => table = v),
                       ),
-                    ),
-                  if (source == 'Gel-Al')
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        initialValue: pickup,
-                        decoration: const InputDecoration(
-                          labelText: 'Teslim Alma',
-                        ),
-                        items: ['Tezgahtan', 'Telefon']
-                            .map(
-                              (v) => DropdownMenuItem(value: v, child: Text(v)),
-                            )
-                            .toList(),
-                        onChanged: (v) =>
-                            setState(() => pickup = v ?? 'Tezgahtan'),
-                      ),
-                    ),
-                ],
-              ),
-              if (source == 'Gel-Al' && !widget.adding)
-                OutlinedButton(
-                  onPressed: () async {
-                    final v = await askFields(context, 'Gel-Al Bilgileri', [
-                      ('Ad', '${pickupCustomer['name'] ?? ''}'),
-                      ('Telefon', '${pickupCustomer['phone'] ?? ''}'),
-                      ('Teslim alma saati', '${pickupCustomer['time'] ?? ''}'),
-                    ]);
-                    if (v != null && mounted) {
-                      setState(
-                        () => pickupCustomer = {
-                          'name': v[0],
-                          'phone': v[1],
-                          'time': v[2],
-                        },
-                      );
-                    }
-                  },
-                  child: const Text('Gel-Al Müşteri / Saat Bilgisi'),
-                ),
-              const SizedBox(height: 15),
-              const Text('Ürüne dokunun: not ve çıkarılan malzemeler.'),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
+                    ],
+                  ),
+                )
+              : ListView(
                   children: [
-                    for (final x in [
-                      ('all', 'Tümü'),
-                      ('wrap', 'Dürümler'),
-                      ('plate', 'Porsiyonlar'),
-                      ('meze', 'Mezeler'),
-                      ('fatte', 'Fatte'),
-                      ('side', 'Diğer'),
-                      ('salad', 'Salatalar'),
-                      ('dessert', 'Tatlı'),
-                      ('drink', 'İçecekler'),
-                    ])
-                      Padding(
-                        padding: const EdgeInsets.only(right: 7),
-                        child: ChoiceChip(
-                          label: Text(x.$2),
-                          selected: category == x.$1,
-                          onSelected: (_) => setState(() => category = x.$1),
-                        ),
-                      ),
+                    for (final entry in counts.entries)
+                      (() {
+                        final p = widget.products.firstWhere(
+                          (p) => p.id == entry.key,
+                        );
+                        return Container(
+                          key: ValueKey('basket-${p.id}'),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(color: Color(0xffedf0ea)),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                p.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                formatTry(cents(p.price) * entry.value),
+                                style: const TextStyle(
+                                  color: emerald,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              if ((notes[p.id] ?? '').isNotEmpty)
+                                Text(
+                                  notes[p.id]!,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xff7c8b80),
+                                  ),
+                                ),
+                              if ((removed[p.id] ?? []).isNotEmpty)
+                                Text(
+                                  'Çıkar: ${removed[p.id]!.join(', ')}',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextButton(
+                                      onPressed: () => customize(p),
+                                      child: const Text('Not / Malzeme'),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: '${p.name} azalt',
+                                    onPressed: () => change(p, -1),
+                                    icon: const Icon(
+                                      Icons.remove_circle_outline,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${entry.value}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: '${p.name} artır',
+                                    onPressed: () => change(p, 1),
+                                    icon: const Icon(Icons.add_circle_outline),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      })(),
                   ],
                 ),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: filtered.length,
-                  itemBuilder: (context, i) {
-                    final p = filtered[i], qty = counts[p.id] ?? 0;
-                    return ListTile(
-                      title: Text(
-                        p.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        const Divider(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('TOPLAM', style: TextStyle(fontWeight: FontWeight.w700)),
+            Text(
+              formatTry(total),
+              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        FilledButton.icon(
+          key: const ValueKey('save-order'),
+          onPressed: counts.isEmpty || (source == 'Masa' && table == null)
+              ? null
+              : save,
+          icon: const Icon(Icons.check_circle_outline),
+          label: const Text('Siparişi Kaydet'),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Ctrl + Enter ile kaydet',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 10, color: Color(0xff7c8b80)),
+        ),
+      ],
+    ),
+  );
+  @override
+  Widget build(BuildContext context) {
+    final available = widget.products.map((p) => p.category).toSet();
+    final labels = {
+      ...categories,
+      for (final id in available)
+        if (!categories.containsKey(id)) id: id,
+    };
+    final filtered = widget.products
+        .where(
+          (p) => search.trim().isEmpty
+              ? p.category == category
+              : searchKey(p.name).contains(searchKey(search.trim())),
+        )
+        .toList();
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.enter, control: true): save,
+      },
+      child: Dialog(
+        insetPadding: const EdgeInsets.all(20),
+        backgroundColor: cream,
+        child: SizedBox(
+          width: 1220,
+          height: MediaQuery.sizeOf(context).height * .89,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.restaurant_menu_rounded, color: emerald),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        widget.adding ? 'Ek Sipariş' : 'Sipariş Al',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                      subtitle: Text(
-                        p.price == null
-                            ? 'Fiyat belirlenmedi'
-                            : '${formatTry(cents(p.price))} · ${notes[p.id] ?? ''}',
-                      ),
-                      onTap: () async {
-                        final v = await askFields(context, p.name, [
-                          ('Ürün notu', notes[p.id] ?? ''),
-                          (
-                            'Çıkarılan malzemeler (virgülle)',
-                            (removed[p.id] ?? []).join(', '),
+                    ),
+                    IconButton(
+                      tooltip: 'Kapat',
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (widget.adding)
+                  Text(
+                    source == 'Masa'
+                        ? 'Masa $table · Mevcut hesaba ürün ekle'
+                        : 'Gel-Al · Mevcut siparişe ürün ekle',
+                    style: const TextStyle(
+                      color: emerald,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      for (final type in ['Masa', 'Gel-Al'])
+                        ChoiceChip(
+                          label: Text(type),
+                          selected: source == type,
+                          onSelected: (_) => setState(() => source = type),
+                        ),
+                      const SizedBox(width: 8),
+                      if (source == 'Masa')
+                        for (var n = 1; n <= 5; n++)
+                          ChoiceChip(
+                            key: ValueKey('select-table-$n'),
+                            label: Text('Masa $n'),
+                            selected: table == n,
+                            onSelected: (_) => setState(() => table = n),
                           ),
-                        ]);
-                        if (v != null && mounted) {
-                          setState(() {
-                            notes[p.id] = v[0];
-                            removed[p.id] = v[1]
-                                .split(',')
-                                .map((s) => s.trim())
-                                .where((s) => s.isNotEmpty)
-                                .toList();
-                          });
-                        }
-                      },
-                      trailing: p.price == null
-                          ? const Text(
-                              'Fiyat yok',
-                              style: TextStyle(color: Colors.deepOrange),
-                            )
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
+                      if (source == 'Gel-Al') ...[
+                        for (final channel in ['Tezgahtan', 'Telefon'])
+                          ChoiceChip(
+                            label: Text(channel),
+                            selected: pickup == channel,
+                            onSelected: (_) => setState(() => pickup = channel),
+                          ),
+                        TextButton.icon(
+                          onPressed: () async {
+                            final v = await askFields(
+                              context,
+                              'Gel-Al Bilgileri',
+                              [
+                                ('Ad', '${pickupCustomer['name'] ?? ''}'),
+                                ('Telefon', '${pickupCustomer['phone'] ?? ''}'),
+                                (
+                                  'Teslim alma saati',
+                                  '${pickupCustomer['time'] ?? ''}',
+                                ),
+                              ],
+                            );
+                            if (v != null && mounted) {
+                              setState(
+                                () => pickupCustomer = {
+                                  'name': v[0],
+                                  'phone': v[1],
+                                  'time': v[2],
+                                },
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.person_outline, size: 18),
+                          label: const Text('Müşteri Bilgisi'),
+                        ),
+                      ],
+                    ],
+                  ),
+                const SizedBox(height: 18),
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, c) {
+                      final wide = c.maxWidth >= 1000;
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (wide) ...[
+                            SizedBox(
+                              width: 142,
+                              child: ListView(
+                                children: [
+                                  const Padding(
+                                    padding: EdgeInsets.only(bottom: 14),
+                                    child: Text(
+                                      'MENÜ',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xff7c8b80),
+                                        letterSpacing: 1.3,
+                                      ),
+                                    ),
+                                  ),
+                                  for (final e in labels.entries)
+                                    if (available.contains(e.key))
+                                      categoryButton(e.key, e.value),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                          ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                IconButton(
-                                  onPressed: qty > 0
-                                      ? () => setState(() {
-                                          if (qty == 1) {
-                                            counts.remove(p.id);
-                                          } else {
-                                            counts[p.id] = qty - 1;
-                                          }
-                                        })
-                                      : null,
-                                  icon: const Icon(Icons.remove_circle_outline),
+                                TextField(
+                                  key: const ValueKey('catalog-search'),
+                                  controller: searchController,
+                                  decoration: const InputDecoration(
+                                    prefixIcon: Icon(Icons.search),
+                                    hintText: 'Ürün ara…',
+                                  ),
+                                  onChanged: (v) => setState(() => search = v),
                                 ),
-                                Text(
-                                  '$qty',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
+                                const SizedBox(height: 12),
+                                if (!wide)
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: [
+                                        for (final e in labels.entries)
+                                          if (available.contains(e.key))
+                                            categoryButton(e.key, e.value),
+                                      ],
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Text(
+                                    search.isEmpty
+                                        ? '${labels[category]} · ${filtered.length} ürün'
+                                        : '${filtered.length} arama sonucu',
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
                                 ),
-                                IconButton(
-                                  onPressed: () =>
-                                      setState(() => counts[p.id] = qty + 1),
-                                  icon: const Icon(
-                                    Icons.add_circle,
-                                    color: emerald,
-                                  ),
+                                Expanded(
+                                  child: filtered.isEmpty
+                                      ? const Center(
+                                          child: Text('Ürün bulunamadı.'),
+                                        )
+                                      : GridView.builder(
+                                          gridDelegate:
+                                              const SliverGridDelegateWithMaxCrossAxisExtent(
+                                                maxCrossAxisExtent: 220,
+                                                mainAxisExtent: 164,
+                                                crossAxisSpacing: 12,
+                                                mainAxisSpacing: 12,
+                                              ),
+                                          itemCount: filtered.length,
+                                          itemBuilder: (context, i) {
+                                            final p = filtered[i],
+                                                qty = counts[p.id] ?? 0;
+                                            return Material(
+                                              color: qty > 0
+                                                  ? const Color(0xfff1f7eb)
+                                                  : Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              child: InkWell(
+                                                key: ValueKey(
+                                                  'product-${p.id}',
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                onTap: p.price == null
+                                                    ? null
+                                                    : () => change(p, 1),
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(
+                                                    15,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(
+                                                      color: qty > 0
+                                                          ? const Color(
+                                                              0xff9eb99f,
+                                                            )
+                                                          : const Color(
+                                                              0xffe4e9e3,
+                                                            ),
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          16,
+                                                        ),
+                                                  ),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          Icon(
+                                                            icon(p.category),
+                                                            color: emerald,
+                                                          ),
+                                                          const Spacer(),
+                                                          if (qty > 0)
+                                                            Container(
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        8,
+                                                                    vertical: 4,
+                                                                  ),
+                                                              decoration: BoxDecoration(
+                                                                color:
+                                                                    const Color(
+                                                                      0xffdcead8,
+                                                                    ),
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      99,
+                                                                    ),
+                                                              ),
+                                                              child: Text(
+                                                                'Sepette $qty',
+                                                                style: const TextStyle(
+                                                                  fontSize: 11,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w700,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 10,
+                                                      ),
+                                                      Expanded(
+                                                        child: Text(
+                                                          p.name,
+                                                          maxLines: 2,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style:
+                                                              const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w800,
+                                                                fontSize: 14,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: Text(
+                                                              p.price == null
+                                                                  ? 'Fiyat belirlenmedi'
+                                                                  : formatTry(
+                                                                      cents(
+                                                                        p.price,
+                                                                      ),
+                                                                    ),
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w700,
+                                                                fontSize:
+                                                                    p.price ==
+                                                                        null
+                                                                    ? 11
+                                                                    : 14,
+                                                                color:
+                                                                    p.price ==
+                                                                        null
+                                                                    ? Colors
+                                                                          .deepOrange
+                                                                    : dark,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          Icon(
+                                                            p.price == null
+                                                                ? Icons.block
+                                                                : Icons
+                                                                      .add_circle_rounded,
+                                                            color:
+                                                                p.price == null
+                                                                ? Colors.grey
+                                                                : emerald,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
                                 ),
                               ],
                             ),
-                    );
-                  },
+                          ),
+                          const SizedBox(width: 18),
+                          SizedBox(
+                            width: c.maxWidth < 900 ? 280 : 320,
+                            child: basket(),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-              const Divider(),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Ürün: ${counts.values.fold<int>(0, (a, b) => a + b)} · Toplam: ${formatTry(totalCents)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Vazgeç'),
-                  ),
-                  const SizedBox(width: 10),
-                  FilledButton.icon(
-                    onPressed:
-                        counts.isEmpty || (source == 'Masa' && table == null)
-                        ? null
-                        : () {
-                            final lines = <Json>[];
-                            for (final entry in counts.entries) {
-                              final product = widget.products.firstWhere(
-                                (p) => p.id == entry.key,
-                              );
-                              lines.add({
-                                'productId': product.id,
-                                'productKey': product.name,
-                                'name': product.name,
-                                'price': product.price,
-                                'qty': entry.value,
-                                'removed': removed[product.id] ?? <String>[],
-                                'note': notes[product.id] ?? '',
-                              });
-                            }
-                            Navigator.pop(
-                              context,
-                              OrderRequest(
-                                source: source,
-                                table: source == 'Masa' ? table : null,
-                                pickupChannel: pickup,
-                                lines: lines,
-                                customer: pickupCustomer,
-                              ),
-                            );
-                          },
-                    icon: const Icon(Icons.save),
-                    label: const Text('Siparişi Kaydet'),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

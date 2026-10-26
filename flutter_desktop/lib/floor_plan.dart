@@ -1,13 +1,10 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'pos_logic.dart';
+import 'floor_geometry.dart';
 
-const floorDefaults = <int, Rect>{
-  1: Rect.fromLTWH(.456, .130, .143, .135),
-  2: Rect.fromLTWH(.255, .165, .130, .113),
-  3: Rect.fromLTWH(.265, .424, .343, .174),
-  4: Rect.fromLTWH(.261, .710, .346, .178),
-  5: Rect.fromLTWH(.032, .676, .076, .148),
+final floorDefaults = <int, Rect>{
+  for (final e in floorGeometry.entries)
+    e.key: Rect.fromLTWH(e.value[0], e.value[1], e.value[2], e.value[3]),
 };
 
 Map<int, Rect> positionsFromJson(Object? value) {
@@ -87,53 +84,59 @@ class RestaurantFloorPlan extends StatelessWidget {
               style: const TextStyle(color: Color(0xff718275), fontSize: 12),
             ),
             const SizedBox(height: 15),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final width = math.max(740.0, constraints.maxWidth);
-                final height = width * 640 / 1075;
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: width,
-                    height: height,
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: CustomPaint(painter: _FloorPainter(positions)),
-                        ),
-                        Positioned(
-                          left: width * .137,
-                          top: height * .274,
-                          child: const Text(
-                            'KAPI',
-                            style: TextStyle(
-                              color: Color(0xffbd6b5c),
-                              fontSize: 13,
-                              letterSpacing: 2,
-                              fontWeight: FontWeight.w900,
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final width =
+                      constraints.maxWidth < constraints.maxHeight * 1075 / 640
+                      ? constraints.maxWidth
+                      : constraints.maxHeight * 1075 / 640;
+                  final height = width * 640 / 1075;
+                  return Center(
+                    child: SizedBox(
+                      width: width,
+                      height: height,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: CustomPaint(
+                              painter: _FloorPainter(positions),
                             ),
                           ),
-                        ),
-                        Positioned(
-                          right: 22,
-                          top: height * .36,
-                          child: const Text(
-                            'OTURMA ALANI',
-                            style: TextStyle(
-                              color: Color(0xffa0b5a0),
-                              fontSize: 10,
-                              letterSpacing: 2,
-                              fontWeight: FontWeight.bold,
+                          Positioned(
+                            left: width * .137,
+                            top: height * .274,
+                            child: const Text(
+                              'KAPI',
+                              style: TextStyle(
+                                color: Color(0xffbd6b5c),
+                                fontSize: 13,
+                                letterSpacing: 2,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
                           ),
-                        ),
-                        for (final n in [2, 1, 3, 4, 5])
-                          _table(context, n, width, height),
-                      ],
+                          Positioned(
+                            right: 22,
+                            top: height * .36,
+                            child: const Text(
+                              'OTURMA ALANI',
+                              style: TextStyle(
+                                color: Color(0xffa0b5a0),
+                                fontSize: 10,
+                                letterSpacing: 2,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          for (final n in [2, 1, 3, 4, 5])
+                            _table(context, n, width, height),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ],
         ),

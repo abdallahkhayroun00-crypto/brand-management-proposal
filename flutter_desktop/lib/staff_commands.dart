@@ -1,5 +1,6 @@
 import 'pos_logic.dart';
 import 'pos_store.dart';
+import 'order_actions.dart';
 
 class StaffConflict implements Exception {
   const StaffConflict();
@@ -7,15 +8,29 @@ class StaffConflict implements Exception {
 
 /// Server owns prices, active-worker checks, table merging and kitchen jobs.
 /// Phones submit intentions; no employee endpoint accepts financial state.
-Json submitStaffOrder(PosStore store, Json payload) {
+Json submitStaffOrder(
+  PosStore store,
+  Json payload, {
+  StaffPrincipal? principal,
+  StaffAuth? auth,
+}) {
   final id = payload['requestId'];
   if (id is! String) throw const FormatException('İstek kimliği gerekli');
-  return store.command(id, payload, (s) {
+  if (principal != null) auth!.validatePrincipal(principal);
+  final commandId = principal == null ? id : auth!.commandKey(principal, id);
+  final authoritative = {
+    ...payload,
+    if (principal != null) 'staffId': principal.employeeId,
+  };
+  return store.command(commandId, authoritative, (s) {
+    if (principal != null) auth!.validatePrincipal(principal);
     if (payload['expectedRevision'] != store.read().revision) {
       throw const StaffConflict();
     }
     final staff = asMaps(s['employees'])
-        .where((e) => e['id'] == payload['staffId'] && e['active'] == true)
+        .where(
+          (e) => e['id'] == authoritative['staffId'] && e['active'] == true,
+        )
         .firstOrNull;
     if (staff == null) throw const FormatException('Aktif personel seçin');
     final source = payload['source'];
@@ -95,6 +110,51 @@ Json submitStaffOrder(PosStore store, Json payload) {
         };
       }
     }
+    (s.putIfAbsent('activity', () => <dynamic>[]) as List).add({
+      'id': commandId,
+      'orderId': order['id'],
+      'action': existing == null ? 'Sipariş Al' : 'Ek Sipariş',
+      'actor':
+          principal?.actor ??
+          {'kind': 'staff', 'id': staff['id'], 'name': staff['name']},
+      'at': DateTime.now().toUtc().toIso8601String(),
+      'platformSync': 'Yerel',
+    });
     return {'ok': true, 'orderId': order['id'], 'requestId': id};
+  });
+}
+
+Json submitStaffReady(
+  PosStore store,
+  StaffAuth auth,
+  StaffPrincipal p,
+  Json payload,
+) {
+  auth.validatePrincipal(p);
+  final id = payload['requestId'];
+  if (id is! String || payload['orderId'] is! int) {
+    throw const FormatException('İstek / sipariş gerekli');
+  }
+  return store.command(auth.commandKey(p, id), payload, (s) {
+    auth.validatePrincipal(p);
+    return requestOrderAction(s, payload['orderId'] as int, 'ready', p.actor);
+  });
+}
+
+Json submitStaffRetry(
+  PosStore store,
+  StaffAuth auth,
+  StaffPrincipal p,
+  Json payload,
+) {
+  auth.validatePrincipal(p);
+  final id = payload['requestId'];
+  if (id is! String || payload['operationId'] is! String) {
+    throw const FormatException('İşlem gerekli');
+  }
+  return store.command(auth.commandKey(p, id), payload, (s) {
+    auth.validatePrincipal(p);
+    retryOrderAction(s, payload['operationId'] as String, p.actor);
+    return {'ok': true, 'operationId': payload['operationId']};
   });
 }

@@ -8,6 +8,82 @@ import 'package:nohut_falafel_desktop/platform_workflows.dart';
 import 'package:nohut_falafel_desktop/operations.dart';
 
 void main() {
+  testWidgets(
+    'PC categorized product cards preserve basket across filters and save quantities to chosen table',
+    (tester) async {
+      final folder = Directory.systemTemp.createTempSync('nohut-composer-'),
+          file = '${folder.path}/pos.sqlite3';
+      tester.view.physicalSize = const Size(1280, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox.shrink());
+        folder.deleteSync(recursive: true);
+      });
+      final seed = PosStore(databaseFile: file), s = seed.read().data;
+      s['localMenu'] = [
+        {'id': 0, 'name': 'Falafel Dürüm', 'category': 'wrap', 'price': 140},
+        {
+          'id': 1,
+          'name': 'Falafel Porsiyon',
+          'category': 'plate',
+          'price': 200,
+        },
+        {'id': 2, 'name': 'Ayran', 'category': 'drink', 'price': 30},
+      ];
+      seed.replace(s, 0);
+      seed.dispose();
+      await tester.pumpWidget(
+        NohutFalafelApp(databaseFile: file, startServer: false),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('+ Sipariş Al'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const ValueKey('product-0')), findsOneWidget);
+      expect(find.byKey(const ValueKey('product-1')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('select-table-2')));
+      await tester.tap(find.byKey(const ValueKey('product-0')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('category-drink')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('product-0')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('product-2')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('basket-0')), findsOneWidget);
+      expect(find.byKey(const ValueKey('basket-2')), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const ValueKey('catalog-search')),
+        'Porsiyon',
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('product-1')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('category-wrap')));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const ValueKey('catalog-search')))
+            .controller!
+            .text,
+        isEmpty,
+      );
+      await tester.tap(find.byTooltip('Falafel Dürüm artır'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.byKey(const ValueKey('save-order')));
+      await tester.pumpAndSettle();
+      final saved = PosStore(databaseFile: file),
+          order = asMaps(saved.read().data['orders']).single;
+      expect(order['table'], 2);
+      expect(orderTotalCents(order), 31000);
+      expect(
+        checkLines(order).fold<int>(0, (n, l) => n + (l.line['qty'] as int)),
+        3,
+      );
+      saved.dispose();
+    },
+  );
   for (final size in [const Size(1600, 900), const Size(1280, 720)]) {
     testWidgets(
       'manager and workflow navigation at ${size.width} without role chooser',
@@ -68,7 +144,8 @@ void main() {
           'Tüm Siparişler',
           'Kasa & Ödemeler',
           'Yazdırma Kuyruğu',
-          'Personel Yönetimi',
+          'Fiş & Fatura',
+          'Personel & QR',
           'Raporlar',
           'Ayarlar',
           'Online Siparişler',
@@ -78,6 +155,118 @@ void main() {
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull, reason: label);
           expect(find.text(label), findsAtLeastNWidgets(2));
+          if (label == 'Fiş & Fatura') {
+            await tester.tap(
+              find.byKey(const ValueKey('work-tab-Satış Belgeleri')),
+            );
+            await tester.pumpAndSettle();
+            expect(
+              tester.takeException(),
+              isNull,
+              reason: 'Fiscal provider gating at ${size.width}',
+            );
+            final issue = tester.widget<FilledButton>(
+              find.widgetWithText(
+                FilledButton,
+                'Mali Fatura Kes · Sağlayıcı Gerekli',
+              ),
+            );
+            expect(issue.onPressed, isNull);
+            await tester.tap(
+              find.byKey(const ValueKey('work-tab-Hesap Özeti')),
+            );
+            await tester.pumpAndSettle();
+          }
+          if (label == 'Ayarlar') {
+            for (final section in [
+              'Menü & Fiyatlar',
+              'Platform API',
+              'Yazıcı',
+              'Veri & Yedek',
+              'Genel',
+            ]) {
+              await tester.tap(
+                find.byKey(ValueKey('settings-section-$section')),
+              );
+              await tester.pumpAndSettle();
+              expect(
+                tester.takeException(),
+                isNull,
+                reason: 'Settings $section at ${size.width}',
+              );
+            }
+          }
+          if (label == 'Raporlar') {
+            for (final tab in [
+              'Tahsilatlar',
+              'Ürünler',
+              'Personel',
+              'Platform Mutabakatı',
+              'Özet',
+            ]) {
+              await tester.tap(find.byKey(ValueKey('work-tab-$tab')));
+              await tester.pumpAndSettle();
+              expect(
+                tester.takeException(),
+                isNull,
+                reason: 'Reports $tab at ${size.width}',
+              );
+            }
+          }
+          if (label == 'Kasa & Ödemeler') {
+            for (final tab in [
+              'Günlük Kasa',
+              'Kasa Geçmişi',
+              'Nakit Hareketleri',
+              'Açık Hesaplar',
+            ]) {
+              await tester.tap(find.byKey(ValueKey('work-tab-$tab')));
+              await tester.pumpAndSettle();
+              expect(
+                tester.takeException(),
+                isNull,
+                reason: 'Cash $tab at ${size.width}',
+              );
+            }
+          }
+          if (label == 'Masalar') {
+            for (var n = 1; n <= 5; n++) {
+              expect(
+                tester.getRect(find.text('Masa $n')).bottom,
+                lessThan(size.height),
+              );
+            }
+            await tester.tap(find.text('Masa 3'));
+            await tester.pumpAndSettle();
+            expect(
+              tester.takeException(),
+              isNull,
+              reason: 'selected table with side check',
+            );
+            expect(
+              tester
+                  .getRect(find.byKey(const ValueKey('order-payment')))
+                  .bottom,
+              lessThan(size.height),
+            );
+          }
+          if (label == 'Personel & QR') {
+            expect(find.text('Personel Wi-Fi'), findsNothing);
+            expect(
+              tester.getRect(find.text('Telefon Bağla · QR Oluştur')).bottom,
+              lessThan(size.height),
+            );
+            expect(find.text('Telefon Bağlantıları'), findsOneWidget);
+            await tester.tap(find.text('Personel Bilgileri'));
+            await tester.pumpAndSettle();
+            expect(
+              tester.takeException(),
+              isNull,
+              reason: 'Staff directory at ${size.width}',
+            );
+            await tester.tap(find.text('Telefon Bağlantıları'));
+            await tester.pumpAndSettle();
+          }
         }
         for (final tab in [
           'Mağaza',
