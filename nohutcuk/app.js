@@ -45,6 +45,7 @@
   ];
   const $ = id => document.getElementById(id);
   const audio=window.NohutcukAudio;
+  const voice=window.NohutcukVoice;
   const els = {
     face:$('faceContent'),svg:$('face'),screen:$('screen'),robot:$('robot'),
     bubble:$('speechBubble'),currentMood:$('currentMood'),currentEvent:$('currentEvent'),
@@ -57,15 +58,15 @@
   const state = {
     mood:'normal',label:'Idle • Blink • Glance',token:0,timeout:0,bubbleTimeout:0,motionTimeout:0,
     palette:'expressive',customColor:'#a7edff',duration:3.5,blinkEvery:3,speed:1,
-    autoBlink:true,autoSleep:false,voice:false,quiet:false,effects:false,volume:.5,language:'tr-TR',
+    autoBlink:true,autoSleep:false,voice:true,quiet:false,effects:false,volume:.5,language:'tr-TR',
     blinkStarted:0,nextBlink:Date.now()+2400,glanceX:0,glanceY:0,lastPointer:0,
     lastInteraction:Date.now(),lastGlance:Date.now(),lastWelcome:0,friendship:0,
     previewSequence:0,frame:0
   };
   const phrases = {
-    welcome:{'tr-TR':'Hoş geldiiin!','en-US':'Hellooo!','ar-MA':'مرحبا بيك!'},
+    welcome:{'tr-TR':'Hoş geldin!','en-US':'Welcome!','ar-MA':'مرحبا بيك!'},
     pet:{'tr-TR':'Çok teşekkür ederim!','en-US':'Thank you!','ar-MA':'شكراً بزاف!'},
-    goodbye:{'tr-TR':'Yine gel, tamam mı?','en-US':'Come back soon!','ar-MA':'عاود زورنا!'},
+    goodbye:{'tr-TR':'Yine beklerim!','en-US':'See you again!','ar-MA':'عاود زورنا!'},
     ready:{'tr-TR':'Afiyet olsun!','en-US':'Enjoy your meal!','ar-MA':'بالصحة والراحة!'},
     birthday:{'tr-TR':'İyi ki doğdun!','en-US':'Happy birthday!','ar-MA':'عيد ميلاد سعيد!'}
   };
@@ -88,17 +89,12 @@
     els.bubble.classList.remove('is-hidden');
     state.bubbleTimeout=setTimeout(()=>els.bubble.classList.add('is-hidden'),ms);
   }
-  function say(key) {
-    if(!state.voice || state.quiet || !('speechSynthesis' in window)) return;
-    const text=phrases[key] && phrases[key][state.language];
-    if(!text)return;
-    try {
-      window.speechSynthesis.cancel();
-      const utterance=new SpeechSynthesisUtterance(text);
-      utterance.lang=state.language;utterance.rate=1.08;utterance.pitch=1.28;utterance.volume=.72;
-      window.speechSynthesis.speak(utterance);
-    } catch(err){log('Browser voice is unavailable: '+err.message);}
+  function say(key){
+    // Only explicitly selected moments speak. The voice engine enforces silence between phrases.
+    if(!state.voice||state.quiet)return false;
+    return voice.speak(key);
   }
+
   function clearMotion(){
     clearTimeout(state.motionTimeout);
     els.robot.classList.remove('is-dancing','is-nodding','is-waving');
@@ -132,7 +128,7 @@
     motion(options.motion||'',options.duration||2000);
     if(options.bubble)bubble(options.bubble,options.duration||3000);
     if(options.say)say(options.say);
-    if(options.sound!==false&&options.interactive!==false&&state.effects&&!state.quiet)audio.playEffect(id);
+    if(options.sound!==false&&!options.say&&options.interactive!==false&&state.effects&&!state.quiet)audio.playEffect(id);
     if(options.log!==false)log(state.label+' → '+BY_ID[id].name);
     const delay=typeof options.duration==='number'?options.duration:state.duration*1000/state.speed;
     if(delay>0 && id!=='normal'){
@@ -151,11 +147,11 @@
       state.lastWelcome=t;
       setMood('hello',{label:'Proximity sensor • simulated',motion:'nod',bubble:phrases.welcome[state.language],say:'welcome'});return;
     }
-    if(action==='touch1'){setMood('happy',{label:'Head touch ×1 • simulated',motion:'nod',bubble:'Başımı okşa! 💚',say:'pet'});return;}
+    if(action==='touch1'){setMood('happy',{label:'Head touch ×1 • simulated',motion:'nod',bubble:'🥹💚'});return;}
     if(action==='touch2'){setMood('shy',{label:'Head touch ×2 • simulated',motion:'tilt',bubble:'Awww 🥹'});return;}
-    if(action==='touch3'){setMood('love',{label:'Head touch ×3 • simulated',motion:'nod',bubble:'Seni seviyorum! 💕'});return;}
+    if(action==='touch3'){setMood('love',{label:'Head touch ×3 • simulated',motion:'nod',bubble:'Çok tatlısın! 💕',say:'love'});return;}
     if(action==='touchLong'){setMood('sleeping',{label:'Long head touch • relax',bubble:'Mmm... 😌'});return;}
-    if(action==='wave'){setMood('hello',{label:'Wave / button • simulated',motion:'wave',bubble:phrases.welcome[state.language],say:'welcome'});return;}
+    if(action==='wave'){setMood('hello',{label:'Wave / button • simulated',motion:'wave',bubble:'👋💚'});return;}
     if(action==='friendship'){
       state.friendship=(state.friendship%4)+1;
       els.friendCount.textContent=state.friendship+' / 4';
@@ -174,8 +170,8 @@
     if(action==='dance'){setMood('celebrating',{label:'Dance mode',motion:'dance',duration:4500/state.speed,bubble:'Hadi dans edelim! 🎵',sound:false});if(state.effects&&!state.quiet)startSong('dance');return;}
     if(action==='cool'){setMood('cool',{label:'Cool mode',motion:'tilt',bubble:'Çok havalı! 😎'});return;}
     if(action==='loveAttack'){setMood('love',{label:'Love attack',motion:'nod',bubble:'💗💗💗'});return;}
-    if(action==='falafel'){setMood('hungry',{label:'Falafel lover',motion:'nod',bubble:'Falafel! 🧆'});return;}
-    if(action==='photo'){setMood('happy',{label:'Photo mode • holds pose 10s',duration:10000,motion:'tilt',bubble:'Çek bakalım! 📸'});return;}
+    if(action==='falafel'){setMood('hungry',{label:'Falafel lover',motion:'nod',bubble:'Afiyet olsun! 🧆',say:'falafel'});return;}
+    if(action==='photo'){setMood('happy',{label:'Photo mode • holds pose 10s',duration:10000,motion:'tilt',bubble:'Gülümse! 📸',say:'photo'});return;}
     if(action==='selfie'){setMood('shy',{label:'Selfie pose',duration:5000,motion:'tilt',bubble:'Selfie! 🤳'});return;}
     if(action==='instagram'){setMood('love',{label:'Instagram mode',motion:'nod',bubble:'Beni etiketle! #Nohutçuk'});return;}
     if(action==='reels'){setMood('celebrating',{label:'Reels performance',motion:'dance',duration:6000,bubble:'Nohutçuk Reels 🎬',sound:false});if(state.effects&&!state.quiet)startSong('dance');return;}
@@ -377,6 +373,37 @@
   });
   localPlayer.addEventListener('ended',()=>{$('musicStatus').textContent='Local audio finished';});
   window.addEventListener('pagehide',()=>{if(localFileUrl)URL.revokeObjectURL(localFileUrl);});
+  // Short, intentionally rare voice clips — manual samples ignore automatic cooldown.
+  voice.onChange(({status,key,text})=>{
+    const messages={
+      speaking:'Speaking: '+text+' 🗣️',
+      ended:'Speech finished ✓',
+      cooldown:'Staying quiet for a moment (22-second pause between phrases).',
+      unsupported:'Browser voice is not supported; try Chrome or Edge.',
+      error:'Voice unavailable. Try a different system voice.'
+    };
+    $('voiceStatus').textContent=messages[status]||status;
+  });
+  document.querySelectorAll('[data-voice]').forEach(btn=>btn.addEventListener('click',()=>{
+    const key=btn.dataset.voice;
+    if(!state.voice){
+      $('voiceStatus').textContent='Enable “Occasional talking” below to hear voice samples.';
+      return;
+    }
+    if(state.quiet){
+      $('voiceStatus').textContent='Quiet mode is on — turn it off to test voice.';
+      return;
+    }
+    // Don't overlap spoken preview and optional synthesized melody.
+    audio.stopSong();
+    stopLocal();
+    voice.preview(key);
+    log('Voice test • '+voice.getPhrase(key));
+  }));
+  $('stopVoice').addEventListener('click',()=>{
+    voice.stop();
+    $('voiceStatus').textContent='Voice stopped.';
+  });
   function refreshSettings(){
     state.palette=els.palette.value;
     state.customColor=els.customColor.value;
@@ -393,6 +420,7 @@
     audio.setEffectsEnabled(state.effects);
     audio.setVolume(state.volume);
     audio.setMuted(state.quiet);
+    voice.setOptions({enabled:state.voice,quiet:state.quiet,language:state.language,volume:state.volume});
     localPlayer.volume=state.volume;
     if(state.quiet&&!localPlayer.paused)localPlayer.pause();
     $('volumeValue').textContent=Math.round(state.volume*100)+'%';
@@ -400,7 +428,7 @@
     $('blinkValue').textContent=state.blinkEvery+'s';
     $('speedValue').textContent=state.speed+'×';
     document.documentElement.style.setProperty('--speed',state.speed);
-    if(state.quiet){clearMotion();try{window.speechSynthesis.cancel();}catch(_){}}
+    if(state.quiet){clearMotion();voice.stop();}
     draw();
   }
   ['paletteSelect','customColor','languageSelect','durationRange','blinkRange','speedRange','autoBlink','autoSleep','voiceEnabled','effectsEnabled','quietMode','volumeRange'].forEach(id=>{
