@@ -3,6 +3,23 @@
 > **Status: concept & product requirements, not yet manufactured.** Nohutçuk is the friendly, modular, animated mascot for **Nohut Falafel**, designed to interact with guests, appear in social media, and eventually receive safe restaurant-event notifications.
 
 
+## ✅ Full Shop-Day Simulation — 82 cases
+
+**Try it:** open [Nohutçuk Eye Studio](./index.html) and select **Shop Day Tests**.
+
+The mascot now includes a completely simulated operating-day rule engine in [day.js](day.js) with **82 named opening-to-closing situations**, **63 safety/service mode checks**, and **4,000 reproducible stress events** over 50 simulated workdays. Test inputs use an **example schedule of 10:45–21:30**. This is not a real operating-hours feed or proof of physical sensor performance.
+
+**Full numbered checklist:** [DAY_SCENARIOS.md](docs/DAY_SCENARIOS.md) (all 82 situations grouped into 8 shop phases).
+
+- Eight phases from pre-opening through opening, first guests, lunch rush, afternoon, evening, closing and after-hours.
+- 30-second welcome debounce/cooldown, infrequent voice, child/accidental touch safeguards, worker-controlled birthday/photo and touch-safe 10-second poses.
+- No talking/dance during rush, mute, cleaning or fault; idle rest; safe response to Wi-Fi outage, lost power, reconnection, unsafe input, repeated commands and closure.
+- Live browser **Shop Day Tests** panel: run all scenarios; filter and select individual situations; preview a silent, accelerated day. A "pass" can mean **correctly ignoring** an event.
+- The separate personal-character tabs stay independent of a real restaurant schedule. No external delivery-platform APIs, payments, customer data or hardware are wired into the test simulation.
+- Automated acceptance: `node nohutcuk/tests/day.mjs` plus `node nohutcuk/tests/smoke.mjs` for UI wiring. GitHub Actions runs both.
+
+**Important:** this proves the specified simulated software state transitions, **not** operation with real touch/proximity sensors, actual speaker/servo electronics, real-time Wi-Fi events or the restaurant POS application. Those remain separate hardware/integration tasks.
+
 ## 🌈 Multicolor Eye & Sound Studio — live browser simulator
 
 **Live preview:** https://abdallahkhayroun00-crypto.github.io/brand-management-proposal/nohutcuk/
