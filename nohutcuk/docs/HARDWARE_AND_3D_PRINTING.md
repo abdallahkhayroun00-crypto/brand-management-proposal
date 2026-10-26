@@ -2,6 +2,16 @@
 
 > **Concept / engineering backlog. Nothing here is a tested STL or a final electrical diagram.**
 
+## Screen-fit update — 3.2-inch ILI9341 chosen (2026-10-27)
+
+**New screen choice:** 3.2-inch SPI ILI9341 240×320 (landscape 320×240). **Voltaj MZK-6 without touch** is a candidate retail module in Türkiye, not yet ordered. It lists a PCB **89.3 mm horizontal × 55.04 mm vertical** and display active image approximately **64.8 × 48.6 mm** in landscape. Hardware pins and any backlight connector must be verified on the actual supplier model.
+
+**Old CAD cannot be printed as final:** Current outer head ~100×58×50 mm with a placeholder display opening 77×34 mm. The 55.04-mm-tall PCB leaves ~3 mm in the **outer** head dimension — insufficient allowance for two enclosure walls, PCB supports and cable bends. The active picture is 48.6 mm tall, also larger than the opening.
+
+**Mechanical concept only:** Revisit outer head around **115 mm wide × 75–80 mm high**, with sufficient internal depth and a viewing aperture just slightly larger than the 64.8×48.6-mm active view, depending on glass mask and required lens overlap. These dimensions are **NOT approved CAD**: validate the exact PCB size, mounting holes, connector orientation, antenna clearance and wall thickness first. Preserve rounded black head proportions, green sprout, Nohut Falafel styling and comfortable child-facing edges. Reposition servo pivot according to the new head's measured center of mass.
+
+**No fixed STLs/STEP have been updated to 3.2-inch geometry**; retain the existing meshes as historical prototypes and do not claim print fit.
+
 ## Visual target and reference dimensions
 
 - Rounded rectangular **matte-black head**, recessed dark OLED face, minimal bright animated eye shapes.
