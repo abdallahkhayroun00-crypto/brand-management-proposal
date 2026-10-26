@@ -373,6 +373,56 @@
   });
   localPlayer.addEventListener('ended',()=>{$('musicStatus').textContent='Local audio finished';});
   window.addEventListener('pagehide',()=>{if(localFileUrl)URL.revokeObjectURL(localFileUrl);});
+  // The character voice is adjustable, but the browser still supplies its speech timbre.
+  function refreshAvailableVoices(){
+    const selector=$('voiceChoice');
+    const requested=selector.value||'auto';
+    const list=voice.getVoices(state.language);
+    selector.replaceChildren();
+    const opt=document.createElement('option');
+    opt.value='auto';
+    opt.textContent='Auto · best matching voice';
+    selector.appendChild(opt);
+    list.forEach(item=>{
+      const option=document.createElement('option');
+      option.value=item.voiceURI;
+      option.textContent=item.name+' ('+item.lang+')';
+      selector.appendChild(option);
+    });
+    selector.value=list.some(v=>v.voiceURI===requested)?requested:'auto';
+    $('voiceHint').textContent=list.length?
+      'Try the 3 character personalities with any of '+list.length+' voices on this device.':
+      'No matching '+state.language+' system voice was found. The browser may use its default accent; a real recorded clip is the best choice.';
+  }
+  if(window.speechSynthesis?.addEventListener){
+    window.speechSynthesis.addEventListener('voiceschanged',refreshAvailableVoices);
+  }
+  $('voiceStyle').addEventListener('change',refreshSettings);
+  $('voiceChoice').addEventListener('change',refreshSettings);
+  $('voiceClipFor').addEventListener('change',()=>{
+    $('voiceClipFile').value='';
+    $('customClipStatus').textContent=voice.clipLoaded($('voiceClipFor').value)?
+      'A custom clip is loaded for this phrase in this session.':
+      'No custom clip for this phrase yet.';
+  });
+  $('voiceClipFile').addEventListener('change',()=>{
+    const file=$('voiceClipFile').files?.[0];
+    if(!file)return;
+    const key=$('voiceClipFor').value;
+    if(voice.setClip(key,file)){
+      $('customClipStatus').textContent='✓ '+file.name+' loaded for '+voice.getPhrase(key)+'. Press the phrase above to hear it.';
+      log('Character voice clip loaded locally for '+key+' (not uploaded).');
+    }else{
+      $('customClipStatus').textContent='Please select a supported audio clip.';
+    }
+  });
+  $('clearVoiceClip').addEventListener('click',()=>{
+    const key=$('voiceClipFor').value;
+    voice.setClip(key,null);
+    $('voiceClipFile').value='';
+    $('customClipStatus').textContent='Custom recording cleared for '+key+'. Browser voice will be used.';
+    voice.stop();
+  });
   // Short, intentionally rare voice clips — manual samples ignore automatic cooldown.
   voice.onChange(({status,key,text})=>{
     const messages={
@@ -420,7 +470,8 @@
     audio.setEffectsEnabled(state.effects);
     audio.setVolume(state.volume);
     audio.setMuted(state.quiet);
-    voice.setOptions({enabled:state.voice,quiet:state.quiet,language:state.language,volume:state.volume});
+    voice.setOptions({enabled:state.voice,quiet:state.quiet,language:state.language,volume:state.volume,
+      style:$('voiceStyle').value,selectedVoiceURI:$('voiceChoice').value||'auto'});
     localPlayer.volume=state.volume;
     if(state.quiet&&!localPlayer.paused)localPlayer.pause();
     $('volumeValue').textContent=Math.round(state.volume*100)+'%';
@@ -462,6 +513,7 @@
     draw();
     requestAnimationFrame(tick);
   }
+  refreshAvailableVoices();
   refreshSettings();
   setMood('normal',{duration:0,log:false,interactive:false,label:'Idle • Blink • Glance'});
   log('Nohutçuk Eye Studio ready. All events are simulated.');
