@@ -65,7 +65,8 @@ const fakeVoice={
   onChange(fn){this.callback=fn;},speak(key){spoken.push('auto:'+key);return true;},
   preview(key){spoken.push('preview:'+key);if(this.callback)this.callback({status:'speaking',key,text:key});return true;},
   getPhrase(key){return key;},stop(){spoken.push('stop');},
-  setOptions(options){this.options=options;}
+  setOptions(options){this.options=options;},getVoices(){return [{name:'Türkçe test',lang:'tr-TR',voiceURI:'test-tr'}];},
+  clipLoaded(){return false;},setClip(){return true;}
 };
 for(const key of ['welcome','thanks','love','goodbye','falafel','birthday']){
   const el=document.createElement('button');el.dataset.voice=key;
@@ -106,6 +107,11 @@ assert.ok(playLog.includes('stop'),'stop music button should stop playback');
 byId('effectsEnabled').checked=true;byId('effectsEnabled').emit('change');
 assert.ok(playLog.includes('enabled:true'),'auto effect switch should enable effects');
 byId('volumeRange').value='35';byId('volumeRange').emit('input');
+byId('voiceStyle').value='zipir';byId('voiceStyle').emit('change');
+assert.equal(fakeVoice.options.style,'zipir','character voice style is forwarded');
+assert.ok(byId('voiceChoice').children.length>=2,'system voice dropdown is populated');
+byId('voiceClipFor').value='welcome';
+byId('clearVoiceClip').emit('click');
 assert.ok(playLog.includes('volume:0.35'),'volume slider should update gain');
 assert.equal(fakeVoice.options.volume,.35,'voice preview volume follows main volume');
 assert.ok(spoken.includes('auto:welcome'),'welcome should have one short spoken cue');
