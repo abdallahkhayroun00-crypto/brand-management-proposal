@@ -21,17 +21,16 @@
 **No need to buy everything immediately.** Start with the main board, exact LCD module, jumper wires and safe power. Verify that the colorful eyes run before choosing a body-sized sound/sensor/motor layout.
 
 ## Reference sources (manufacturer / engineering docs)
-- Waveshare exact standalone 8-pin panel, part #23822: https://www.waveshare.com/wiki/1.9inch_LCD_Module
-- Waveshare listing with module footprint: https://www.waveshare.com/1.9inch-LCD-Module.htm
+- Selected 3.2-inch non-touch 4-wire SPI retail candidate, Voltaj MZK-6: https://www.voltaj.net/tft-lcd-spi-seri-arayuzlu3.2-incili9341-ekran-modulu-dokunmatiksiz
+- Reference 3.2-inch ILI9341 panel active area and board geometry: https://www.raystar-optronics.com/3.2-3.5-3.9-tft-lcd-display/240x320-ili9341.html
 - Espressif DevKitC-1 pin map, variants and power: https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/user_guide_v1.0.html
 - Adafruit VL53L0X **carrier**: https://learn.adafruit.com/adafruit-vl53l0x-micro-lidar-distance-sensor-breakout/pinouts
 - Adafruit MAX98357A amplifier and speaker limits: https://learn.adafruit.com/adafruit-max98357-i2s-class-d-mono-amp/pinouts
-- Official controller graphics reference: https://github.com/waveshareteam/ESP32-S3-LCD-1.9/blob/main/02_Example/Arduino/07_Hello_World_GFX/07_Hello_World_GFX.ino
 - PlatformIO board ID: https://docs.platformio.org/en/latest/boards/espressif32/esp32-s3-devkitc-1.html
 
 ## Bench-only pin proposal (ESP32-S3-DevKitC-1)
 
-These are **GPIO numbers, not physical connector positions or an approved final harness**. Read \`firmware/include/pins.h\` before connecting anything.
+These are **provisional ESP32 GPIO assignments only**, NOT actual 3.2-inch module pin numbers or an approved wiring harness. The Voltaj MZK-6 full pinout has NOT been independently verified. **Do not connect a screen until seller photos/schematic and voltage levels have been checked.** Read `firmware/include/pins.h`.
 
 | Display breakout pin | DevKit GPIO | Purpose |
 |---|---|---|
@@ -44,7 +43,7 @@ These are **GPIO numbers, not physical connector positions or an approved final 
 | RST | GPIO8 | Reset |
 | BL | GPIO7 | Backlight **control**, not LED power; check module version and schematic |
 
-Software initializes Arduino_ST7789 with native 170×320, offset 35, rotation 1 to 320×170. Library is \`moononournation/GFX Library for Arduino\`. **If screen is clipped or mirrored, adjust offsets and rotation, not display wiring blindly.**
+Default software now initializes **Arduino_ILI9341**, 240×320 rotated to 320×240 for the selected 3.2-inch face. The prior 2.4-inch profile has the same pixel geometry, not necessarily the same electrical connector. Library is \`moononournation/GFX Library for Arduino\`. **If screen is clipped or mirrored, adjust offsets and rotation, not display wiring blindly.**
 
 For later **optional** testing:
 - TTP223 OUT (3.3V signal) → GPIO4, VCC according to breakout spec, GND common. One capacitive pad on insulated body head.
@@ -58,8 +57,8 @@ ESP32-S3 **GPIO19/GPIO20 (native USB), GPIO0/45/46 (bootstrapping/restrictions)*
 
 1. **No mains AC wires**, no exposed lithium pack/charger experiments. Use approved enclosed low-voltage supply.
 2. ESP32 pins are **3.3V logic**. Never connect any 5V output directly to an ESP32 GPIO.
-3. The LCD breakout has onboard conversion circuitry but its VCC and input levels must agree; for our initial tests prefer 3.3V.
-4. Backlight is *control signal* in the referenced module, not a license to drive bare LED strings from GPIO. Verify **this exact SKU** before enabling.
+3. **Do not assume the purchased 3.2-inch breakout includes level conversion**. Check actual seller pinout, onboard regulator, panel VCC and 3.3V-compatible SPI signal levels before providing power.
+4. Backlight pin may be an LED supply or control depending on the module. **Do not connect GPIO7 to BL until the actual 3.2-inch PCB's circuit and rating are verified.**
 5. Measure idle and peak currents and enclosure temperature; don't size final power from assumed values.
 6. Test **screen only** before attaching speaker, touch, ToF or servo.
 7. A safe motor design needs actual head mass, servo stall-current data, mechanical hard stops, screw retention and cable strain relief. Current code does not drive motors.
@@ -72,7 +71,7 @@ ESP32-S3 **GPIO19/GPIO20 (native USB), GPIO0/45/46 (bootstrapping/restrictions)*
 3. After comparing your real board/module revision with the pin map, wire **LCD + ESP32 only**. Keep motor and amplifier absent.
 4. Connect the ESP32 board to PC with a USB data cable; \`pio run -d nohutcuk/firmware -t upload\` and \`pio device monitor -b 115200\`.
 5. Serial commands: \`help\`, \`list\`, \`next\`, \`demo\`, \`mood happy\`, \`mood love\`, \`mood celebrating\`, \`tap1\`, \`tap2\`, \`tap3\`, \`long\`, \`photo\`, \`selfie\`, \`stop\`, \`greet\`, \`quiet on\`.
-6. Validate all 20 moods, portrait-to-landscape fit, true pink/blue/mint/yellow, blinking visibility, heat, stable screen brightness and no random restarts. Photograph results; adapt face proportions if panel is too small.
+6. Validate all 20 moods, 320×240 landscape, pink/blue/mint/yellow, blinking, viewing angle, backlight behavior, heat, and stable operation. Photograph results; redesign 100×58 mm head and 77×34 mm viewing aperture for the 3.2-inch PCB/active image.
 7. Add a TTP223 with \`NOHUT_ENABLE_TOUCH=1\` only after checking its output voltage, touch sensitivity, and insulation; test all gesture windows and false triggers.
 8. Add VL53L0X with \`NOHUT_ENABLE_TOF=1\` only after confirming breakout/I2C pins and installing \`Adafruit VL53L0X\` dependency. Test guest range hysteresis (enter at ~650mm, reset after >1000mm), no repeated welcome within 30s.
 9. Only then tackle short WAV/MP3 recordings, speaker/amplifier, quiet controls and safe servo movement.
