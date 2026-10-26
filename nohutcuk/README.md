@@ -7,7 +7,7 @@
 
 **Full researched shortlist:** [BOM_TURKIYE.md](docs/BOM_TURKIYE.md), covering controller, LCD options, touch/proximity/gesture, voice amp/speaker, head servo, power, small electronics, wiring, 3D hardware, research links and provisional Turkish price references.
 
-**Purchase decision (27 October 2026): buy ONE Waveshare 2.4-inch ILI9341 SPI TFT (SKU 18366), not the 1.9-inch reference. No order placed or hardware wired yet.** Official board is 70.5×43.3 mm and active screen is 48.96×36.72 mm horizontally, **taller than the existing 77×34 mm bezel opening**. Do not finalize CAD or print yet. **C++ firmware now defaults to the 2.4-inch ILI9341 (320x240)**; the legacy 1.9-inch ST7789V2 remains an optional reference. **Both builds pass GitHub CI; physical testing is pending.** This is documented so we do not accidentally buy a screen incompatible with the code.
+**Latest decision (27 October 2026): ONE 3.2-inch ILI9341 SPI TFT screen; no 2.4-inch or 1.9-inch purchase.** A concrete non-touch Turkish retail candidate is **Voltaj MZK-6** (4-wire SPI, PCB 89.3×55.04 mm in landscape, active image about 64.8×48.6 mm). The current 100×58-mm outer head and 77×34-mm viewing aperture are too small for mechanically safe installation; **resize head and front bezel before printing**. Default PlatformIO profile now `esp32-s3-ili9341-32` (320×240). Matching a controller does not guarantee identical header or voltage wiring. Screen is **not ordered, wired, or physically tested**. See [BOM_TURKIYE.md](docs/BOM_TURKIYE.md).
 
 ## ✅ Full Shop-Day Simulation — 82 cases
 
@@ -37,7 +37,7 @@ The mascot now includes a completely simulated operating-day rule engine in [day
 - [Host C++ tests](firmware/tests/character_test.cpp) — 20 emotion roundtrips, 30-second hello debounce, photo lock, sleep, quiet mode, uint32 clock rollover.
 - [Firmware build CI](https://github.com/abdallahkhayroun00-crypto/brand-management-proposal/actions/workflows/nohutcuk-firmware.yml) — checks native logic and attempts an actual PlatformIO ESP32-S3 compilation.
 
-**Proposed color face:** the **standalone 8-pin Waveshare 1.9inch IPS LCD Module, ST7789V2 170×320** rotated to 320×170, plus **Espressif ESP32-S3-DevKitC-1**. The module measures about 51.2×27.3 mm and its visible area about 42.72×22.70 mm. This fits nominally within the CAD prototype's placeholder opening (77×34 mm), but may **look too small compared to the artwork**; do not lock the outer shell without seeing the real panel first. This is a test-platform selection, not the final confirmed hardware package.
+**Selected color face:** **3.2-inch ILI9341 240×320 SPI TFT (320×240 landscape)** with Espressif ESP32-S3-DevKitC-1. The previously considered 1.9-inch and 2.4-inch displays are **not to be purchased**. Current CAD head (100×58mm) must grow to accommodate the ~89.3×55mm no-touch MZK-6 board, its viewing aperture and wiring. Validate the specific supplier breakout and dimensions before print.
 
 **Safety:** servo, amplifier and Wi-Fi-PC integration are NOT turned on in this initial firmware. TTP223 head touch and VL53L0X carrier distance sensor are future opt-in flags. This code is **not yet confirmed on a physically wired screen**; the GitHub C++/PlatformIO build is only a compile test. Browser JavaScript remains separate and operational.
 
