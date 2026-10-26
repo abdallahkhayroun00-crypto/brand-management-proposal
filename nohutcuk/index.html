@@ -107,6 +107,15 @@
           <div class="voice-box">
             <div class="voice-heading"><span>🗣️ <strong>Mini voice lines</strong></span><span class="voice-light">OCCASIONAL</span></div>
             <p>Short phrases for welcoming someone, 3× head touch, goodbye, falafel or a birthday. Normal expressions stay silent. The robot waits at least 22 seconds between automatic phrases.</p>
+            <div class="character-voice-settings">
+              <label for="voiceStyle">Nohutçuk voice personality
+                <select id="voiceStyle"><option value="minik">🌱 Minik Nohutçuk · tiny & playful</option><option value="yumusak">🥹 Yumuşacık · softer and sweet</option><option value="zipir">⚡ Zıpır · silly and energetic</option></select>
+              </label>
+              <label for="voiceChoice">Installed voice (same language)
+                <select id="voiceChoice"><option value="auto">Auto · best available voice</option></select>
+              </label>
+            </div>
+            <p class="character-hint" id="voiceHint">Try Minik, Yumuşacık, or Zıpır. This changes pitch and speed; the underlying voice still comes from your browser.</p>
             <div class="voice-samples">
               <button type="button" data-voice="welcome"><span>👋</span><strong>Hoş geldin!</strong><small>Welcome</small></button>
               <button type="button" data-voice="thanks"><span>💚</span><strong>Teşekkür ederim!</strong><small>Thanks</small></button>
@@ -115,8 +124,17 @@
               <button type="button" data-voice="falafel"><span>🧆</span><strong>Afiyet olsun!</strong><small>Falafel</small></button>
               <button type="button" data-voice="birthday"><span>🎂</span><strong>İyi ki doğdun!</strong><small>Birthday</small></button>
             </div>
+            <div class="custom-clip">
+              <label for="voiceClipFor">Use a real Nohutçuk voice recording (optional)</label>
+              <div class="clip-controls">
+                <select id="voiceClipFor" aria-label="Phrase for custom audio"><option value="welcome">Hoş geldiiin!</option><option value="thanks">Teşekkür ederim!</option><option value="love">Çok tatlısın!</option><option value="goodbye">Yine beklerim!</option><option value="falafel">Afiyet olsun!</option><option value="photo">Gülümse!</option><option value="birthday">İyi ki doğdun!</option></select>
+                <input id="voiceClipFile" type="file" accept="audio/*" aria-label="Select recorded audio for selected phrase">
+                <button type="button" id="clearVoiceClip">Clear</button>
+              </div>
+              <small id="customClipStatus">MP3/WAV clips play instead of browser speech for the selected phrase. Files stay only in this browser session.</small>
+            </div>
             <div class="voice-footer"><span id="voiceStatus" role="status">Tap a phrase to test speech. Language follows Voice language below.</span><button type="button" id="stopVoice">Stop voice</button></div>
-            <small class="voice-note">Preview uses your device's Turkish, English or Arabic text-to-speech voice. Recorded robot voice files can be added after we choose the final sound.</small>
+            <small class="voice-note">Character presets make browser speech brighter but cannot create a truly new human voice. For the best Nohutçuk character, load short pre-recorded clips above. No customer audio is recorded.</small>
           </div>
           <h3 class="sound-heading">Optional original tunes <span>Play only when selected</span></h3>
           <div class="audio-status" aria-live="polite"><span class="audio-led"></span><span id="musicStatus">Choose a song to start listening 🎵</span><button type="button" id="stopMusic" class="stop-music">■ Stop</button></div>
