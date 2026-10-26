@@ -28,14 +28,14 @@ const state = {
       source: "Masa",
       table: 3,
       serviceStatus: "Hazırlanıyor",
-      batches: [],
+      batches: [{id: 1, lines: [{name: 'Falafel Dürüm', qty: 2, note: 'Sos ayrı', removed: ['Soğan']}]}],
       operations: [],
     },
     {
       id: 1201,
       source: "Trendyol Go",
       demoRemoteStatus: "Created",
-      batches: [],
+      batches: [{id: 1, lines: [{name: 'Falafel Porsiyon', qty: 1, note: '', removed: []}]}],
       operations: [],
     },
   ],
@@ -94,6 +94,7 @@ const server = http.createServer((req, res) => {
       );
       await page.locator("#floor button").first().waitFor();
       assert.equal(await page.locator("#floor button").count(), 5);
+      if (process.env.NOHUT_UI_SCREENSHOT_DIR) await page.screenshot({path:path.join(process.env.NOHUT_UI_SCREENSHOT_DIR, 'phone-floor-'+width+'.png'), fullPage:true});
       await page.locator('#floor [data-table="3"]').click();
       assert.equal(await page.locator('[data-add="0"]').count(), 1);
       assert.equal(await page.locator('[data-add="2"]').count(), 0);
@@ -188,6 +189,16 @@ const server = http.createServer((req, res) => {
       assert.equal(attempts[0].lines[0].qty, 1);
       assert.equal(attempts[0].lines[0].note, "Sos ayrı");
       assert.deepEqual(attempts[0].lines[0].removed, ["Soğan"]);
+      await page.locator('[data-tab="orders"]').click();
+      if (process.env.NOHUT_UI_SCREENSHOT_DIR) await page.screenshot({path:path.join(process.env.NOHUT_UI_SCREENSHOT_DIR, 'phone-orders-'+width+'.png'), fullPage:true});
+      await page.locator('#order-source').selectOption('Online');
+      assert.equal(await page.locator('#orders .order').count(), 1);
+      assert.equal(await page.locator('[data-ready]').count(), 0, 'Unaccepted platform order has no staff ready action');
+      await page.locator('#order-source').selectOption('Tümü');
+      await page.locator('#order-search').fill('durum');
+      assert.equal(await page.locator('#orders .order').count(), 1);
+      assert.equal(await page.locator('[data-ready="1200"]').count(), 1);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       assert.equal(
         await page.getByRole("button", { name: /Kabul|Reddet/ }).count(),
         0,

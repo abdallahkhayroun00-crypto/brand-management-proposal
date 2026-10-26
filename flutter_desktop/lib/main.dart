@@ -12,7 +12,10 @@ import 'platform_workflows.dart';
 import 'staff_qr_ui.dart';
 import 'platform_api.dart';
 import 'platform_runtime.dart';
-import 'platform_settings_ui.dart';
+import 'settings_workspace.dart';
+import 'reports_workspace.dart';
+import 'cash_workspace.dart';
+import 'staff_directory.dart';
 import 'dashboard_insights.dart';
 import 'platform_ui.dart';
 import 'order_action_ui.dart';
@@ -545,7 +548,16 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(24),
-                      child: ['tables', 'orders', 'printer'].contains(page)
+                      child:
+                          [
+                            'tables',
+                            'orders',
+                            'printer',
+                            'settings',
+                            'reports',
+                            'payments',
+                            'online',
+                          ].contains(page)
                           ? _page(data)
                           : SingleChildScrollView(
                               child: ConstrainedBox(
@@ -1073,8 +1085,43 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
   Widget _online(Json db) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      PlatformPanel(state: db, edit: _edit),
-      OrderActionLog(state: db, edit: _edit),
+      Expanded(
+        child: PlatformPanel(state: db, edit: _edit),
+      ),
+      const SizedBox(height: 8),
+      Align(
+        alignment: Alignment.centerRight,
+        child: OutlinedButton.icon(
+          onPressed: () => showDialog<void>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Platform İşlem Kaydı'),
+              content: SizedBox(
+                width: 1000,
+                height: 500,
+                child: SingleChildScrollView(
+                  child: ListenableBuilder(
+                    listenable: store,
+                    builder: (context, _) => OrderActionLog(
+                      state: store.read().data,
+                      edit: _edit,
+                      initiallyExpanded: true,
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Kapat'),
+                ),
+              ],
+            ),
+          ),
+          icon: const Icon(Icons.history, size: 18),
+          label: const Text('İşlem Kaydı / Platform Senkronizasyonu'),
+        ),
+      ),
     ],
   );
 
@@ -1317,108 +1364,38 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     );
   }
 
-  Widget _payments(Json db) {
-    final locals = asMaps(db['orders'])
-        .where(
-          (o) =>
-              (o['source'] == 'Masa' || o['source'] == 'Gel-Al') &&
-              orderDueCents(o) > 0,
-        )
-        .toList();
-    final totalDue = locals.fold<int>(0, (s, o) => s + orderDueCents(o));
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _sectionTitle(
-          'Kasa & Ödemeler',
-          'Bütün ödemeler Kasa (PC) tarafından işlenir. Telefonlarda ödeme ekranı yoktur.',
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: _metric(
-                'Açık Hesaplar',
-                '${locals.length}',
-                Icons.receipt_long,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _metric(
-                'Restoran Alacağı',
-                formatTry(totalDue),
-                Icons.payments,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        _notice(
-          'Kart tahsilatı bu sürümde banka POS terminaline otomatik aktarılmaz. Fiziksel mali fiş / ÖKC entegrasyonu yoktur.',
-        ),
-        const SizedBox(height: 13),
-        Card(
-          child: Column(
-            children: [
-              if (locals.isEmpty)
-                const ListTile(title: Text('Açık ödeme bulunmuyor')),
-              for (final o in locals)
-                ListTile(
-                  title: Text(
-                    '#${o['id']} · ${o['source']}${o['table'] == null ? '' : ' · Masa ${o['table']}'}',
-                  ),
-                  subtitle: Text('Toplam ${formatTry(orderTotalCents(o))}'),
-                  trailing: FilledButton(
-                    onPressed: () {
-                      setState(() {
-                        selectedOrder = o['id'] as int;
-                        page = 'orders';
-                      });
-                    },
-                    child: Text('Kalan ${formatTry(orderDueCents(o))}'),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        CashPanel(state: db, edit: _edit),
-      ],
-    );
-  }
+  Widget _payments(Json db) => CashWorkspace(
+    state: db,
+    edit: _edit,
+    onOrder: (id) => setState(() {
+      selectedOrder = id;
+      page = 'orders';
+    }),
+  );
 
   Widget _printer(Json db) => PrinterWorkspace(state: db, edit: _edit);
 
   Widget _staff(Json db) => StaffQrPanel(
     server: lan,
-    editor: StaffPanel(state: db, edit: _edit),
+    editor: StaffDirectory(state: db, edit: _edit),
   );
 
-  Widget _reports(Json db) => ReportsPanel(state: db, edit: _edit);
-
-  Widget _settings(Json db) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      PlatformConnectionsPanel(runtime: runtime),
-      SettingsPanel(state: db, edit: _edit, store: store),
-    ],
+  Widget _reports(Json db) => ReportsWorkspace(
+    state: db,
+    edit: _edit,
+    onOrder: (id) => setState(() {
+      selectedOrder = id;
+      page = 'orders';
+    }),
   );
 
-  Widget _notice(String text) => Container(
-    padding: const EdgeInsets.all(15),
-    decoration: BoxDecoration(
-      color: const Color(0xfffff1d9),
-      border: Border.all(color: const Color(0xfff0dbb2)),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Text(
-      text,
-      style: const TextStyle(
-        color: Color(0xff775624),
-        fontSize: 12,
-        height: 1.5,
-      ),
-    ),
+  Widget _settings(Json db) => SettingsWorkspace(
+    state: db,
+    edit: _edit,
+    store: store,
+    runtime: runtime,
+    onStaff: () => _switch('staff'),
+    onPrinter: () => _switch('printer'),
   );
 }
 

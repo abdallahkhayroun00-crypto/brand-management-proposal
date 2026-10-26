@@ -2,13 +2,21 @@ import 'package:flutter/material.dart';
 import 'operations_ui.dart';
 import 'pos_logic.dart';
 import 'order_actions.dart';
+import 'workspace_ui.dart';
 
 class OrderActionLog extends StatelessWidget {
-  const OrderActionLog({super.key, required this.state, required this.edit});
+  const OrderActionLog({
+    super.key,
+    required this.state,
+    required this.edit,
+    this.initiallyExpanded = false,
+  });
   final Json state;
   final EditState edit;
+  final bool initiallyExpanded;
   @override
   Widget build(BuildContext context) => ExpansionTile(
+    initiallyExpanded: initiallyExpanded,
     title: const Text('Sipariş İşlem Kaydı / Platform Senkronizasyonu'),
     children: [
       for (final j in orderOperations(state).reversed)
@@ -21,7 +29,7 @@ class OrderActionLog extends StatelessWidget {
                 : 'Reddet'}',
           ),
           subtitle: Text(
-            'Personel: ${j['actor']['name']} · Saat: ${j['at']}\nPlatform Senkronizasyonu: ${j['status']} · ${j['error']}\nDeneme: ${j['attempts']}',
+            'Personel: ${j['actor']['name']} · Saat: ${istanbulTime(j['at'])}\nPlatform Senkronizasyonu: ${j['status']} · ${j['error']}\nDeneme: ${j['attempts']}',
           ),
           trailing: j['status'] == 'Hata'
               ? OutlinedButton(

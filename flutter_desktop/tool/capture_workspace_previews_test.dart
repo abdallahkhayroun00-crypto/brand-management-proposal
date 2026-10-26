@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nohut_falafel_desktop/main.dart';
 import 'package:nohut_falafel_desktop/pos_store.dart';
 import 'package:nohut_falafel_desktop/pos_logic.dart';
+import 'package:nohut_falafel_desktop/operations.dart';
+import 'package:nohut_falafel_desktop/platform_workflows.dart';
 
 void main() {
   testWidgets('capture native workspace previews', (tester) async {
@@ -73,6 +75,27 @@ void main() {
         ],
       );
     }
+    openCash(state, 10000);
+    state['localMenu'] = [
+      {'id': 0, 'name': 'Falafel Dürüm', 'category': 'wrap', 'price': 140},
+      {'id': 1, 'name': 'Ayran', 'category': 'drink', 'price': 30},
+    ];
+    seedPlatformMenu(state, asMaps(state['localMenu']));
+    final first = asMaps(state['orders']).first;
+    recordPayment(first, 14000, 'Nakit', receivedCents: 14000);
+    refundPayment(first, 0, 2000, 'Örnek iade');
+    moveCash(state, -1000, 'Örnek sarf gideri');
+    importPlatform(state, platformFixture(state, 'Trendyol Go', 'card'));
+    importPlatform(state, platformFixture(state, 'Yemeksepeti', 'card'));
+    final completed = importPlatform(
+      state,
+      platformFixture(state, 'Trendyol Go', 'card'),
+    )!;
+    externalPlatformEvent(state, completed['id'] as int, 'Delivered');
+    sampleClaim(state, completed['id'] as int, 'PAY_BACK');
+    sampleReview(state, 'Trendyol Go');
+    sampleSettlement(state, completed['id'] as int);
+    queuePlatform(state, 'sync', 'Trendyol Go', 'Trendyol Go', {});
     store.replace(state, 0);
     store.dispose();
     final boundary = GlobalKey();
@@ -98,11 +121,23 @@ void main() {
         final img = await render.toImage();
         final bytes = await img.toByteData(format: ui.ImageByteFormat.png);
         await File(
-          '${output.path}/preview-$name-v5.png',
+          '${output.path}/preview-$name-v6.png',
         ).writeAsBytes(bytes!.buffer.asUint8List());
         img.dispose();
       });
     }
+
+    Future<void> navigate(String label) async {
+      await tester.scrollUntilVisible(
+        find.text(label).first,
+        150,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text(label).first);
+      await tester.pumpAndSettle();
+    }
+
+    await capture('dashboard');
 
     await tester.tap(find.text('Masalar').first);
     await tester.pumpAndSettle();
@@ -110,6 +145,8 @@ void main() {
     await tester.pumpAndSettle();
     await capture('tables');
     await tester.tap(find.text('Tüm Siparişler').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('order-row-1201')));
     await tester.pumpAndSettle();
     await capture('orders');
     await tester.tap(find.byKey(const ValueKey('detail-tab-Hesap Böl')));
@@ -131,6 +168,74 @@ void main() {
     await tester.tap(find.text('Yazdırma Kuyruğu').first);
     await tester.pumpAndSettle();
     await capture('printer');
+    await navigate('Kasa & Ödemeler');
+    await capture('cash-open-orders');
+    for (final e in {
+      'Günlük Kasa': 'cash-session',
+      'Kasa Geçmişi': 'cash-history',
+      'Nakit Hareketleri': 'cash-movements',
+    }.entries) {
+      await tester.tap(find.byKey(ValueKey('work-tab-${e.key}')));
+      await tester.pumpAndSettle();
+      await capture(e.value);
+    }
+    await navigate('Personel & QR');
+    await capture('staff-qr');
+    await tester.tap(find.text('Personel Bilgileri'));
+    await tester.pumpAndSettle();
+    await capture('staff-directory');
+    await navigate('Raporlar');
+    await capture('reports-summary');
+    for (final e in {
+      'Tahsilatlar': 'reports-collections',
+      'Ürünler': 'reports-products',
+      'Personel': 'reports-staff',
+      'Platform Mutabakatı': 'reports-finance',
+    }.entries) {
+      await tester.tap(find.byKey(ValueKey('work-tab-${e.key}')));
+      await tester.pumpAndSettle();
+      await capture(e.value);
+    }
+    await navigate('Ayarlar');
+    await capture('settings-general');
+    for (final e in {
+      'Menü & Fiyatlar': 'settings-menu',
+      'Platform API': 'settings-api',
+      'Yazıcı': 'settings-printer',
+      'Veri & Yedek': 'settings-backup',
+    }.entries) {
+      await tester.tap(find.byKey(ValueKey('settings-section-${e.key}')));
+      await tester.pumpAndSettle();
+      if (e.key == 'Menü & Fiyatlar') {
+        final row = find
+            .byWidgetPredicate(
+              (w) =>
+                  w is ListTile &&
+                  w.key is ValueKey &&
+                  '${(w.key as ValueKey).value}'.startsWith(
+                    'settings-product-',
+                  ),
+            )
+            .first;
+        await tester.tap(row);
+        await tester.pumpAndSettle();
+      }
+      await capture(e.value);
+    }
+    await navigate('Online Siparişler');
+    await capture('online-orders');
+    for (final e in {
+      'Mağaza': 'online-store',
+      'Menü': 'online-menu',
+      'İade Talepleri': 'online-claims',
+      'Değerlendirmeler': 'online-reviews',
+      'Faturalar': 'online-invoices',
+      'Senkronizasyon': 'online-sync',
+    }.entries) {
+      await tester.tap(find.text(e.key).first);
+      await tester.pumpAndSettle();
+      await capture(e.value);
+    }
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'platform_api.dart';
 import 'platform_runtime.dart';
 import 'platform_workflows.dart';
+import 'workspace_ui.dart';
 
 class PlatformConnectionsPanel extends StatefulWidget {
   const PlatformConnectionsPanel({super.key, required this.runtime});
@@ -13,6 +14,8 @@ class PlatformConnectionsPanel extends StatefulWidget {
 
 class _PlatformConnectionsPanelState extends State<PlatformConnectionsPanel> {
   int revision = 0;
+  String selected = 'Trendyol Go';
+  final testing = <String>{};
   Future<void> configure(String source) async {
     PlatformCredentials old;
     try {
@@ -227,63 +230,167 @@ class _PlatformConnectionsPanelState extends State<PlatformConnectionsPanel> {
     builder: (context, _) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 14),
-          child: Text(
-            'Platform API Bağlantıları',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-          ),
+        workHeading(
+          'Platform API Bağlantıları',
+          'Resmi hesap bilgileri Windows güvenli deposunda saklanır.',
         ),
-        for (final source in platformSources)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        WorkTabs(
+          values: platformSources,
+          selected: selected,
+          onChanged: (v) => setState(() => selected = v),
+        ),
+        const SizedBox(height: 16),
+        WorkCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
                 children: [
-                  Text(
-                    source == 'Trendyol Go'
-                        ? 'Uber Eats Trendyol Go · Yemek'
-                        : source,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  CircleAvatar(
+                    radius: 26,
+                    backgroundColor: const Color(0xffedf3e8),
+                    child: Icon(
+                      Icons.delivery_dining,
+                      color: selected == 'Trendyol Go'
+                          ? Colors.deepOrange
+                          : Colors.pink,
+                    ),
                   ),
-                  Text(
-                    widget.runtime.statuses[source] ??
-                        'API bilgileri girilmedi · Bağlı değil',
-                  ),
-                  Wrap(
-                    spacing: 7,
-                    children: [
-                      OutlinedButton(
-                        onPressed: () => configure(source),
-                        child: const Text('API Kodunu / Bilgilerini Gir'),
-                      ),
-                      OutlinedButton(
-                        onPressed: () => widget.runtime.testConnection(source),
-                        child: const Text('Bağlantıyı Test Et'),
-                      ),
-                      OutlinedButton(
-                        onPressed: () async {
-                          try {
-                            await widget.runtime.vault.remove(source);
-                            widget.runtime.statuses[source] =
-                                'Anahtarlar kaldırıldı · Bağlı değil';
-                          } catch (_) {
-                            widget.runtime.statuses[source] =
-                                'Güvenli depo açılamadı; silme onaylanmadı';
-                          }
-                          if (mounted) setState(() => revision++);
-                        },
-                        child: const Text('Kayıtlı Anahtarları Kaldır'),
-                      ),
-                    ],
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          selected == 'Trendyol Go'
+                              ? 'Uber Eats Trendyol Go · Yemek'
+                              : selected,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          testing.contains(selected)
+                              ? 'Bağlantı test ediliyor…'
+                              : widget.runtime.statuses[selected] ??
+                                    'API bilgileri girilmedi · Bağlı değil',
+                          style: const TextStyle(fontSize: 12, color: muted),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ),
+              const Divider(height: 32),
+              const Text(
+                '1. Resmi hesap bilgilerini kaydet',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Anahtarlar telefona, CSV dosyasına veya GitHub’a gönderilmez. Kapalı, resmi test ve canlı ortamlar ayrı tutulur.',
+                style: TextStyle(fontSize: 12, height: 1.6, color: muted),
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilledButton.icon(
+                  onPressed: () => configure(selected),
+                  icon: const Icon(Icons.key_outlined, size: 18),
+                  label: const Text('API Kodunu / Bilgilerini Gir'),
+                ),
+              ),
+              const Divider(height: 32),
+              const Text(
+                '2. Kimlik doğrulamasını test et',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Bu test, sipariş kabulü veya hazır bildiriminin uçtan uca çalıştığını kanıtlamaz. DEMO siparişler canlı API’ye gönderilmez.',
+                style: TextStyle(fontSize: 12, height: 1.6, color: muted),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: testing.contains(selected)
+                        ? null
+                        : () async {
+                            final source = selected;
+                            setState(() => testing.add(source));
+                            await widget.runtime.testConnection(source);
+                            if (mounted) setState(() => testing.remove(source));
+                          },
+                    icon: const Icon(Icons.network_check, size: 18),
+                    label: Text(
+                      testing.contains(selected)
+                          ? 'Test Ediliyor…'
+                          : 'Bağlantıyı Test Et',
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      final source = selected;
+                      final remove = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Kayıtlı Anahtarları Kaldır'),
+                          content: Text(
+                            '$source için kayıtlı API bilgileri kaldırılacak.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: const Text('Vazgeç'),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: const Text('Kaldır'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (remove != true) return;
+                      try {
+                        await widget.runtime.vault.remove(source);
+                        widget.runtime.statuses[source] =
+                            'Anahtarlar kaldırıldı · Bağlı değil';
+                      } catch (_) {
+                        widget.runtime.statuses[source] =
+                            'Güvenli depo açılamadı; silme onaylanmadı';
+                      }
+                      if (mounted) setState(() => revision++);
+                    },
+                    child: const Text('Kayıtlı Anahtarları Kaldır'),
+                  ),
+                ],
+              ),
+            ],
           ),
-        const Text(
-          'Bağlantı testi ile başarılı sipariş / hazır bildirimi testi farklıdır. DEMO siparişler canlı API’ye gönderilmez.',
+        ),
+        const SizedBox(height: 16),
+        WorkCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Entegrasyon Yetenekleri',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                selected == 'Trendyol Go'
+                    ? '• Sipariş sorgusu: uygulandı; resmi hesap gerekli.\n• Kabul / ret / hazır: güncel Meal sözleşmesi doğrulanana kadar kapalı.\n• Mağaza, menü ve finans iş akışları: DEMO.'
+                    : '• Sipariş alma: onaylı hesap ve ayrı HTTPS gateway gerekli.\n• PC kabulü / hazır: resmi hesap izinleri ve sipariş callback’i gerekli.\n• Mağaza, menü ve finans iş akışları: DEMO.',
+                style: const TextStyle(fontSize: 12, height: 1.9, color: muted),
+              ),
+            ],
+          ),
         ),
       ],
     ),

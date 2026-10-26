@@ -4,6 +4,7 @@ import 'operations.dart';
 import 'operations_ui.dart';
 import 'platform_workflows.dart';
 import 'order_actions.dart';
+import 'workspace_ui.dart';
 
 class PlatformPanel extends StatefulWidget {
   const PlatformPanel({super.key, required this.state, required this.edit});
@@ -24,6 +25,45 @@ class _PlatformPanelState extends State<PlatformPanel> {
       reviewComment = 'Tümü';
   final selectedMenu = <String>{}, selectedItems = <String>{};
   final claimItems = <String>{};
+  String label(Object? value) =>
+      const <String, String>{
+        'ACTIVE': 'Açık',
+        'PASSIVE': 'Kapalı',
+        'Created': 'Yeni',
+        'Picking': 'Hazırlanıyor',
+        'Invoiced': 'Hazır',
+        'Shipped': 'Kuryede',
+        'Delivered': 'Teslim Edildi',
+        'Cancelled': 'İptal',
+        'UnSupplied': 'Karşılanamadı',
+        'Collected': 'Tahsil edildi',
+        'Pending': 'Tahsilat bekliyor',
+        'PAY_WITH_CARD': 'Online kart',
+        'PAY_WITH_CASH': 'Nakit',
+        'MEAL_CARD': 'Yemek kartı',
+        'NONE': 'Yanıt yok',
+        'WAITING_FOR_APPROVE': 'Onay bekliyor',
+        'APPROVED': 'Onaylandı',
+        'REJECTED': 'Reddedildi',
+        'WaitingInAction': 'İşlem bekliyor',
+        'Unresolved': 'Çözümlenmedi',
+        'Accepted': 'Kabul edildi',
+        'Rejected': 'Reddedildi',
+        'PAY_BACK': 'İade',
+        'wrap': 'Dürümler',
+        'plate': 'Porsiyonlar',
+        'drink': 'İçecekler',
+        'meze': 'Mezeler',
+        'fatte': 'Fatte',
+        'side': 'Yan Ürünler',
+        'salad': 'Salatalar',
+        'dessert': 'Tatlılar',
+        'score': 'Genel Puan',
+        'flavor': 'Lezzet',
+        'service': 'Servis',
+        'delivery': 'Teslimat',
+      }['$value'] ??
+      '${value ?? '—'}';
   static const tabs = [
     'Siparişler',
     'Mağaza',
@@ -49,7 +89,7 @@ class _PlatformPanelState extends State<PlatformPanel> {
       key: ValueKey('$tab:$value:${options.join()}'),
       initialValue: value,
       items: options
-          .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+          .map((s) => DropdownMenuItem(value: s, child: Text(label(s))))
           .toList(),
       onChanged: (v) => setState(() => change(v!)),
     ),
@@ -77,12 +117,15 @@ class _PlatformPanelState extends State<PlatformPanel> {
         'API bağlantıları Ayarlar üzerinden yapılandırılır. Siparişler dışındaki mağaza, menü, talep, yorum, fatura ve finans sekmeleri DEMO verisidir. DEMO işlemler API’ye gönderilmez. Kurye ve tahsilat platforma aittir.',
       ),
       if (tab != 'Siparişler')
-        dropdown(source, platformSources, (v) {
-          source = v;
-          status = 'Tümü';
-          selectedMenu.clear();
-          selectedItems.clear();
-        }),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: dropdown(source, platformSources, (v) {
+            source = v;
+            status = 'Tümü';
+            selectedMenu.clear();
+            selectedItems.clear();
+          }),
+        ),
       if (source == 'Yemeksepeti')
         info(
           'Yemeksepeti restoran yönetim yetenekleri doğrulanmadı. Mağaza, menü, talep, yorum, fatura ve finans yazmaları kapalı.',
@@ -110,45 +153,49 @@ class _PlatformPanelState extends State<PlatformPanel> {
         ],
       ),
       const SizedBox(height: 15),
-      switch (tab) {
-        'Mağaza' => stores(),
-        'Menü' => menu(),
-        'İade Talepleri' => claims(),
-        'Değerlendirmeler' => reviews(),
-        'Faturalar' => invoices(),
-        'Senkronizasyon' => sync(),
-        _ => LayoutBuilder(
-          builder: (context, c) {
-            final columns = [
-              for (final provider in platformSources)
-                Card(
-                  margin: EdgeInsets.zero,
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: orders(provider: provider),
-                  ),
-                ),
-            ];
-            return c.maxWidth >= 900
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: columns[0]),
-                      const SizedBox(width: 16),
-                      Expanded(child: columns[1]),
-                    ],
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      columns[0],
-                      const SizedBox(height: 16),
-                      columns[1],
-                    ],
-                  );
+      Expanded(
+        child: SingleChildScrollView(
+          child: switch (tab) {
+            'Mağaza' => WorkCard(child: stores()),
+            'Menü' => WorkCard(child: menu()),
+            'İade Talepleri' => WorkCard(child: claims()),
+            'Değerlendirmeler' => WorkCard(child: reviews()),
+            'Faturalar' => WorkCard(child: invoices()),
+            'Senkronizasyon' => WorkCard(child: sync()),
+            _ => LayoutBuilder(
+              builder: (context, c) {
+                final columns = [
+                  for (final provider in platformSources)
+                    Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: orders(provider: provider),
+                      ),
+                    ),
+                ];
+                return c.maxWidth >= 900
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: columns[0]),
+                          const SizedBox(width: 16),
+                          Expanded(child: columns[1]),
+                        ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          columns[0],
+                          const SizedBox(height: 16),
+                          columns[1],
+                        ],
+                      );
+              },
+            ),
           },
         ),
-      },
+      ),
     ],
   );
   Widget orders({String? provider}) {
@@ -297,16 +344,16 @@ class _PlatformPanelState extends State<PlatformPanel> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Toplam ${formatTry(orderTotalCents(o))} · ${o['platformDeliveryType']} · Tahsilat ${o['platformCollection']}',
+                    'Toplam ${formatTry(orderTotalCents(o))} · ${o['platformDeliveryType']} · ${label(o['platformCollection'])}',
                   ),
                   Text(
-                    '${o['platformPaymentLabel']} · Sipariş revizyonu ${o['platformRevision']}',
+                    '${label(o['platformPaymentLabel'])} · Tahsilat: platform',
                   ),
                   Text(
                     'İndirim ${o['platformSnapshot']?['discount'] ?? 0} ₺ · PIN ${o['platformSnapshot']?['pinCode'] ?? '—'} · Arama ${o['platformSnapshot']?['callCenterPhone'] ?? '—'}',
                   ),
                   Text(
-                    'Kurye ETA ${o['platformSnapshot']?['etaMin'] ?? '—'} → ${o['platformSnapshot']?['etaMax'] ?? '—'} · ${o['platformSnapshot']?['pickupEtaState'] ?? '—'}',
+                    'Kurye tahmini: ${istanbulTime(o['platformSnapshot']?['etaMin'])} → ${istanbulTime(o['platformSnapshot']?['etaMax'])}',
                   ),
                   if (o['cancelled'] != true) ...[
                     if (o['demoRemoteStatus'] == 'Created')
@@ -653,7 +700,7 @@ class _PlatformPanelState extends State<PlatformPanel> {
             ),
             for (final category in rows.map((m) => '${m['cat']}').toSet())
               button(
-                '$category Aç/Kapat',
+                '${label(category)} Aç/Kapat',
                 blocked
                     ? null
                     : () async {
@@ -681,7 +728,7 @@ class _PlatformPanelState extends State<PlatformPanel> {
                   value: selectedMenu.contains(m['id']),
                   title: Text('${m['name']} · ${formatTry(cents(m['price']))}'),
                   subtitle: Text(
-                    '${m['id']} · Yerel ${m['localId'] ?? 'Eşlenmedi'} · ${m['status']} / ${m['categoryStatus']}',
+                    '${m['id']} · Yerel ${m['localId'] ?? 'Eşlenmedi'} · Ürün: ${label(m['status'])} / Kategori: ${label(m['categoryStatus'])}',
                   ),
                   onChanged: blocked
                       ? null
@@ -824,6 +871,15 @@ class _PlatformPanelState extends State<PlatformPanel> {
           'Accepted',
           'Rejected',
         ], (v) => status = v),
+        if (rows.isEmpty)
+          const SizedBox(
+            height: 160,
+            child: WorkEmpty(
+              title: 'Bu filtrede iade talebi yok',
+              message:
+                  'Talep kayıtları platformdan gelir. Bu bölüm DEMO verisidir.',
+            ),
+          ),
         for (final c in rows)
           Card(
             child: Padding(
@@ -832,10 +888,10 @@ class _PlatformPanelState extends State<PlatformPanel> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${c['id']} · #${c['orderId']} · ${c['type']} · ${c['status']}',
+                    '${c['id']} · #${c['orderId']} · ${label(c['type'])} · ${label(c['status'])}',
                   ),
                   Text(
-                    'Son yanıt ${c['deadline']} · Kanıt: ${(c['images'] as List? ?? []).length} görsel',
+                    'Son yanıt ${istanbulTime(c['deadline'])} · Kanıt: ${(c['images'] as List? ?? []).length} görsel',
                   ),
                   Text('${c['reason']}'),
                   for (final item in asMaps(c['items']))
@@ -943,7 +999,7 @@ class _PlatformPanelState extends State<PlatformPanel> {
                 Padding(
                   padding: const EdgeInsets.all(10),
                   child: Text(
-                    '$key: ${all.isEmpty ? '—' : (all.fold<num>(0, (n, r) => n + (r[key] as num)) / all.length).toStringAsFixed(1)} / 5',
+                    '${label(key)}: ${all.isEmpty ? '—' : (all.fold<num>(0, (n, r) => n + (r[key] as num)) / all.length).toStringAsFixed(1)} / 5',
                   ),
                 ),
             ],
@@ -981,6 +1037,16 @@ class _PlatformPanelState extends State<PlatformPanel> {
               }),
             ],
           ),
+          if (rows.isEmpty)
+            const SizedBox(
+              height: 160,
+              child: WorkEmpty(
+                title: 'Bu filtrede değerlendirme yok',
+                message:
+                    'Canlı yorum bağlantısı yok. Örnek yorumlar yalnızca DEMO verisidir.',
+                icon: Icons.star_outline,
+              ),
+            ),
           for (final r in rows)
             Card(
               child: Padding(
@@ -989,7 +1055,7 @@ class _PlatformPanelState extends State<PlatformPanel> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${r['score']}/5 · ${r['text']} · ${r['replyStatus']}',
+                      '${r['score']}/5 · ${r['text']} · ${label(r['replyStatus'])}',
                     ),
                     Text('Yanıt: ${r['reply'] ?? ''}'),
                     Wrap(
@@ -1005,7 +1071,7 @@ class _PlatformPanelState extends State<PlatformPanel> {
                         if (r['replyStatus'] == 'WAITING_FOR_APPROVE')
                           for (final outcome in ['APPROVED', 'REJECTED'])
                             button(
-                              'Test: $outcome',
+                              'Test: ${label(outcome)}',
                               () => edit(
                                 (s) => findRecord(
                                   s,
@@ -1032,6 +1098,16 @@ class _PlatformPanelState extends State<PlatformPanel> {
       info(
         'Mali fatura üretmez. Hazır bildirimi fatura değildir. Değiştirmeden önce eski bağlantıyı silin.',
       ),
+      if (!asMaps(hub()['invoices']).any((i) => i['source'] == source))
+        const SizedBox(
+          height: 130,
+          child: WorkEmpty(
+            title: 'Henüz fatura bağlantısı yok',
+            message:
+                'Uygun sipariş için mevcut bir HTTPS fatura bağlantısı eklenebilir.',
+            icon: Icons.receipt_long_outlined,
+          ),
+        ),
       for (final o in asMaps(widget.state['orders']).where(
         (o) =>
             o['source'] == source &&
@@ -1079,6 +1155,19 @@ class _PlatformPanelState extends State<PlatformPanel> {
         () =>
             edit((s) => importPlatform(s, platformFixture(s, source, 'card'))),
       ),
+      if (!asMaps(hub()['jobs']).any(
+        (j) =>
+            j['source'] == source &&
+            (status == 'Tümü' || j['status'] == status),
+      ))
+        const SizedBox(
+          height: 150,
+          child: WorkEmpty(
+            title: 'Bu filtrede senkronizasyon kaydı yok',
+            message: 'DEMO isteklerinin sonuçları burada izlenir.',
+            icon: Icons.sync,
+          ),
+        ),
       for (final j in asMaps(hub()['jobs']).where(
         (j) =>
             j['source'] == source &&

@@ -154,6 +154,58 @@ void main() {
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull, reason: label);
           expect(find.text(label), findsAtLeastNWidgets(2));
+          if (label == 'Ayarlar') {
+            for (final section in [
+              'Menü & Fiyatlar',
+              'Platform API',
+              'Yazıcı',
+              'Veri & Yedek',
+              'Genel',
+            ]) {
+              await tester.tap(
+                find.byKey(ValueKey('settings-section-$section')),
+              );
+              await tester.pumpAndSettle();
+              expect(
+                tester.takeException(),
+                isNull,
+                reason: 'Settings $section at ${size.width}',
+              );
+            }
+          }
+          if (label == 'Raporlar') {
+            for (final tab in [
+              'Tahsilatlar',
+              'Ürünler',
+              'Personel',
+              'Platform Mutabakatı',
+              'Özet',
+            ]) {
+              await tester.tap(find.byKey(ValueKey('work-tab-$tab')));
+              await tester.pumpAndSettle();
+              expect(
+                tester.takeException(),
+                isNull,
+                reason: 'Reports $tab at ${size.width}',
+              );
+            }
+          }
+          if (label == 'Kasa & Ödemeler') {
+            for (final tab in [
+              'Günlük Kasa',
+              'Kasa Geçmişi',
+              'Nakit Hareketleri',
+              'Açık Hesaplar',
+            ]) {
+              await tester.tap(find.byKey(ValueKey('work-tab-$tab')));
+              await tester.pumpAndSettle();
+              expect(
+                tester.takeException(),
+                isNull,
+                reason: 'Cash $tab at ${size.width}',
+              );
+            }
+          }
           if (label == 'Masalar') {
             for (var n = 1; n <= 5; n++) {
               expect(
@@ -182,6 +234,15 @@ void main() {
               lessThan(size.height),
             );
             expect(find.text('Telefon Bağlantıları'), findsOneWidget);
+            await tester.tap(find.text('Personel Bilgileri'));
+            await tester.pumpAndSettle();
+            expect(
+              tester.takeException(),
+              isNull,
+              reason: 'Staff directory at ${size.width}',
+            );
+            await tester.tap(find.text('Telefon Bağlantıları'));
+            await tester.pumpAndSettle();
           }
         }
         for (final tab in [
