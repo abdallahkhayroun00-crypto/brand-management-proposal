@@ -94,6 +94,23 @@ jobs:
           print('16 modular +16 print oriented parts manifold; key envelope assertions passed')
           print('head dimensions',vars['HEAD_W'],vars['HEAD_H'],'display PCB',vars['DISPLAY_PCB_W'],vars['DISPLAY_PCB_H'])
           PY
+      - name: Refresh embedded CAD source archive to avoid obsolete old sizes
+        run: |
+          python - <<'PY'
+          import base64,io,pathlib,tarfile
+          root=pathlib.Path('nohutcuk')
+          buf=io.BytesIO()
+          with tarfile.open(fileobj=buf,mode='w:gz') as archive:
+            for filename in ('build_nohutcuk.py','prepare_print_and_verify.py','requirements.txt'):
+              file=root/'CAD_Source'/filename
+              archive.add(file,arcname='CAD_Source/'+filename)
+          dest=root/'CAD_Source/model_source_bundle.tar.gz.b64'
+          dest.write_text(base64.b64encode(buf.getvalue()).decode('ascii')+'\n')
+          with tarfile.open(fileobj=io.BytesIO(base64.b64decode(dest.read_text())),mode='r:gz') as archive:
+            source=archive.extractfile('CAD_Source/build_nohutcuk.py').read().decode('utf-8')
+            assert 'DISPLAY_PCB_W=89.3' in source,'source bundle contains old dimensions'
+          print('Updated and checked latest CAD source bundle')
+          PY
       - name: Assemble replacement ZIP of current STL/STEP/CAD files
         run: |
           python - <<'PY'
@@ -117,6 +134,7 @@ jobs:
           name: nohutcuk-provisional-3_2-inch-stl-step
           path: |
             nohutcuk/CAD_Source/build_nohutcuk.py
+            nohutcuk/CAD_Source/model_source_bundle.tar.gz.b64
             nohutcuk/STEP/
             nohutcuk/STL_Individual/
             nohutcuk/STL_Print_Oriented/
@@ -129,9 +147,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add nohutcuk/STL_Individual nohutcuk/STL_Print_Oriented nohutcuk/STL_Merged nohutcuk/STEP nohutcuk/Docs nohutcuk/downloads/NOHUTCUK_CAD_STL_COMPLETE_PROTOTYPE.zip
+          git add nohutcuk/STL_Individual nohutcuk/STL_Print_Oriented nohutcuk/STL_Merged nohutcuk/STEP nohutcuk/Docs nohutcuk/CAD_Source/model_source_bundle.tar.gz.b64 nohutcuk/downloads/NOHUTCUK_CAD_STL_COMPLETE_PROTOTYPE.zip
           if ! git diff --cached --quiet; then
             git commit -m "build(nohutcuk): regenerate 3.2-inch prototype STL, STEP, print orientations and zip"
+            git fetch origin main
+            git rebase origin/main
             git push origin HEAD:main
           else
             echo "All 3.2-inch STL and STEP assets are already up to date"
