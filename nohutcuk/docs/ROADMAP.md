@@ -1,6 +1,6 @@
 # Nohutçuk — Roadmap, package contract and acceptance plan
 
-> **Hardware procurement update, 2026-10-27:** See [BOM_TURKIYE.md](BOM_TURKIYE.md) for the exact candidate parts, retailer research references, approximate Turkish quotes, mechanical fit gates and stages. Proposed final-face display is **2.4-inch ILI9341 (research candidate only)**. **Compiled screen firmware remains 1.9-inch ST7789V2**, and neither physical setup is bench tested. Next: decide display visually and adapt the 2.4-inch driver/CAD before purchase.
+> **27 October 2026 decision:** The user chose to purchase the Waveshare **2.4-inch ILI9341 SKU 18366** directly and skip the 1.9-inch panel. **Default 320x240 ILI9341 firmware and legacy 1.9-inch builds passed GitHub CI.** Hardware not ordered, connected or physically tested. The 77x34 mm front aperture must be redesigned for the 48.96x36.72 mm active image. Full component shortlist: [BOM_TURKIYE.md](BOM_TURKIYE.md).
 
 ## Scope and delivery status (2026-10-27 — verified GitHub assets vs physical tests)
 
@@ -8,7 +8,7 @@
 |---|---|
 | Brand visuals & two infographics | concept references supplied |
 | Product feature list (moods, guest interactions, PC-app reactions) | documented |
-| Electronics / selected exact components | **provisional bench selections**: ESP32-S3-DevKitC-1 + Waveshare standalone 1.9-inch ST7789V2 color IPS, VL53L0X/TTP223/MAX98357A candidates; physical fit and power unverified |
+| Electronics / selected exact components | **provisional bench selections**: ESP32-S3-DevKitC-1 + Waveshare selected 2.4-inch ILI9341 color TFT, VL53L0X/TTP223/MAX98357A candidates; physical fit and power unverified |
 | CAD source / STEP | **prototype assets now in repository**, see main README and CAD_Source/STEP; hardware-fit unverified |
 | STL set validated with chosen hardware | prototype STL set committed; **not validated against selected real hardware** |
 | 3MF/G-code / print profile | **not yet created** |
@@ -62,7 +62,7 @@ Only real, verified artifacts should be put into engineering folders; do not cre
 
 ## Immediate engineering decisions
 
-1. **Bench display candidate selected:** Waveshare standalone 1.9-inch **color IPS ST7789V2** 170×320, module 51.2×27.3mm; test the visible eye size before locking final selection.
+1. **Display selected for purchase:** Waveshare standalone **2.4-inch ILI9341 SKU 18366**, 240x320 TFT, module 70.5x43.3 mm. Verify orientation and viewing angles on actual hardware; redesign the old aperture.
 2. **Bench controller selected:** ESP32-S3-DevKitC-1 using Arduino + PlatformIO; confirm exact purchased board/module variant.
 3. Choose capacitive touch sensor, proximity sensor and audio solution; optional worker control button is not a game input.
 4. Measure servo travel, torque, current and mounting screws.
