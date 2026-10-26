@@ -9,13 +9,15 @@ import 'pos_store.dart';
 import 'operations.dart';
 import 'operations_ui.dart';
 import 'platform_workflows.dart';
-import 'platform_ui.dart';
 import 'staff_qr_ui.dart';
 import 'platform_api.dart';
 import 'platform_runtime.dart';
 import 'platform_settings_ui.dart';
-import 'order_action_ui.dart';
 import 'dashboard_insights.dart';
+import 'platform_ui.dart';
+import 'order_action_ui.dart';
+import 'order_workspace.dart';
+import 'printer_workspace.dart';
 
 const dark = Color(0xff183b2c);
 const cream = Color(0xfff6f6f2);
@@ -463,12 +465,6 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     }
   }
 
-  void _equalSplit(Json order, int people) {
-    _edit(
-      (data) => splitEqually(mutableOrder(data, order['id'] as int)!, people),
-    );
-  }
-
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: Listenable.merge([store, lan]),
@@ -547,12 +543,18 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                     ),
                   ),
                   Expanded(
-                    child: SingleChildScrollView(
+                    child: Padding(
                       padding: const EdgeInsets.all(24),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1400),
-                        child: _page(data),
-                      ),
+                      child: ['tables', 'orders', 'printer'].contains(page)
+                          ? _page(data)
+                          : SingleChildScrollView(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 1400,
+                                ),
+                                child: _page(data),
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -892,7 +894,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                 ),
                 _metric(
                   'Yazdırma Bekleyen',
-                  '${asMaps(db['printJobs']).where((j) => j['state'] != 'İşaretlendi').length}',
+                  '${asMaps(db['printJobs']).where((j) => !['İşaretlendi', 'Simüle edildi'].contains(j['state'])).length}',
                   Icons.print_outlined,
                   onTap: () => _switch('printer'),
                 ),
@@ -1006,233 +1008,75 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           ],
         ),
         const SizedBox(height: 15),
-        RestaurantFloorPlan(
-          state: db,
-          positions: positions,
-          editing: floorEditing,
-          selected: selectedTable,
-          onTable: _onTable,
-          onMove: (n, delta) => setState(() {
-            final r = draftFloor[n]!;
-            final left = (r.left + delta.dx)
-                .clamp(0.0, 1.0 - r.width)
-                .toDouble();
-            final top = (r.top + delta.dy)
-                .clamp(0.0, 1.0 - r.height)
-                .toDouble();
-            draftFloor[n] = Rect.fromLTWH(left, top, r.width, r.height);
-          }),
-        ),
-        const SizedBox(height: 17),
-        if (order != null && order['source'] == 'Masa') _orderDetail(order),
-        if (order == null)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(17),
-              child: Text(
-                floorEditing
-                    ? 'Masaları sürükleyin. Numaralar, hesaplar ve 5 masa değişmez.'
-                    : 'Boş masaya tıklayın: yeni sipariş. Dolu masaya tıklayın: hesap, ek sipariş ve ödeme.',
-                style: const TextStyle(color: Color(0xff647a67)),
-              ),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, c) => Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: RestaurantFloorPlan(
+                    state: db,
+                    positions: positions,
+                    editing: floorEditing,
+                    selected: selectedTable,
+                    onTable: _onTable,
+                    onMove: (n, delta) => setState(() {
+                      final r = draftFloor[n]!;
+                      final left = (r.left + delta.dx)
+                          .clamp(0.0, 1.0 - r.width)
+                          .toDouble();
+                      final top = (r.top + delta.dy)
+                          .clamp(0.0, 1.0 - r.height)
+                          .toDouble();
+                      draftFloor[n] = Rect.fromLTWH(
+                        left,
+                        top,
+                        r.width,
+                        r.height,
+                      );
+                    }),
+                  ),
+                ),
+                if (order != null &&
+                    order['source'] == 'Masa' &&
+                    !floorEditing) ...[
+                  const SizedBox(width: 16),
+                  SizedBox(
+                    width: c.maxWidth < 1100 ? 420 : 500,
+                    child: _orderDetail(order),
+                  ),
+                ],
+              ],
             ),
           ),
+        ),
       ],
     );
   }
 
-  Widget _orderDetail(Json o) {
-    final id = o['id'] as int;
-    final closed = o['closed'] == true;
-    final total = orderTotalCents(o), paid = orderPaidCents(o);
-    final split = asMaps(o['guestChecks']);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(19),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Sipariş #$id · ${o['source']}${o['table'] == null ? '' : ' · Masa ${o['table']}'}',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        closed
-                            ? 'Kapalı'
-                            : 'Açık · ${o['serviceStatus'] ?? 'Hazırlanıyor'}',
-                        style: const TextStyle(
-                          color: Color(0xff708273),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (!closed &&
-                    (o['source'] == 'Masa' || o['source'] == 'Gel-Al'))
-                  OutlinedButton.icon(
-                    onPressed: () =>
-                        _composer(table: o['table'] as int?, addToOrder: id),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Ek Sipariş'),
-                  ),
-              ],
-            ),
-            const Divider(height: 26),
-            for (final line in activeLines(o))
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: cream,
-                        borderRadius: BorderRadius.circular(9),
-                      ),
-                      child: Text(
-                        '${line['qty']}×',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(width: 11),
-                    Expanded(
-                      child: Text(
-                        '${line['name'] ?? line['productKey'] ?? 'Ürün'}',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Text(
-                      formatTry(
-                        cents(line['price']) *
-                            ((line['qty'] as num?)?.toInt() ?? 0),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            const Divider(height: 25),
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              runSpacing: 10,
-              children: [
-                Text(
-                  'Toplam: ${formatTry(total)}',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                Text(
-                  'Alınan: ${formatTry(paid)}',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  'Kalan: ${formatTry(orderDueCents(o))}',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    color: dark,
-                  ),
-                ),
-              ],
-            ),
-            if (split.isNotEmpty) ...[
-              const Divider(height: 24),
-              const Text(
-                'Kişi Hesapları',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-              ),
-              for (final guest in split)
-                Builder(
-                  builder: (context) {
-                    final allocated = asMaps(
-                      guest['allocations'],
-                    ).fold<int>(0, (sum, a) => sum + (a['cents'] as int));
-                    final rest = guestBalance(
-                      o,
-                      guest['id'] as int,
-                    ).clamp(0, allocated).toInt();
-                    return ListTile(
-                      title: Text(
-                        '${guest['name'] ?? 'Kişi'} · ${formatTry(allocated)}',
-                      ),
-                      subtitle: Text('Kalan ${formatTry(rest)}'),
-                      trailing: rest > 0 && !closed
-                          ? FilledButton(
-                              onPressed: () => _pay(
-                                o,
-                                guestId: guest['id'] as int,
-                                guestName: '${guest['name']}',
-                                maximumCents: rest,
-                              ),
-                              child: const Text('Öde'),
-                            )
-                          : const Icon(Icons.check_circle, color: emerald),
-                    );
-                  },
-                ),
-            ],
-            const SizedBox(height: 17),
-            if (!closed && (o['source'] == 'Masa' || o['source'] == 'Gel-Al'))
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (split.isEmpty && orderDueCents(o) > 0)
-                    FilledButton.icon(
-                      onPressed: () => _pay(o),
-                      icon: const Icon(Icons.payments),
-                      label: const Text('Nakit / Kart'),
-                    ),
-                  if (split.isEmpty && orderPaidCents(o) == 0)
-                    PopupMenuButton<int>(
-                      onSelected: (n) => _equalSplit(o, n),
-                      itemBuilder: (context) => [
-                        for (final n in [2, 3, 4, 5, 6, 7, 8, 9, 10])
-                          PopupMenuItem(
-                            value: n,
-                            child: Text('$n kişiye eşit böl'),
-                          ),
-                      ],
-                      child: const Chip(label: Text('⚖ Hesabı Eşit Böl')),
-                    ),
-                  if (o['source'] == 'Masa' && orderDueCents(o) == 0)
-                    OutlinedButton.icon(
-                      onPressed: () => _closeTable(o),
-                      icon: const Icon(Icons.done_all),
-                      label: const Text('Masayı Kapat'),
-                    ),
-                ],
-              ),
-            OrderOperations(order: o, edit: _edit),
-            if (closed)
-              const Padding(
-                padding: EdgeInsets.only(top: 12),
-                child: Text(
-                  'Bu hesap kapalı. Ek ürün ve yeni ödeme eklenemez.',
-                  style: TextStyle(color: Colors.teal),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _orderDetail(Json o) => OrderWorkspace(
+    key: ValueKey(o['id']),
+    order: o,
+    edit: _edit,
+    onAdd: () =>
+        _composer(table: o['table'] as int?, addToOrder: o['id'] as int),
+    onPay: () => _pay(o),
+    onClose: () => _closeTable(o),
+    onGuestPay: (guest) => _pay(
+      o,
+      guestId: guest['id'] as int,
+      guestName: '${guest['name']}',
+      maximumCents: guestBalance(o, guest['id'] as int),
+    ),
+  );
+
+  Widget _online(Json db) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      PlatformPanel(state: db, edit: _edit),
+      OrderActionLog(state: db, edit: _edit),
+    ],
+  );
 
   Widget _orders(Json db) {
     final all = asMaps(db['orders']).reversed.toList();
@@ -1267,110 +1111,211 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     final focused = selectedOrder == null
         ? null
         : all.where((o) => o['id'] == selectedOrder).firstOrNull;
+    final chosen = focused ?? filtered.firstOrNull;
+    if (selectedOrder == null && chosen != null) {
+      final initialId = chosen['id'] as int;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && page == 'orders' && selectedOrder == null) {
+          setState(() => selectedOrder = initialId);
+        }
+      });
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _sectionTitle(
           'Tüm Siparişler',
-          'Masa / Gel-Al / Online platform kayıtları.',
+          'Siparişi seçin; ürünler, kişi payları ve tahsilatlar sağda açılır.',
           action: FilledButton.icon(
             onPressed: () => _composer(),
             icon: const Icon(Icons.add),
             label: const Text('Sipariş Al'),
           ),
         ),
-        OutlinedButton(
-          onPressed: () async {
-            final v = await askFields(context, 'Sipariş Filtreleri', [
-              ('Sipariş / masa / müşteri / ürün ara', orderSearch),
-              (
-                'Durum: boş / Kalan / Ödendi / Kapalı / İptal / Hazır / Hazırlanıyor / Teslim Edildi',
-                orderStatus,
-              ),
-              ('Siparişi alan personel', orderStaff),
-              ('Başlangıç YYYY-MM-DD', orderFrom),
-              ('Bitiş YYYY-MM-DD', orderTo),
-            ]);
-            if (v != null && mounted) {
-              if (v
-                      .skip(3)
-                      .any(
-                        (d) =>
-                            d.isNotEmpty &&
-                            (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(d) ||
-                                DateTime.tryParse(d) == null),
-                      ) ||
-                  v[3].isNotEmpty &&
-                      v[4].isNotEmpty &&
-                      v[3].compareTo(v[4]) > 0) {
-                _notify('Tarih aralığı geçersiz', error: true);
-                return;
-              }
-              setState(() {
-                orderSearch = v[0];
-                orderStatus = v[1];
-                orderStaff = v[2];
-                orderFrom = v[3];
-                orderTo = v[4];
-                selectedOrder = null;
-              });
-            }
-          },
-          child: Text('Sipariş Filtreleri · ${filtered.length} kayıt'),
-        ),
-        Wrap(
-          spacing: 7,
+        Row(
           children: [
-            for (final filter in [
-              'Tümü',
-              'Masa',
-              'Gel-Al',
-              'Yemeksepeti',
-              'Trendyol Go',
-            ])
-              ChoiceChip(
-                label: Text(filter),
-                selected: orderFilter == filter,
-                onSelected: (_) => setState(() => orderFilter = filter),
+            Expanded(
+              child: TextField(
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.search),
+                  hintText: 'Sipariş, masa, müşteri veya ürün ara…',
+                ),
+                onChanged: (v) => setState(() {
+                  orderSearch = v;
+                  selectedOrder = null;
+                }),
               ),
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 170,
+              child: DropdownButtonFormField<String>(
+                initialValue: orderStatus,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Durum'),
+                items: [
+                  for (final value in [
+                    '',
+                    'Kalan',
+                    'Ödendi',
+                    'Kapalı',
+                    'İptal',
+                    'Hazır',
+                    'Hazırlanıyor',
+                    'Teslim Edildi',
+                  ])
+                    DropdownMenuItem(
+                      value: value,
+                      child: Text(value.isEmpty ? 'Tüm Durumlar' : value),
+                    ),
+                ],
+                onChanged: (v) => setState(() {
+                  orderStatus = v ?? '';
+                  selectedOrder = null;
+                }),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Tarih / Personel Filtreleri',
+              icon: const Icon(Icons.tune),
+              onPressed: () async {
+                final v = await askFields(context, 'Tarih / Personel', [
+                  ('Personel', orderStaff),
+                  ('Başlangıç YYYY-MM-DD', orderFrom),
+                  ('Bitiş YYYY-MM-DD', orderTo),
+                ]);
+                if (v != null && mounted) {
+                  if (v
+                          .skip(1)
+                          .any(
+                            (d) =>
+                                d.isNotEmpty &&
+                                (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(d) ||
+                                    DateTime.tryParse(d) == null),
+                          ) ||
+                      v[1].isNotEmpty &&
+                          v[2].isNotEmpty &&
+                          v[1].compareTo(v[2]) > 0) {
+                    _notify('Tarih aralığı geçersiz', error: true);
+                    return;
+                  }
+                  setState(() {
+                    orderStaff = v[0];
+                    orderFrom = v[1];
+                    orderTo = v[2];
+                    selectedOrder = null;
+                  });
+                }
+              },
+            ),
           ],
         ),
         const SizedBox(height: 12),
-        if (focused != null) _orderDetail(focused),
-        Card(
-          child: Column(
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
             children: [
-              if (filtered.isEmpty)
-                const ListTile(title: Text('Sipariş bulunamadı')),
-              for (final o in filtered)
-                ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: cream,
-                    child: Text('${o['table'] ?? '#'}'),
+              for (final filter in [
+                'Tümü',
+                'Masa',
+                'Gel-Al',
+                'Yemeksepeti',
+                'Trendyol Go',
+              ])
+                Padding(
+                  padding: const EdgeInsets.only(right: 7),
+                  child: ChoiceChip(
+                    label: Text(filter),
+                    selected: orderFilter == filter,
+                    onSelected: (_) => setState(() {
+                      orderFilter = filter;
+                      selectedOrder = null;
+                    }),
                   ),
-                  title: Text('#${o['id']} · ${o['source']}'),
-                  subtitle: Text(
-                    o['closed'] == true
-                        ? 'Kapalı'
-                        : (o['serviceStatus'] ?? 'Açık').toString(),
-                  ),
-                  trailing: Text(formatTry(orderTotalCents(o))),
-                  onTap: () => setState(() => selectedOrder = o['id'] as int),
                 ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: 300,
+                child: Card(
+                  margin: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Siparişler',
+                                style: TextStyle(fontWeight: FontWeight.w800),
+                              ),
+                            ),
+                            Text(
+                              '${filtered.length} kayıt',
+                              style: const TextStyle(color: Color(0xff7c8b80)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      Expanded(
+                        child: filtered.isEmpty
+                            ? const Center(child: Text('Sipariş bulunamadı.'))
+                            : ListView.builder(
+                                itemCount: filtered.length,
+                                itemBuilder: (context, i) {
+                                  final order = filtered[i];
+                                  return ListTile(
+                                    key: ValueKey('order-row-${order['id']}'),
+                                    selected: chosen?['id'] == order['id'],
+                                    selectedTileColor: const Color(0xffedf5e9),
+                                    leading: CircleAvatar(
+                                      backgroundColor: cream,
+                                      child: Text('${order['table'] ?? '#'}'),
+                                    ),
+                                    title: Text(
+                                      '#${order['id']} · ${order['source']}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      '${order['closed'] == true ? 'Kapalı' : order['serviceStatus'] ?? order['demoRemoteStatus'] ?? 'Açık'} · ${formatTry(orderTotalCents(order))}',
+                                    ),
+                                    onTap: () => setState(
+                                      () => selectedOrder = order['id'] as int,
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: chosen == null
+                    ? const Card(
+                        child: Center(
+                          child: Text('Sipariş detayları burada açılır.'),
+                        ),
+                      )
+                    : _orderDetail(chosen),
+              ),
             ],
           ),
         ),
       ],
     );
   }
-
-  Widget _online(Json db) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      PlatformPanel(state: db, edit: _edit),
-      OrderActionLog(state: db, edit: _edit),
-    ],
-  );
 
   Widget _payments(Json db) {
     final locals = asMaps(db['orders'])
@@ -1442,7 +1387,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     );
   }
 
-  Widget _printer(Json db) => PrinterPanel(state: db, edit: _edit);
+  Widget _printer(Json db) => PrinterWorkspace(state: db, edit: _edit);
 
   Widget _staff(Json db) => StaffQrPanel(
     server: lan,

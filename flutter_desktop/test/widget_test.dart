@@ -154,6 +154,27 @@ void main() {
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull, reason: label);
           expect(find.text(label), findsAtLeastNWidgets(2));
+          if (label == 'Masalar') {
+            for (var n = 1; n <= 5; n++) {
+              expect(
+                tester.getRect(find.text('Masa $n')).bottom,
+                lessThan(size.height),
+              );
+            }
+            await tester.tap(find.text('Masa 3'));
+            await tester.pumpAndSettle();
+            expect(
+              tester.takeException(),
+              isNull,
+              reason: 'selected table with side check',
+            );
+            expect(
+              tester
+                  .getRect(find.byKey(const ValueKey('order-payment')))
+                  .bottom,
+              lessThan(size.height),
+            );
+          }
           if (label == 'Personel & QR') {
             expect(find.text('Personel Wi-Fi'), findsNothing);
             expect(

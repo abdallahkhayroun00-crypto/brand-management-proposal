@@ -1,7 +1,7 @@
 name: nohut_falafel_desktop
 description: Nohut Falafel Windows POS desktop with local SQLite and employee QR LAN.
 publish_to: none
-version: 0.4.0+4
+version: 0.5.0+5
 
 environment:
   sdk: '>=3.10.0 <4.0.0'
