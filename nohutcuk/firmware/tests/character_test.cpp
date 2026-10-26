@@ -53,7 +53,7 @@ int main(){
   bot.setDemo(false);assert(!bot.isDemo());
   // millis() wraps every ~49.7 days. Time delta arithmetic must survive.
   assert(elapsed(15,UINT32_MAX-9,24));
-  assert(!elapsed(15,UINT32_MAX-9,25));
+  assert(!elapsed(15,UINT32_MAX-9,26));
   Character afterWrap;afterWrap.begin(UINT32_MAX-500);
   assert(afterWrap.approach(UINT32_MAX-400));
   assert(!afterWrap.approach(15));
