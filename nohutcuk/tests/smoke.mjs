@@ -39,15 +39,17 @@ class FakeDocument {
     if(query==='.tab-panel')return this.elements.filter(e=>e.className==='tab-panel');
     if(query==='[data-action]')return this.elements.filter(e=>e.dataset.action);
     if(query==='[data-song]')return this.elements.filter(e=>e.dataset.song);
+    if(query==='[data-voice]')return this.elements.filter(e=>e.dataset.voice);
     return [];
   }
 }
 const document=new FakeDocument();
-for(const id of ['paletteSelect','customColor','languageSelect','durationRange','blinkRange','speedRange']){
+for(const id of ['paletteSelect','customColor','languageSelect','durationRange','blinkRange','speedRange','volumeRange']){
   const el=document.getElementById(id);
   el.value=({paletteSelect:'expressive',customColor:'#a7edff',languageSelect:'tr-TR',durationRange:'3.5',blinkRange:'3',speedRange:'1',volumeRange:'50'})[id];
 }
 document.getElementById('autoBlink').checked=true;
+document.getElementById('voiceEnabled').checked=true;
 const source=readFileSync(new URL('../app.js',import.meta.url),'utf8');
 const playLog=[];
 const fakeAudio={songNames:{theme:'Nohutçuk Theme',dance:'Tiny Dance',lullaby:'Sleepy Stars',hello:'Happy Hello'},
@@ -58,7 +60,17 @@ const fakeAudio={songNames:{theme:'Nohutçuk Theme',dance:'Tiny Dance',lullaby:'
 for(const id of ['theme','dance','lullaby','hello']){
   const el=document.createElement('button');el.dataset.song=id;
 }
-const context={document,window:{NohutcukAudio:fakeAudio,addEventListener(){}},console,Date,Math,Number,String,Object,
+const spoken=[];
+const fakeVoice={
+  onChange(fn){this.callback=fn;},speak(key){spoken.push('auto:'+key);return true;},
+  preview(key){spoken.push('preview:'+key);if(this.callback)this.callback({status:'speaking',key,text:key});return true;},
+  getPhrase(key){return key;},stop(){spoken.push('stop');},
+  setOptions(options){this.options=options;}
+};
+for(const key of ['welcome','thanks','love','goodbye','falafel','birthday']){
+  const el=document.createElement('button');el.dataset.voice=key;
+}
+const context={document,window:{NohutcukAudio:fakeAudio,NohutcukVoice:fakeVoice,addEventListener(){}},console,Date,Math,Number,String,Object,
   clearTimeout(){},setTimeout(){return 1;},requestAnimationFrame(){return 1;}};
 vm.runInNewContext(source,context,{filename:'app.js',timeout:1500});
 
@@ -95,6 +107,15 @@ byId('effectsEnabled').checked=true;byId('effectsEnabled').emit('change');
 assert.ok(playLog.includes('enabled:true'),'auto effect switch should enable effects');
 byId('volumeRange').value='35';byId('volumeRange').emit('input');
 assert.ok(playLog.includes('volume:0.35'),'volume slider should update gain');
+assert.equal(fakeVoice.options.volume,.35,'voice preview volume follows main volume');
+assert.ok(spoken.includes('auto:welcome'),'welcome should have one short spoken cue');
+assert.ok(spoken.includes('auto:love'),'third head touch can speak briefly');
+assert.ok(!spoken.includes('auto:thanks'),'single pet should not speak automatically');
+const manualVoice=document.elements.find(e=>e.dataset.voice==='thanks');
+manualVoice.emit('click');
+assert.ok(spoken.includes('preview:thanks'),'voice preview button should trigger its specific phrase');
+byId('stopVoice').emit('click');
+assert.ok(spoken.includes('stop'),'voice stop button should cancel speech');
 const palette=byId('paletteSelect');
 palette.value='rainbow';palette.emit('input');
 assert.match(face.innerHTML,/url\(#rainbow\)/,'rainbow paint should reach SVG shapes');
@@ -104,4 +125,4 @@ assert.match(face.innerHTML,/#5dbbee/i,'custom color should reach SVG shape styl
 assert.ok(byId('eventLog').children.length>0,'actions should appear in event log');
 assert.ok(source.includes('12000'),'welcome cooldown should be present');
 assert.ok(!source.includes('restaurantGrid'),'restaurant/platform tab should be absent from mascot simulator');
-console.log('Nohutçuk smoke tests passed: 20 moods, SVG colors, interactions, song controls, SFX soundboard, volume and event history.');
+console.log('Nohutçuk smoke tests passed: 20 moods, colors, songs, SFX, sparse speech triggers, manual voice, volume and interactions.');
