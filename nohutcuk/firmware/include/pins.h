@@ -1,8 +1,10 @@
 #pragma once
 // PROVISIONAL, breadboard ONLY — Espressif ESP32-S3-DevKitC-1 (not every ESP32-S3 variant).
-// DEFAULT screen: Waveshare standalone 2.4" SPI TFT ILI9341 (SKU 18366), 240x320.
-// LEGACY reference: Waveshare 1.9" LCD ST7789V2, 170x320.
-// Both use SPI and 8 labeled signals; verify PH2.0 connector pin order on the actual 2.4".
+// DEFAULT hardware target: 3.2" ILI9341 240x320 SPI TFT (e.g. Voltaj MZK-6,
+// NON-TOUCH). The exact breakout PINOUT AND VOLTAGE have NOT been verified.
+// CAUTION: many Turkish 3.2" listings are Arduino Mega / 16-bit PARALLEL
+// shields even when seller says "SPI". Those are NOT wired like this!
+// Old build profiles: 2.4" ILI9341 / 1.9" ST7789V2 for code reference only.
 // Compare every name with the silkscreen AND board schematic before powering.
 // Never power motors or a loudspeaker directly from GPIO/ESP32 3V3 pins.
 namespace nohut {
@@ -19,8 +21,9 @@ constexpr int SERVO_PWM = 16;  // RESERVED; servo disabled and not driven in ben
 constexpr int I2S_BCLK  = 5;   // RESERVED; no audio driver in this build.
 constexpr int I2S_LRC   = 6;
 constexpr int I2S_DOUT  = 15;
-// Both displays rotate to 320px width. The new 2.4" ILI9341 is 320x240,
-// while legacy 1.9" ST7789V2 is 320x170 with a 35px RAM column offset.
+// 3.2-inch and prior 2.4-inch ILI9341 share 320x240 pixel geometry,
+// NOT necessarily breakout pinouts, voltages, or physical dimensions.
+// Legacy 1.9" ST7789V2 is 320x170 with a 35px RAM column offset.
 #ifndef NOHUT_DISPLAY_ILI9341
 #define NOHUT_DISPLAY_ILI9341 1
 #endif
