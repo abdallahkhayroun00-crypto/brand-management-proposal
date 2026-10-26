@@ -26,7 +26,7 @@ jobs:
           /tmp/nohut-character-test
 
   esp32-build:
-    name: Build ESP32-S3 2.4-inch color face
+    name: Build ESP32-S3 3.2-inch ILI9341 face
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -36,7 +36,9 @@ jobs:
           python-version: '3.12'
       - name: Install PlatformIO
         run: python -m pip install -q platformio
-      - name: Compile selected Waveshare 2.4-inch ILI9341 firmware
+      - name: Compile selected 3.2-inch SPI ILI9341 firmware
+        run: pio run -d nohutcuk/firmware -e esp32-s3-ili9341-32
+      - name: Compile older 2.4-inch ILI9341 software reference
         run: pio run -d nohutcuk/firmware -e esp32-s3-ili9341-24
       - name: Compile legacy Waveshare 1.9-inch reference
         run: pio run -d nohutcuk/firmware -e esp32-s3-st7789-19
