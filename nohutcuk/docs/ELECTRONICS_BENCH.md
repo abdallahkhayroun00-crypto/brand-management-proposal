@@ -2,6 +2,8 @@
 
 **Status: preliminary engineering selection, not a verified wiring diagram or shopping order.** The real restaurant mascot is one complete product; these are internal verification stages, not product versions. No games.
 
+> **2026-10-27 purchasing update:** This page intentionally describes the **already compiled 1.9-inch ST7789V2 LCD bench target**. The updated [Türkiye BOM and purchasing decisions](BOM_TURKIYE.md) shortlist a **larger 2.4-inch ILI9341 SKU 18366** for the face. It requires a **different firmware driver and a modified bezel**, because its active panel is **36.72 mm high** whereas the placeholder cutout is **34 mm high**. Do not mistake the 1.9-inch GPIO/display firmware for a validated 2.4-inch implementation.
+
 ## First purchase / test candidates
 
 | Part | Candidate | Why | Current software |
