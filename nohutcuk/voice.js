@@ -71,12 +71,16 @@
   }
   function setClip(key,file){
     if(!Object.prototype.hasOwnProperty.call(LINES,key))return false;
+    // Validate before replacing; a wrong file must never destroy a working clip.
+    if(file && (!file.type?.startsWith('audio/')||!root.URL?.createObjectURL))return false;
+    let next=null;
+    if(file){
+      try{next=root.URL.createObjectURL(file);}catch(_){return false;}
+    }
     const old=clipUrls.get(key);
     if(old && root.URL?.revokeObjectURL)root.URL.revokeObjectURL(old);
     clipUrls.delete(key);
-    if(!file)return true;
-    if(!file.type?.startsWith('audio/')||!root.URL?.createObjectURL)return false;
-    clipUrls.set(key,root.URL.createObjectURL(file));
+    if(next)clipUrls.set(key,next);
     return true;
   }
   function clipLoaded(key){return clipUrls.has(key);}
