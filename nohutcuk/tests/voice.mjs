@@ -66,6 +66,8 @@ assert.equal(heard.at(-1).pitch,1.63,'default character style uses playful pitch
 assert.equal(heard.at(-1).rate,1.13,'default character style uses playful speed');
 assert.equal(voice.setClip('welcome',{type:'audio/mpeg',name:'welcome.mp3'}),true);
 assert.equal(voice.clipLoaded('welcome'),true);
+assert.equal(voice.setClip('welcome',{type:'text/plain',name:'not-a-sound.txt'}),false);
+assert.equal(voice.clipLoaded('welcome'),true,'invalid audio does not erase the previously loaded voice clip');
 assert.equal(voice.preview('welcome'),true);
 assert.equal(clipPlay.length,1,'custom clip should play instead of system TTS');
 assert.equal(voice.setClip('welcome',null),true);
