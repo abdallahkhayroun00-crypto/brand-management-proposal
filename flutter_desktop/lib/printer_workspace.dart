@@ -7,6 +7,7 @@ import 'ticket_paper.dart';
 import 'ticket_actions.dart';
 import 'print_service.dart';
 import 'platform_receipt_ui.dart';
+import 'platform_receipt.dart';
 
 class PrinterWorkspace extends StatefulWidget {
   const PrinterWorkspace({
@@ -35,6 +36,10 @@ class _PrinterWorkspaceState extends State<PrinterWorkspace> {
     if (printCompleted(j.cast<String, dynamic>()) ||
         printUncertain(j.cast<String, dynamic>())) {
       throw const FormatException('Tamamlanmış iş tekrar gönderilmez');
+    }
+    final order = mutableOrder(s, j['orderId'] as int);
+    if (order != null && isPlatform(order)) {
+      originalPlatformReceipt(j.cast<String, dynamic>());
     }
     j['state'] = success ? 'Simüle edildi' : 'Hata';
     j['attempts'] = (j['attempts'] as int? ?? 0) + 1;
@@ -302,6 +307,7 @@ class _PrinterWorkspaceState extends State<PrinterWorkspace> {
                 ],
               ),
             if (job != null &&
+                (!platform || job['platformReceipt'] != null) &&
                 !completed(job) &&
                 !printUncertain(job) &&
                 widget.state['settings']?['printerMode'] != 'windows')
