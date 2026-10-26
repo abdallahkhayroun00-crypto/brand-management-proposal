@@ -7,7 +7,7 @@
 
 **Full researched shortlist:** [BOM_TURKIYE.md](docs/BOM_TURKIYE.md), covering controller, LCD options, touch/proximity/gesture, voice amp/speaker, head servo, power, small electronics, wiring, 3D hardware, research links and provisional Turkish price references.
 
-**Important:** a larger **Waveshare 2.4-inch ILI9341 SPI TFT (SKU 18366)** is now the **preferred face candidate**, but **not yet selected for a hardware order or wired**. Official board is 70.5×43.3 mm and active screen is 48.96×36.72 mm horizontally, **taller than the existing 77×34 mm bezel opening**. Do not finalize CAD or print yet. Current **compiling C++ firmware continues to target the separate 1.9-inch ST7789V2** display; 2.4-inch needs a new driver profile and screen-layout port. This is documented so we do not accidentally buy a screen incompatible with the code.
+**Purchase decision (27 October 2026): buy ONE Waveshare 2.4-inch ILI9341 SPI TFT (SKU 18366), not the 1.9-inch reference. No order placed or hardware wired yet.** Official board is 70.5×43.3 mm and active screen is 48.96×36.72 mm horizontally, **taller than the existing 77×34 mm bezel opening**. Do not finalize CAD or print yet. **C++ firmware now defaults to the 2.4-inch ILI9341 (320x240)**; the legacy 1.9-inch ST7789V2 remains an optional reference. **Both builds pass GitHub CI; physical testing is pending.** This is documented so we do not accidentally buy a screen incompatible with the code.
 
 ## ✅ Full Shop-Day Simulation — 82 cases
 
@@ -32,7 +32,7 @@ The mascot now includes a completely simulated operating-day rule engine in [day
 
 - [Electronics & wiring bench plan](docs/ELECTRONICS_BENCH.md) — component candidates, official sources, safe sequence, dimensions, provisional GPIO pin map.
 - [PlatformIO project](firmware/) — ESP32-S3 board configuration and dependencies.
-- [Actual 20-expression C++ face renderer](firmware/src/main.cpp) — 320×170 multicolor eyes for an SPI ST7789V2 display, nonblocking blink/idle/serial controls.
+- [Actual 20-expression C++ face renderer](firmware/src/main.cpp) — 320x240 multicolor eyes for the selected SPI ILI9341 panel, with old ST7789V2 build retained.
 - [Portable C++ character state machine](firmware/include/character.hpp) — 20 moods, hello cooldown, touch gestures and photo hold.
 - [Host C++ tests](firmware/tests/character_test.cpp) — 20 emotion roundtrips, 30-second hello debounce, photo lock, sleep, quiet mode, uint32 clock rollover.
 - [Firmware build CI](https://github.com/abdallahkhayroun00-crypto/brand-management-proposal/actions/workflows/nohutcuk-firmware.yml) — checks native logic and attempts an actual PlatformIO ESP32-S3 compilation.
