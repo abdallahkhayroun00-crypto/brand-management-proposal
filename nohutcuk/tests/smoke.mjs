@@ -102,6 +102,16 @@ for(const id of ['interactionGrid','specialGrid']){
   assert.ok(controls.length>=7,id+' should have control buttons');
   for(const button of controls)button.emit('click');
 }
+// Photo holds for 10 seconds even if an accidental guest tap happens.
+byId('specialGrid').children[0].emit('click');
+byId('screen').emit('click');
+assert.match(byId('eventLog').children[0].children[1].textContent,/Sensor ignored/,
+  'touch during photo pose must be suppressed by the main simulator');
+byId('resetBtn').emit('click');
+byId('playDay').emit('click');
+assert.equal(byId('playDay').disabled,true,'accelerated day playback starts');
+byId('stopDay').emit('click');
+assert.equal(byId('playDay').disabled,false,'day playback can stop immediately');
 assert.equal(byId('sfxGrid').children.length,10,'10 sound effect preview buttons');
 byId('sfxGrid').children[0].emit('click');
 assert.ok(playLog.includes('effect:happy:true'),'SFX soundboard should play on demand');
