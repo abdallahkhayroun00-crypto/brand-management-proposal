@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="./styles.css">
   <script src="./audio.js" defer></script>
   <script src="./voice.js" defer></script>
+  <script src="./day.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
@@ -92,6 +93,7 @@
           <button type="button" role="tab" data-tab="interactions" aria-selected="false">Interactions</button>
           <button type="button" role="tab" data-tab="sounds" aria-selected="false">Voice & Sounds</button>
           <button type="button" role="tab" data-tab="special" aria-selected="false">Special</button>
+          <button type="button" role="tab" data-tab="day" aria-selected="false">Shop Day Tests</button>
         </div>
         <div class="tab-panel" id="panel-emotions" role="tabpanel">
           <p class="panel-help">Tap any emotion to preview colorful expressions, not just one-color OLED eyes.</p>
@@ -155,6 +157,25 @@
         <div class="tab-panel" id="panel-special" role="tabpanel" hidden>
           <p class="panel-help">Social, festive and performance reactions. No games in the approved product scope.</p>
           <div class="action-grid" id="specialGrid"></div>
+        </div>
+        <div class="tab-panel" id="panel-day" role="tabpanel" hidden>
+          <div class="day-intro">
+            <span class="eyebrow">OPENING → CLOSING LAB</span>
+            <h3>Bir gün Nohutçuk ile 🌿</h3>
+            <p>Test a whole example workday, 10:45–21:30. Buttons simulate events; they do not detect real customers, control payments, or read live restaurant systems.</p>
+            <div class="day-stats"><div><strong id="dayCaseTotal">—</strong><span>Scenarios</span></div><div><strong id="dayPassed">—</strong><span>Passing</span></div><div><strong>8</strong><span>Day phases</span></div></div>
+          </div>
+          <div class="day-actions">
+            <button type="button" id="runDayTests" class="day-run">✓ Run all checks</button>
+            <button type="button" id="playDay" class="day-play">▶ Preview day</button>
+            <button type="button" id="stopDay" class="day-stop">■ Stop</button>
+          </div>
+          <p class="day-result" id="dayResult" role="status">The simulation is separate from hardware. Select any situation below to see its expected robot behavior.</p>
+          <div class="day-phases" id="dayPhases" aria-label="Select part of day"></div>
+          <label class="day-filter-label" for="dayCaseSearch">Find a specific situation</label>
+          <input type="search" id="dayCaseSearch" class="day-search" placeholder="Touch, guest, noise, Wi-Fi, closing..." autocomplete="off">
+          <div class="day-case-list" id="dayCaseList"></div>
+          <p class="day-disclaimer">Green = behavior matches a predefined expected result. Suppressed events are often correct: repeated greetings, unsafe motions, guests during cleaning, and all after-hours interactions. Fully simulated; physical sensor/power/servo behavior needs bench tests.</p>
         </div>
         <div class="divider"></div>
         <div class="settings-header"><h3>Customize the face</h3><span>⚙</span></div>
