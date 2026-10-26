@@ -1,17 +1,17 @@
 # Nohutçuk — Roadmap, package contract and acceptance plan
 
-## Scope and delivery status (2026-10-26)
+## Scope and delivery status (2026-10-27 — verified GitHub assets vs physical tests)
 
 | Workstream | Status |
 |---|---|
 | Brand visuals & two infographics | concept references supplied |
 | Product feature list (moods, guest interactions, PC-app reactions) | documented |
-| Electronics / selected exact components | **not finalized** |
-| CAD source / STEP | **not yet created** |
-| STL set validated with chosen hardware | **not yet created** |
+| Electronics / selected exact components | **provisional bench selections**: ESP32-S3-DevKitC-1 + Waveshare standalone 1.9-inch ST7789V2 color IPS, VL53L0X/TTP223/MAX98357A candidates; physical fit and power unverified |
+| CAD source / STEP | **prototype assets now in repository**, see main README and CAD_Source/STEP; hardware-fit unverified |
+| STL set validated with chosen hardware | prototype STL set committed; **not validated against selected real hardware** |
 | 3MF/G-code / print profile | **not yet created** |
-| Wiring diagram, verified power design | **not yet created** |
-| ESP32-S3 firmware, unit and hardware tests | **not yet created** |
+| Wiring diagram, verified power design | **provisional GPIO table in docs/ELECTRONICS_BENCH.md**, not an electrically verified schematic or power budget |
+| ESP32-S3 firmware, unit and hardware tests | **firmware/ C++ LCD renderer + portable tests created; CI compilation running / hardware tests not performed** |
 | Restaurant integration | **planned, not deployed** |
 | Assembly manual and maintenance | **planned** |
 | Separate GitHub assets | upload status tracked in assets/README.md |
@@ -60,8 +60,8 @@ Only real, verified artifacts should be put into engineering folders; do not cre
 
 ## Immediate engineering decisions
 
-1. Pick exact OLED (screen size, resolution, placement and supply).
-2. Pick ESP32-S3 module/form factor and firmware framework (Arduino or ESP-IDF).
+1. **Bench display candidate selected:** Waveshare standalone 1.9-inch **color IPS ST7789V2** 170×320, module 51.2×27.3mm; test the visible eye size before locking final selection.
+2. **Bench controller selected:** ESP32-S3-DevKitC-1 using Arduino + PlatformIO; confirm exact purchased board/module variant.
 3. Choose capacitive touch sensor, proximity sensor and audio solution; optional worker control button is not a game input.
 4. Measure servo travel, torque, current and mounting screws.
 5. Decide line-powered USB-C versus battery; ensure adequate electrical safety.
