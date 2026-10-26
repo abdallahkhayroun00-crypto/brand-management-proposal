@@ -3,6 +3,12 @@
 > **Status: concept & product requirements, not yet manufactured.** Nohutçuk is the friendly, modular, animated mascot for **Nohut Falafel**, designed to interact with guests, appear in social media, and eventually receive safe restaurant-event notifications.
 
 
+## 🛒 Türkiye hardware BOM — researched, not final (2026-10-27)
+
+**Full researched shortlist:** [BOM_TURKIYE.md](docs/BOM_TURKIYE.md), covering controller, LCD options, touch/proximity/gesture, voice amp/speaker, head servo, power, small electronics, wiring, 3D hardware, research links and provisional Turkish price references.
+
+**Important:** a larger **Waveshare 2.4-inch ILI9341 SPI TFT (SKU 18366)** is now the **preferred face candidate**, but **not yet selected for a hardware order or wired**. Official board is 70.5×43.3 mm and active screen is 48.96×36.72 mm horizontally, **taller than the existing 77×34 mm bezel opening**. Do not finalize CAD or print yet. Current **compiling C++ firmware continues to target the separate 1.9-inch ST7789V2** display; 2.4-inch needs a new driver profile and screen-layout port. This is documented so we do not accidentally buy a screen incompatible with the code.
+
 ## ✅ Full Shop-Day Simulation — 82 cases
 
 **Try it:** open [Nohutçuk Eye Studio](./index.html) and select **Shop Day Tests**.
