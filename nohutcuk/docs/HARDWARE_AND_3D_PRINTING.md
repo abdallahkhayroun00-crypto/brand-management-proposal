@@ -10,7 +10,7 @@
 
 **Mechanical concept only:** Revisit outer head around **115 mm wide × 75–80 mm high**, with sufficient internal depth and a viewing aperture just slightly larger than the 64.8×48.6-mm active view, depending on glass mask and required lens overlap. These dimensions are **NOT approved CAD**: validate the exact PCB size, mounting holes, connector orientation, antenna clearance and wall thickness first. Preserve rounded black head proportions, green sprout, Nohut Falafel styling and comfortable child-facing edges. Reposition servo pivot according to the new head's measured center of mass.
 
-**No fixed STLs/STEP have been updated to 3.2-inch geometry**; retain the existing meshes as historical prototypes and do not claim print fit.
+**UPDATED 27 October 2026:** All 16 modular STL, 16 oriented STL, 2 merged STL, 2 STEP files and the CAD ZIP were regenerated from the enlarged 3.2-inch parametric source, and automated mesh validation passed. The corrected dimensions, exact paths and unresolved physical fit risks are in [CAD_3_2_CHANGELOG.md](CAD_3_2_CHANGELOG.md). This is still *not* physical test fit, and the servo/screen mounting holes are provisional.
 
 ## Visual target and reference dimensions
 
