@@ -145,6 +145,6 @@ palette.value='custom';palette.emit('input');
 byId('customColor').value='#5dbbee';byId('customColor').emit('input');
 assert.match(face.innerHTML,/#5dbbee/i,'custom color should reach SVG shape styling');
 assert.ok(byId('eventLog').children.length>0,'actions should appear in event log');
-assert.ok(source.includes('12000'),'welcome cooldown should be present');
+assert.ok(source.includes('30000'),'30-second welcome cooldown should be present');
 assert.ok(!source.includes('restaurantGrid'),'restaurant/platform tab should be absent from mascot simulator');
 console.log('Nohutçuk smoke tests passed: 20 moods, colors, songs, SFX, sparse speech triggers, manual voice, volume and interactions.');
