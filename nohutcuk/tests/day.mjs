@@ -12,7 +12,7 @@ assert.equal(new Set(cases.map(x=>x.id)).size,cases.length,'IDs must be unique')
 assert.equal(day.phases.length,8,'eight realistic daily phases');
 const results=day.validate();
 const failed=results.filter(x=>!x.passed);
-assert.deepEqual(failed.map(x=>({id:x.id,name:x.name,expected:x.expected,actual:x.actual,reason:x.reason})),[],'scenario results must match expected');
+assert.equal(failed.length,0,'scenario results must match expected: '+JSON.stringify(failed.map(x=>({id:x.id,name:x.name,expected:x.expected,actual:x.actual,reason:x.reason}))));
 function perform(s,action,at,options){return day.dispatch(s,action,at,options);}
 const open=day.DAY_START,close=day.DAY_END;
 let s=day.initial();
