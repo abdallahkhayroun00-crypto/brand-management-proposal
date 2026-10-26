@@ -73,3 +73,7 @@ npm ci --ignore-scripts
 npx playwright install chromium
 npm test
 ```
+
+## 0.7.0 — branded tickets and invoice documents
+
+See [PRINTING_AND_INVOICES.md](PRINTING_AND_INVOICES.md) for the new native **Fiş & Fatura** destination, branded immutable preparation batches, 80 mm PDF exports, one Windows USB driver, uncertain-output reconciliation and externally issued invoice registration. The Trendyol Meal invoice-link adapter is implemented and mock-tested; no credentials or live account test are available. Yemeksepeti invoice upload and fiscal issuance remain unavailable. Physical printer output is unverified. This supersedes earlier descriptions of all printing and invoice-link operations as simulation-only. The original HTML demo remains unchanged.

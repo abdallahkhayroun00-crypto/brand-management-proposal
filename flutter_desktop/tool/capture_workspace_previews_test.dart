@@ -21,6 +21,10 @@ void main() {
         ),
       );
     await font.load();
+    final noto = FontLoader('NotoSans')
+      ..addFont(rootBundle.load('assets/fonts/NotoSans-Regular.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/NotoSans-Bold.ttf'));
+    await noto.load();
     final icons = FontLoader('MaterialIcons')
       ..addFont(
         Future.value(
@@ -121,7 +125,7 @@ void main() {
         final img = await render.toImage();
         final bytes = await img.toByteData(format: ui.ImageByteFormat.png);
         await File(
-          '${output.path}/preview-$name-v6.png',
+          '${output.path}/preview-$name-v7.png',
         ).writeAsBytes(bytes!.buffer.asUint8List());
         img.dispose();
       });
@@ -168,6 +172,11 @@ void main() {
     await tester.tap(find.text('Yazdırma Kuyruğu').first);
     await tester.pumpAndSettle();
     await capture('printer');
+    await navigate('Fiş & Fatura');
+    await capture('documents-bill');
+    await tester.tap(find.byKey(const ValueKey('work-tab-Satış Belgeleri')));
+    await tester.pumpAndSettle();
+    await capture('documents-invoices');
     await navigate('Kasa & Ödemeler');
     await capture('cash-open-orders');
     for (final e in {

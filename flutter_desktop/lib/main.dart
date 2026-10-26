@@ -16,6 +16,8 @@ import 'settings_workspace.dart';
 import 'reports_workspace.dart';
 import 'cash_workspace.dart';
 import 'staff_directory.dart';
+import 'print_service.dart';
+import 'documents_workspace.dart';
 import 'dashboard_insights.dart';
 import 'platform_ui.dart';
 import 'order_action_ui.dart';
@@ -165,6 +167,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     ('online', Icons.delivery_dining_outlined, 'Online Siparişler'),
     ('payments', Icons.point_of_sale_outlined, 'Kasa & Ödemeler'),
     ('printer', Icons.print_outlined, 'Yazdırma Kuyruğu'),
+    ('documents', Icons.description_outlined, 'Fiş & Fatura'),
     ('staff', Icons.qr_code_rounded, 'Personel & QR'),
     ('reports', Icons.bar_chart_outlined, 'Raporlar'),
     ('settings', Icons.settings_outlined, 'Ayarlar'),
@@ -557,6 +560,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                             'reports',
                             'payments',
                             'online',
+                            'documents',
                           ].contains(page)
                           ? _page(data)
                           : SingleChildScrollView(
@@ -722,6 +726,17 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
         return _payments(db);
       case 'printer':
         return _printer(db);
+      case 'documents':
+        return DocumentsWorkspace(
+          state: db,
+          edit: _edit,
+          runtime: runtime,
+          onOrder: (id) => setState(() {
+            selectedOrder = id;
+            page = 'orders';
+          }),
+          onPrinter: () => _switch('printer'),
+        );
       case 'staff':
         return _staff(db);
       case 'reports':
@@ -906,7 +921,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                 ),
                 _metric(
                   'Yazdırma Bekleyen',
-                  '${asMaps(db['printJobs']).where((j) => !['İşaretlendi', 'Simüle edildi'].contains(j['state'])).length}',
+                  '${asMaps(db['printJobs']).where((j) => !printCompleted(j)).length}',
                   Icons.print_outlined,
                   onTap: () => _switch('printer'),
                 ),
@@ -1086,7 +1101,11 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       Expanded(
-        child: PlatformPanel(state: db, edit: _edit),
+        child: PlatformPanel(
+          state: db,
+          edit: _edit,
+          onDocuments: () => _switch('documents'),
+        ),
       ),
       const SizedBox(height: 8),
       Align(
@@ -1373,7 +1392,8 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     }),
   );
 
-  Widget _printer(Json db) => PrinterWorkspace(state: db, edit: _edit);
+  Widget _printer(Json db) =>
+      PrinterWorkspace(state: db, edit: _edit, service: PrintService(store));
 
   Widget _staff(Json db) => StaffQrPanel(
     server: lan,

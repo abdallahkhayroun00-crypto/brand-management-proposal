@@ -2,11 +2,22 @@ import 'package:flutter/material.dart';
 import 'pos_logic.dart';
 import 'operations.dart';
 import 'operations_ui.dart';
+import 'ticket_document.dart';
+import 'ticket_paper.dart';
+import 'ticket_actions.dart';
+import 'print_service.dart';
+import 'platform_receipt_ui.dart';
 
 class PrinterWorkspace extends StatefulWidget {
-  const PrinterWorkspace({super.key, required this.state, required this.edit});
+  const PrinterWorkspace({
+    super.key,
+    required this.state,
+    required this.edit,
+    this.service,
+  });
   final Json state;
   final EditState edit;
+  final PrintService? service;
   @override
   State<PrinterWorkspace> createState() => _PrinterWorkspaceState();
 }
@@ -14,14 +25,15 @@ class PrinterWorkspace extends StatefulWidget {
 class _PrinterWorkspaceState extends State<PrinterWorkspace> {
   String filter = 'Bekleyen', search = '';
   String? selected;
+  bool sending = false;
   String keyOf(Json j) => '${j['orderId']}:${j['batchId']}';
-  bool completed(Json j) =>
-      ['İşaretlendi', 'Simüle edildi'].contains(j['state']);
+  bool completed(Json j) => printCompleted(j);
   void simulate(Json selected, bool success) => widget.edit((s) {
     final j = (s['printJobs'] as List).cast<Map>().firstWhere(
       (j) => '${j['orderId']}:${j['batchId']}' == keyOf(selected),
     );
-    if (['İşaretlendi', 'Simüle edildi'].contains(j['state'])) {
+    if (printCompleted(j.cast<String, dynamic>()) ||
+        printUncertain(j.cast<String, dynamic>())) {
       throw const FormatException('Tamamlanmış iş tekrar gönderilmez');
     }
     j['state'] = success ? 'Simüle edildi' : 'Hata';
@@ -37,18 +49,26 @@ class _PrinterWorkspaceState extends State<PrinterWorkspace> {
               (filter == 'Tümü' ||
                   filter == 'Bekleyen' &&
                       !completed(j) &&
+                      !printUncertain(j) &&
                       j['state'] != 'Hata' ||
                   filter == 'Hata' && j['state'] == 'Hata' ||
+                  filter == 'Doğrula' && printUncertain(j) ||
                   filter == 'Tamamlanan' && completed(j)) &&
               '${j['orderId']} ${j['batchId']}'.contains(search),
         )
         .toList();
     final job =
         rows.where((j) => keyOf(j) == selected).firstOrNull ?? rows.firstOrNull;
+    TicketDocument? document;
+    final order = job == null
+        ? null
+        : mutableOrder(widget.state, job['orderId'] as int);
+    final platform = order != null && isPlatform(order);
     String preview = 'Önizlemek için soldan bir mutfak işi seçin.';
     if (job != null) {
       try {
         preview = receiptText(widget.state, job);
+        if (!platform) document = kitchenTicket(widget.state, job);
       } catch (_) {
         preview = 'Sipariş bilgisi bulunamadı.';
       }
@@ -156,16 +176,24 @@ class _PrinterWorkspaceState extends State<PrinterWorkspace> {
                   border: Border.all(color: const Color(0xffe8e0cf)),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: SingleChildScrollView(
-                  child: SelectableText(
-                    preview,
-                    style: const TextStyle(
-                      fontFamily: 'Consolas',
-                      height: 1.65,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
+                child: platform
+                    ? PlatformReceiptView(
+                        state: widget.state,
+                        order: order,
+                        edit: widget.edit,
+                      )
+                    : SingleChildScrollView(
+                        child: document != null
+                            ? TicketPaper(document: document)
+                            : SelectableText(
+                                preview,
+                                style: const TextStyle(
+                                  fontFamily: 'Consolas',
+                                  height: 1.65,
+                                  fontSize: 13,
+                                ),
+                              ),
+                      ),
               ),
             ),
             if (job != null && '${job['error'] ?? ''}'.isNotEmpty)
@@ -180,7 +208,103 @@ class _PrinterWorkspaceState extends State<PrinterWorkspace> {
                 ),
               ),
             const SizedBox(height: 12),
-            if (job != null && !completed(job))
+            if (document != null || platform && job?['platformReceipt'] != null)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (document != null)
+                    OutlinedButton.icon(
+                      onPressed: () => saveTicketPdf(context, document!),
+                      icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                      label: const Text('80 mm PDF Kaydet'),
+                    ),
+                  if (widget.state['settings']?['printerMode'] == 'windows')
+                    FilledButton.icon(
+                      onPressed:
+                          sending ||
+                              widget.service == null ||
+                              job == null ||
+                              completed(job) ||
+                              printUncertain(job)
+                          ? null
+                          : () async {
+                              setState(() => sending = true);
+                              try {
+                                final result = await widget.service!.print(
+                                  keyOf(job),
+                                );
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(result)),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).showSnackBar(SnackBar(content: Text('$e')));
+                                }
+                              } finally {
+                                if (mounted) setState(() => sending = false);
+                              }
+                            },
+                      icon: const Icon(Icons.print_outlined, size: 18),
+                      label: Text(
+                        sending ? 'Gönderiliyor…' : 'Seçili Yazıcıya Gönder',
+                      ),
+                    ),
+                ],
+              ),
+            if (job != null && printUncertain(job) && widget.service != null)
+              Wrap(
+                spacing: 6,
+                children: [
+                  for (final exists in [true, false])
+                    TextButton(
+                      onPressed: sending
+                          ? null
+                          : () async {
+                              final v = await askFields(
+                                context,
+                                exists
+                                    ? 'Çıktı / Windows Kuyruğu Doğrulandı'
+                                    : 'Çıktı Oluşmadığı Doğrulandı',
+                                [
+                                  (
+                                    'Fiziksel çıktı ve Windows kuyruğu kontrol notu',
+                                    '',
+                                  ),
+                                ],
+                              );
+                              if (v != null) {
+                                try {
+                                  widget.service!.reconcile(
+                                    keyOf(job),
+                                    outputExists: exists,
+                                    reason: v[0],
+                                  );
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('$e')),
+                                    );
+                                  }
+                                }
+                              }
+                            },
+                      child: Text(
+                        exists
+                            ? 'Çıktı Var · Tamamla'
+                            : 'Çıktı Yok · Kuyruğa Al',
+                      ),
+                    ),
+                ],
+              ),
+            if (job != null &&
+                !completed(job) &&
+                !printUncertain(job) &&
+                widget.state['settings']?['printerMode'] != 'windows')
               ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 title: const Text(
@@ -207,9 +331,11 @@ class _PrinterWorkspaceState extends State<PrinterWorkspace> {
                   ),
                 ],
               ),
-            const Text(
-              'Fiziksel yazıcı bağlı değil. Bu ekran önizleme ve simülasyondur; mali fiş veya KOPYA FİŞ üretmez.',
-              style: TextStyle(fontSize: 11, color: Color(0xff7c8b80)),
+            Text(
+              widget.state['settings']?['printerMode'] == 'windows'
+                  ? 'Tek Windows / USB yazıcısı seçili. Sürücüde 80 mm kâğıdı ayarlayın. Kuyruk kabulü fiziksel baskı doğrulaması değildir. Mali fiş / fatura oluşturulmaz.'
+                  : 'Fiziksel yazıcı seçili değil. PDF ve simülasyon kullanılabilir; mali fiş veya fatura oluşturulmaz.',
+              style: const TextStyle(fontSize: 11, color: Color(0xff7c8b80)),
             ),
           ],
         ),
@@ -231,10 +357,16 @@ class _PrinterWorkspaceState extends State<PrinterWorkspace> {
         Wrap(
           spacing: 8,
           children: [
-            for (final tab in ['Bekleyen', 'Hata', 'Tamamlanan', 'Tümü'])
+            for (final tab in [
+              'Bekleyen',
+              'Hata',
+              'Doğrula',
+              'Tamamlanan',
+              'Tümü',
+            ])
               ChoiceChip(
                 label: Text(
-                  '$tab · ${jobs.where((j) => tab == 'Tümü' || tab == 'Bekleyen' && !completed(j) && j['state'] != 'Hata' || tab == 'Hata' && j['state'] == 'Hata' || tab == 'Tamamlanan' && completed(j)).length}',
+                  '$tab · ${jobs.where((j) => tab == 'Tümü' || tab == 'Bekleyen' && !completed(j) && j['state'] != 'Hata' && !printUncertain(j) || tab == 'Hata' && j['state'] == 'Hata' || tab == 'Doğrula' && printUncertain(j) || tab == 'Tamamlanan' && completed(j)).length}',
                 ),
                 selected: filter == tab,
                 onSelected: (_) => setState(() => filter = tab),

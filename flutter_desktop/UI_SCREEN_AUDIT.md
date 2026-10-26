@@ -24,3 +24,7 @@ This review covers the actual native manager destinations and the staff Chrome i
 - Platform management and finance remain explicitly DEMO. API credentials are absent. Current capability gates, PC-only acceptance/payment, secure key storage and command-only staff LAN access remain enforced.
 - Bank POS, fiscal ÖKC and physical printing are not connected. A CSV or app record is not a certified accounting/fiscal document.
 - Tests cover representative action flows, not every possible data volume, Windows scale factor or visual preference. The screens remain reviewable without claiming that all live integrations or migration gaps are complete.
+
+## 0.7.0 — branded tickets and invoice documents
+
+See [PRINTING_AND_INVOICES.md](PRINTING_AND_INVOICES.md) for the new native **Fiş & Fatura** destination, branded immutable preparation batches, 80 mm PDF exports, one Windows USB driver, uncertain-output reconciliation and externally issued invoice registration. The Trendyol Meal invoice-link adapter is implemented and mock-tested; no credentials or live account test are available. Yemeksepeti invoice upload and fiscal issuance remain unavailable. Physical printer output is unverified. This supersedes earlier descriptions of all printing and invoice-link operations as simulation-only. The original HTML demo remains unchanged.

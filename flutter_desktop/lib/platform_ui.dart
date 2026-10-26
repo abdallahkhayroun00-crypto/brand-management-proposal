@@ -7,9 +7,15 @@ import 'order_actions.dart';
 import 'workspace_ui.dart';
 
 class PlatformPanel extends StatefulWidget {
-  const PlatformPanel({super.key, required this.state, required this.edit});
+  const PlatformPanel({
+    super.key,
+    required this.state,
+    required this.edit,
+    this.onDocuments,
+  });
   final Json state;
   final EditState edit;
+  final VoidCallback? onDocuments;
   @override
   State<PlatformPanel> createState() => _PlatformPanelState();
 }
@@ -1092,6 +1098,30 @@ class _PlatformPanelState extends State<PlatformPanel> {
   }
 
   Widget invoices() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      panelTitle('Fiş ve Fatura Belgeleri'),
+      const Text(
+        'Hazırlık fişi ve hesap özeti mali fatura değildir. Harici düzenlenmiş satış belgesini ayrı belge merkezinde kaydedin.',
+        style: TextStyle(fontSize: 12, color: muted),
+      ),
+      const SizedBox(height: 16),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: FilledButton.icon(
+          onPressed: widget.onDocuments,
+          icon: const Icon(Icons.description_outlined, size: 18),
+          label: const Text('Fiş & Fatura Merkezini Aç'),
+        ),
+      ),
+      const SizedBox(height: 16),
+      ExpansionTile(
+        title: const Text('DEMO Fatura Bağlantısı Senaryosu'),
+        children: [invoiceDemo()],
+      ),
+    ],
+  );
+  Widget invoiceDemo() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       panelTitle('Fatura Bağlantıları'),

@@ -7,6 +7,7 @@ import 'operations_ui.dart';
 import 'platform_runtime.dart';
 import 'platform_settings_ui.dart';
 import 'workspace_ui.dart';
+import 'package:printing/printing.dart';
 
 class SettingsWorkspace extends StatefulWidget {
   const SettingsWorkspace({
@@ -32,6 +33,80 @@ class _SettingsWorkspaceState extends State<SettingsWorkspace> {
   int? selected;
   final price = TextEditingController(), printer = TextEditingController();
   bool printerLoaded = false;
+  bool scanningPrinters = false;
+  Future<void> choosePrinter() async {
+    setState(() => scanningPrinters = true);
+    try {
+      final info = await Printing.info();
+      if (!info.canListPrinters || !info.directPrint) {
+        throw const FormatException(
+          'Windows yazıcı listesi / doğrudan yazdırma desteklenmiyor.',
+        );
+      }
+      final printers = await Printing.listPrinters();
+      if (!mounted) return;
+      final chosen = await showDialog<Printer>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Tek Windows / USB Yazıcısı Seç'),
+          content: SizedBox(
+            width: 500,
+            height: 330,
+            child: printers.isEmpty
+                ? const WorkEmpty(
+                    title: 'Windows yazıcısı bulunamadı',
+                    message:
+                        'USB yazıcısını bağlayıp Windows sürücüsünü kurun.',
+                  )
+                : ListView(
+                    children: [
+                      for (final p in printers)
+                        ListTile(
+                          leading: const Icon(Icons.print_outlined),
+                          title: Text(p.name),
+                          subtitle: Text(
+                            p.isAvailable
+                                ? 'Windows sürücüsü · Cihaz türünü kontrol edin'
+                                : 'Windows: kullanılamıyor',
+                          ),
+                          onTap: p.isAvailable
+                              ? () => Navigator.pop(ctx, p)
+                              : null,
+                        ),
+                    ],
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Vazgeç'),
+            ),
+          ],
+        ),
+      );
+      if (chosen != null &&
+          mounted &&
+          widget.edit((s) {
+            final settings =
+                s.putIfAbsent('settings', () => <String, dynamic>{}) as Map;
+            settings['printerName'] = chosen.name;
+            settings['printerUrl'] = chosen.url;
+            settings['printerCount'] = 1;
+            settings['printerMode'] = 'windows';
+            settings['paperWidthMm'] = 80;
+          })) {
+        printer.text = chosen.name;
+        message(
+          'Windows yazıcısı seçildi. Fiziksel 80 mm çıktı testi henüz yapılmadı.',
+        );
+      }
+    } catch (e) {
+      if (mounted) message('Yazıcı listelenemedi: $e');
+    } finally {
+      if (mounted) setState(() => scanningPrinters = false);
+    }
+  }
+
   String? result;
   static const sections = <String, IconData>{
     'Genel': Icons.tune,
@@ -118,7 +193,9 @@ class _SettingsWorkspaceState extends State<SettingsWorkspace> {
             ),
             statusRow(
               'Tek mutfak yazıcısı',
-              'Bağlı değil · Önizleme ve simülasyon',
+              widget.state['settings']?['printerMode'] == 'windows'
+                  ? 'Windows sürücüsü seçili · Fiziksel test bekliyor'
+                  : 'Simülasyon · Ayarlar’dan Windows / USB yazıcısı seçilebilir',
               Icons.print_outlined,
               onTap: () => setState(() => section = 'Yazıcı'),
             ),
@@ -334,7 +411,9 @@ class _SettingsWorkspaceState extends State<SettingsWorkspace> {
             children: [
               statusRow(
                 'Yazıcı 1',
-                'Bağlı değil · Simülasyon',
+                widget.state['settings']?['printerMode'] == 'windows'
+                    ? 'Windows sürücüsü seçili · Fiziksel test bekliyor'
+                    : 'Seçili değil · Simülasyon',
                 Icons.print_outlined,
               ),
               const SizedBox(height: 14),
@@ -352,6 +431,15 @@ class _SettingsWorkspaceState extends State<SettingsWorkspace> {
                 runSpacing: 8,
                 children: [
                   FilledButton.icon(
+                    onPressed: scanningPrinters ? null : choosePrinter,
+                    icon: const Icon(Icons.usb, size: 18),
+                    label: Text(
+                      scanningPrinters
+                          ? 'Listeleniyor…'
+                          : 'Windows USB Yazıcısı Seç',
+                    ),
+                  ),
+                  FilledButton.icon(
                     onPressed: () {
                       if (widget.edit((s) {
                         final settings =
@@ -359,9 +447,11 @@ class _SettingsWorkspaceState extends State<SettingsWorkspace> {
                                 as Map;
                         settings['printerName'] = printer.text.trim();
                         settings['printerCount'] = 1;
-                        settings['printerMode'] = 'simulation';
+                        settings['printerMode'] ??= 'simulation';
                       })) {
-                        message('Yazıcı bilgisi kaydedildi · Simülasyon.');
+                        message(
+                          'Yazıcı adı kaydedildi. Cihaz seçimi değiştirilmedi.',
+                        );
                       }
                     },
                     icon: const Icon(Icons.save_outlined, size: 18),
@@ -372,6 +462,20 @@ class _SettingsWorkspaceState extends State<SettingsWorkspace> {
                     icon: const Icon(Icons.receipt_long, size: 18),
                     label: const Text('Kuyruk ve Fiş Önizleme'),
                   ),
+                  TextButton(
+                    onPressed: () {
+                      if (widget.edit((s) {
+                        (s.putIfAbsent('settings', () => <String, dynamic>{})
+                                as Map)['printerMode'] =
+                            'simulation';
+                      })) {
+                        message(
+                          'Simülasyon modu seçildi. Fiziksel yazdırma kapalı.',
+                        );
+                      }
+                    },
+                    child: const Text('Simülasyon Modu'),
+                  ),
                 ],
               ),
             ],
@@ -380,7 +484,7 @@ class _SettingsWorkspaceState extends State<SettingsWorkspace> {
         const SizedBox(height: 14),
         const WorkCard(
           child: Text(
-            'İlk sipariş ve ek ürünler ayrı mutfak işleri oluşturur. Ödeme yeni hazırlık fişi oluşturmaz. Tek cihaz kullanılır; kopya fiş oluşturulmaz. Fiziksel cihaz ve mali ÖKC entegrasyonu henüz yoktur.',
+            'İlk sipariş ve ek ürünler ayrı mutfak işleri oluşturur. Ek fişte yalnızca ek ürünler bulunur. Tek Windows yazıcısı kullanılır; tamamlanmış mutfak işi tekrar gönderilmez. Sürücüde 80 mm kâğıdı seçin. Kuyruk kabulü fiziksel çıktı doğrulaması değildir. Mali ÖKC / e-Fatura bağlantısı yoktur.',
             style: TextStyle(fontSize: 12, height: 1.6, color: muted),
           ),
         ),

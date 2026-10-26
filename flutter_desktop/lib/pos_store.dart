@@ -7,6 +7,7 @@ import 'package:path/path.dart' as paths;
 import 'package:sqlite3/sqlite3.dart';
 import 'pos_logic.dart';
 import 'operations.dart';
+import 'ticket_document.dart';
 
 part 'staff_auth.dart';
 
@@ -280,6 +281,7 @@ class PosStore extends ChangeNotifier {
       }
       final current = read(), next = copyJson(read().data);
       result = change(next);
+      freezeKitchenTickets(next);
       validate(next);
       final revision = current.revision + 1;
       result['revision'] = revision;
@@ -310,6 +312,7 @@ class PosStore extends ChangeNotifier {
   }
 
   WriteResult replace(Map<String, dynamic> next, int expectedRevision) {
+    freezeKitchenTickets(next);
     validate(next);
     _db.execute('BEGIN IMMEDIATE');
     try {

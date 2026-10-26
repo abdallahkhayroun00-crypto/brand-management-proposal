@@ -5,6 +5,7 @@ import 'package:nohut_falafel_desktop/printer_workspace.dart';
 import 'package:nohut_falafel_desktop/pos_logic.dart';
 import 'package:nohut_falafel_desktop/pos_store.dart';
 import 'package:nohut_falafel_desktop/operations.dart';
+import 'package:nohut_falafel_desktop/ticket_paper.dart';
 
 void main() {
   testWidgets(
@@ -124,10 +125,15 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byType(SelectableText), findsOneWidget);
+      expect(find.byType(TicketPaper), findsOneWidget);
       expect(
-        tester.widget<SelectableText>(find.byType(SelectableText)).data,
-        contains('Ayran'),
+        tester
+            .widget<TicketPaper>(find.byType(TicketPaper))
+            .document
+            .lines
+            .single
+            .name,
+        'Ayran',
       );
       await tester.tap(find.text('Demo Test Araçları'));
       await tester.pumpAndSettle();

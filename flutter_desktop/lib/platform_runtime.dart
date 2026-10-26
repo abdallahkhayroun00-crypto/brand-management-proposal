@@ -5,6 +5,7 @@ import 'pos_logic.dart';
 import 'platform_api.dart';
 import 'platform_workflows.dart';
 import 'order_actions.dart';
+import 'invoice_sync.dart';
 
 Json normalizeTgoMeal(Json raw, PlatformCredentials c) {
   if ('${raw['storeId']}' != c.field('storeId') ||
@@ -133,6 +134,7 @@ class PlatformRuntime extends ChangeNotifier {
   final PosStore store;
   final CredentialVault vault;
   final RestaurantApi api;
+  late final invoiceSync = InvoiceSync(store, api);
   final statuses = <String, String>{};
   Timer? timer;
   bool _busy = false, _disposed = false;
@@ -146,6 +148,13 @@ class PlatformRuntime extends ChangeNotifier {
     // A crash after a provider accepted but before SQLite commit must not result
     // in an automatic second POST. Require reconciliation for uncertain jobs.
     edit((s) {
+      for (final job in (s['invoiceJobs'] as List? ?? []).whereType<Map>()) {
+        if (job['status'] == 'Gönderiliyor') {
+          job['status'] = 'Belirsiz';
+          job['error'] =
+              'Önceki gönderim sonucu doğrulanmalı; otomatik tekrar yok.';
+        }
+      }
       for (final j in orderOperations(
         s,
       ).where((j) => j['status'] == 'Gönderiliyor')) {
@@ -428,6 +437,7 @@ class PlatformRuntime extends ChangeNotifier {
         ).where((j) => j['source'] == source && j['status'] == 'Bekliyor')) {
           await _dispatch(j, c);
         }
+        await invoiceSync.runSource(c);
       }
     } finally {
       _busy = false;

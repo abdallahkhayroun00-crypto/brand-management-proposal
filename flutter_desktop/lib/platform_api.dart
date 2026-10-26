@@ -223,6 +223,56 @@ class RestaurantApi {
   RestaurantApi(this.transport);
   final ApiTransport transport;
   final _tokens = <String, (String, DateTime)>{};
+
+  /// Meal invoice-link contract; does not create/sign an invoice and must never
+  /// use packageId, grocery endpoints or guessed Yemeksepeti routes.
+  Future<void> sendInvoiceLink(
+    PlatformCredentials c,
+    String providerOrderId,
+    String invoiceLink,
+  ) async {
+    c.validate();
+    final url = Uri.tryParse(invoiceLink);
+    if (c.source != 'Trendyol Go' ||
+        c.mode == 'off' ||
+        !c.confirmed ||
+        !c.configured ||
+        !RegExp(r'^[A-Za-z0-9_-]{1,150}$').hasMatch(providerOrderId) ||
+        url == null ||
+        url.scheme != 'https' ||
+        url.host.isEmpty ||
+        url.userInfo.isNotEmpty) {
+      throw const IntegrationFailure(
+        'Fatura bağlantısı / resmi Meal hesabı eksik; gönderilmedi.',
+      );
+    }
+    final endpoint = c.base.resolve(
+      '/integrator/invoice/meal/suppliers/${Uri.encodeComponent(c.field('supplierId'))}/supplier-invoice-links/4/${Uri.encodeComponent(providerOrderId)}',
+    );
+    try {
+      final r = await transport.call(
+        'POST',
+        endpoint,
+        headers: tgoHeaders(c),
+        body: {'invoiceLink': invoiceLink},
+      );
+      checkReply(r, mutation: true);
+      if (r.status != 201) {
+        throw const IntegrationFailure(
+          'Fatura API’si beklenen 201 sonucunu vermedi; platformda doğrulayın.',
+          uncertain: true,
+        );
+      }
+    } on IntegrationFailure {
+      rethrow;
+    } catch (_) {
+      throw const IntegrationFailure(
+        'Fatura gönderiminin sonucu alınamadı; otomatik tekrar yok.',
+        uncertain: true,
+      );
+    }
+  }
+
   Map<String, String> tgoHeaders(PlatformCredentials c) => {
     'Authorization':
         'Basic ${base64Encode(utf8.encode('${c.field('apiKey')}:${c.field('apiSecret')}'))}',

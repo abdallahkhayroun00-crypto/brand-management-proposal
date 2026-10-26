@@ -44,3 +44,7 @@ Reviewed 25 October 2026. Exact restaurant-account capabilities still require on
 ## Acceptance still required
 
 Two real Chrome phones on private Wi-Fi, Windows restart/revocation, API stage accounts and partner callback certification, gateway TLS/backup/access controls, source status and payment reconciliation, and all bank/printer/fiscal device tests remain outstanding. API tests here use fake credentials and transports. A passing release build does not establish a live external connection.
+
+## 0.7.0 — branded tickets and invoice documents
+
+See [PRINTING_AND_INVOICES.md](PRINTING_AND_INVOICES.md) for the new native **Fiş & Fatura** destination, branded immutable preparation batches, 80 mm PDF exports, one Windows USB driver, uncertain-output reconciliation and externally issued invoice registration. The Trendyol Meal invoice-link adapter is implemented and mock-tested; no credentials or live account test are available. Yemeksepeti invoice upload and fiscal issuance remain unavailable. Physical printer output is unverified. This supersedes earlier descriptions of all printing and invoice-link operations as simulation-only. The original HTML demo remains unchanged.

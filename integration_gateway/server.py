@@ -123,6 +123,16 @@ class Handler(BaseHTTPRequestHandler):
         try:
             verify_middleware_jwt(self.headers.get("Authorization", ""), self.server.webhook_secret)
         except Exception:
+            # Consume a bounded rejected POST body before replying. Closing a
+            # socket with unread body bytes can reset Windows HTTP clients
+            # before they receive the 401 response.
+            try:
+                size = int(self.headers.get("Content-Length", "0"))
+                if 0 < size <= 2 * 1024 * 1024:
+                    self.connection.settimeout(5)
+                    self.rfile.read(size)
+            except (ValueError, OSError):
+                pass
             self.reply(401, {"error": "unauthorized"}); return
         parts = [unquote(p) for p in urlparse(self.path).path.split("/") if p]
         if kind == "order" and len(parts) == 2 and parts == ["order", self.server.remote_id]:

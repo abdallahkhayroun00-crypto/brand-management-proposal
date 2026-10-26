@@ -144,6 +144,7 @@ void main() {
           'Tüm Siparişler',
           'Kasa & Ödemeler',
           'Yazdırma Kuyruğu',
+          'Fiş & Fatura',
           'Personel & QR',
           'Raporlar',
           'Ayarlar',
@@ -154,6 +155,28 @@ void main() {
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull, reason: label);
           expect(find.text(label), findsAtLeastNWidgets(2));
+          if (label == 'Fiş & Fatura') {
+            await tester.tap(
+              find.byKey(const ValueKey('work-tab-Satış Belgeleri')),
+            );
+            await tester.pumpAndSettle();
+            expect(
+              tester.takeException(),
+              isNull,
+              reason: 'Fiscal provider gating at ${size.width}',
+            );
+            final issue = tester.widget<FilledButton>(
+              find.widgetWithText(
+                FilledButton,
+                'Mali Fatura Kes · Sağlayıcı Gerekli',
+              ),
+            );
+            expect(issue.onPressed, isNull);
+            await tester.tap(
+              find.byKey(const ValueKey('work-tab-Hesap Özeti')),
+            );
+            await tester.pumpAndSettle();
+          }
           if (label == 'Ayarlar') {
             for (final section in [
               'Menü & Fiyatlar',
