@@ -37,7 +37,7 @@ The mascot now includes a completely simulated operating-day rule engine in [day
 - [Host C++ tests](firmware/tests/character_test.cpp) — 20 emotion roundtrips, 30-second hello debounce, photo lock, sleep, quiet mode, uint32 clock rollover.
 - [Firmware build CI](https://github.com/abdallahkhayroun00-crypto/brand-management-proposal/actions/workflows/nohutcuk-firmware.yml) — checks native logic and attempts an actual PlatformIO ESP32-S3 compilation.
 
-**Selected color face:** **3.2-inch ILI9341 240×320 SPI TFT (320×240 landscape)** with Espressif ESP32-S3-DevKitC-1. The previously considered 1.9-inch and 2.4-inch displays are **not to be purchased**. Current CAD head (100×58mm) must grow to accommodate the ~89.3×55mm no-touch MZK-6 board, its viewing aperture and wiring. Validate the specific supplier breakout and dimensions before print.
+**Selected color face:** **3.2-inch ILI9341 240×320 SPI TFT (320×240 landscape)** with Espressif ESP32-S3-DevKitC-1. The previously considered 1.9-inch and 2.4-inch displays are **not to be purchased**. The CAD prototype head **has now been resized to 116×80×58mm** to accommodate the approximately 89.3×55mm MZK-6 board envelope; the screen carrier and face opening have also been updated, but exact PCB mounting holes and connector clearance remain unverified. Validate the specific supplier breakout and dimensions before print.
 
 **Safety:** servo, amplifier and Wi-Fi-PC integration are NOT turned on in this initial firmware. TTP223 head touch and VL53L0X carrier distance sensor are future opt-in flags. This code is **not yet confirmed on a physically wired screen**; the GitHub C++/PlatformIO build is only a compile test. Browser JavaScript remains separate and operational.
 
@@ -68,6 +68,9 @@ Built with [index.html](index.html), [styles.css](styles.css), [app.js](app.js),
 
 ## 🖨️ Published 3D CAD prototype files — GitHub verified
 
+**Regenerated 2026-10-27 for the selected 3.2-inch ILI9341:** all 16 modular STLs, all 16 slicer-oriented STLs, the two merged STL references, both STEP models, the new ZIP and 18 geometry report entries. CI [successful regeneration](https://github.com/abdallahkhayroun00-crypto/brand-management-proposal/actions/runs/40422211886). These are mesh/manifold checks, NOT actual printed/motor/PCB-fitting tests.
+
+
 **All the following are now committed and verified in this repository:**
 
 | What you need | GitHub file / folder | Description |
@@ -81,7 +84,7 @@ Built with [index.html](index.html), [styles.css](styles.css), [app.js](app.js),
 | **Editable Python CAD source** | [CAD_Source/](CAD_Source/) | Parametric CadQuery generator, print orientation & mesh checks |
 | **Mesh reports** | [Docs/](Docs/) | Validation of watertight geometry and connectedness |
 
-**Prototype geometry dimensions:** approximate total height 155 mm including leaves; head 100 mm wide × 58 mm tall × 50 mm deep; body 74 mm wide × 47 mm tall × 58 mm deep. The 77 × 34 mm display cutout is a *placeholder* and needs an actual selected color display's measurements.
+**Updated 3.2-inch prototype geometry:** total height approximately **179 mm** including leaves; head **116 × 80 × 58 mm** (W×H×D), body **84 × 64 × 55 mm** (W×D×H), screen opening **69 × 52 mm**, screen carrier **102 × 66 × 3 mm**. CAD assumes a **provisional 89.3 × 55.04 mm PCB** and **64.8 × 48.6 mm active image**, neither physically checked. [Complete 3.2-inch STL/STEP changelog](docs/CAD_3_2_CHANGELOG.md).
 
 The 16 individual STL files, 16 oriented STL files and single connected one-piece mesh passed automated geometric checks. **These are not physically test-printed and are not confirmed to fit any specific OLED/TFT screen, servo, ESP32-S3, sensors, cables or battery.** The one-piece figure is for decorative printing; use the modular set for developing the functional robot. **No final 3MF slicer preset, firmware, tested wiring diagram or physical assembly has been completed.**
 
