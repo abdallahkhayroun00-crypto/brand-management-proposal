@@ -7,4 +7,4 @@ This repository now serves two separate experiences:
 
 The root `index.html` redirects to the existing QR menu. Keep `.nojekyll` for GitHub Pages.
 
-- **Native Windows POS:** `flutter_desktop/` — native Flutter manager/cashier, embedded LAN staff ordering and shared SQLite. See [feature parity audit](flutter_desktop/FEATURE_PARITY.md) and [Windows instructions](flutter_desktop/README.md). External platform/payment/printer connections remain simulated.
+- **Native Windows POS:** `flutter_desktop/` — native Flutter manager/cashier, embedded LAN staff ordering and shared SQLite. See [feature parity audit](flutter_desktop/FEATURE_PARITY.md) and [Windows instructions](flutter_desktop/README.md). External platform/payment connections remain simulated. XP-237B receipt printing uses its Windows driver; physical acceptance is still required.

@@ -122,22 +122,25 @@ Future<void> windowsPrint(String text, String printer) async {
     final script = await rootBundle.loadString(
       'assets/printing/print-receipt.ps1',
     );
-    final process = await Process.start(
-      executable,
-      ['-NoProfile', '-NonInteractive', '-Command', '-'],
-      environment: {
-        'NOHUT_RECEIPT_JOB': base64Encode(utf8.encode('${dir.path}/job.json')),
-      },
-    );
     final body = script.replaceFirst(
       RegExp(r'^param[^\n]*\n'),
       r'$JobPath = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($env:NOHUT_RECEIPT_JOB))'
       '\n',
     );
-    process.stdin.writeln(
-      'try {\n$body\n'
-      r'} catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 }'
-      '\nexit 0',
+    final command =
+        'try {\n$body\n'
+        r'} catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 }'
+        '\nexit 0';
+    // PowerShell's EncodedCommand expects UTF-16LE; job data never enters source.
+    final encoded = base64Encode([
+      for (final unit in command.codeUnits) ...[unit & 255, unit >> 8],
+    ]);
+    final process = await Process.start(
+      executable,
+      ['-NoProfile', '-NonInteractive', '-EncodedCommand', encoded],
+      environment: {
+        'NOHUT_RECEIPT_JOB': base64Encode(utf8.encode('${dir.path}/job.json')),
+      },
     );
     await process.stdin.close();
     final output = process.stdout.drain<void>();

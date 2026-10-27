@@ -900,7 +900,10 @@ class PrinterPanel extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      panelTitle('Tek Yazıcı · Mutfak İşleri'),
+      panelTitle('Xprinter XP-237B · 58 mm Fiş'),
+      info(
+        '48 mm baskı alanı · Büyük boyutlu sayfaları daralt: Varsayılan · Büyütme yapılmaz.',
+      ),
       info(
         'Masa / Gel-Al ve ek siparişler PC kuyruğundan otomatik basılır. Ayarlar → Yazıcı Ayarı: Windows yazıcı adını kaydedin. Kuyruğa gönderildi, kağıt çıktısını doğrulamaz.',
       ),

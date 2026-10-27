@@ -108,12 +108,12 @@
 .staff-demo-footer{max-width:1100px;margin:15px auto;color:#728475;font-size:11px;line-height:1.6}
 @media(max-width:780px){.admin-menu-entry .catalog-scroll{grid-template-columns:1fr}.admin-table-order{padding:14px}.admin-table-payment{padding:10px}.admin-table-payment-head{align-items:flex-start}.standalone-staff{padding:0 8px 20px}.standalone-staff-header img{width:35px;height:35px}}
 
-/* Thermal receipt redesign: high-contrast reference layout, 80mm paper, one printer. */
+/* Thermal receipt redesign: high-contrast reference layout, XP-237B 58mm paper, 48mm print area. */
 @media print{
- @page{size:80mm auto;margin:3mm}
+ @page{size:auto;margin:5mm}
  html,body{background:#fff!important;margin:0!important;padding:0!important;color:#000!important}
  .app,.toast,.worker-login-shell{display:none!important}
- #print-sheet.only-print{display:block!important;width:74mm!important;max-width:74mm!important;margin:0 auto!important;padding:1mm!important;background:#fff!important;color:#000!important;font-family:Arial,"Arial Narrow",Helvetica,sans-serif!important;font-size:11px!important;line-height:1.35!important}
+ #print-sheet.only-print{display:block!important;width:100%!important;max-width:48mm!important;margin:0 auto!important;padding:0!important;background:#fff!important;color:#000!important;font-family:Arial,"Arial Narrow",Helvetica,sans-serif!important;font-size:11px!important;line-height:1.35!important}
  #print-sheet.only-print *{color:#000!important;background:transparent!important;box-shadow:none!important;box-sizing:border-box!important}
  #print-sheet .nf-receipt-logo{margin:4px auto 14px!important;text-align:center!important}
  #print-sheet .nf-receipt-logo img{display:block!important;width:30mm!important;max-width:100%!important;height:30mm!important;max-height:30mm!important;object-fit:contain!important;filter:none!important;margin:0 auto!important}
@@ -1001,7 +1001,7 @@ function autoDrain(){
 }
 window.addEventListener("afterprint",function(){autoPrinting=false;scheduleAutoPrint()});
 var autoRender=render;render=function(){autoRender();scheduleAutoPrint()};
-var automaticPrinterPage=printerPage;printerPage=function(){return '<section class="panel" style="margin:18px 0"><h3>Otomatik Mutfak Fişi · Bu PC</h3><p class="sub">'+(autoEnabled()?'Açık':'Kapalı')+' · Masa / Gel-Al onaylanınca ve yeni ek ürünlerde bir kez yazdırma açılır. Personel telefonunda basılmaz. Önceden kuyruğa alınmış eski işler otomatik basılmaz.</p><button class="secondary" data-auto-print-toggle>'+ (autoEnabled()?'Otomatik Yazdırmayı Kapat':'Otomatik Yazdırmayı Aç')+'</button><p class="sub">Tarayıcı normalde yazdırma penceresini gösterir. Penceresiz baskı için Windows uygulamasında yazıcı adını ayarlayın. İptal edilen baskıyı kuyruktan elle tekrar açın.</p></section>'+automaticPrinterPage()};
+var automaticPrinterPage=printerPage;printerPage=function(){return '<section class="panel" style="margin:18px 0"><h3>XP-237B · 58 mm · Otomatik Mutfak Fişi</h3><p class="sub">'+(autoEnabled()?'Açık':'Kapalı')+' · Masa / Gel-Al onaylanınca ve yeni ek ürünlerde bir kez yazdırma açılır. Personel telefonunda basılmaz. Önceden kuyruğa alınmış eski işler otomatik basılmaz.</p><button class="secondary" data-auto-print-toggle>'+ (autoEnabled()?'Otomatik Yazdırmayı Kapat':'Otomatik Yazdırmayı Aç')+'</button><p class="sub">48 mm baskı alanına sığdırılır. Büyük sayfaları daralt varsayılandır. Tarayıcı normalde yazdırma penceresini gösterir. Penceresiz baskı için Windows uygulamasında yazıcı adını ayarlayın. İptal edilen baskıyı kuyruktan elle tekrar açın.</p></section>'+automaticPrinterPage()};
 document.addEventListener("click",function(e){var b=e.target.closest("button[data-auto-print-toggle],button[data-workload-export]");if(!b)return;if(b.hasAttribute("data-auto-print-toggle")){localStorage.setItem("nohut-auto-kitchen",autoEnabled()?"off":"on");render();return}var rows=[["Başlangıç","Bitiş","Saat (Europe/Istanbul)","Sipariş Sayısı"]];hourlyWorkload().forEach(function(n,h){rows.push([reportFrom,reportTo,String(h).padStart(2,"0")+":00",n])});exportRows("nohut-saatlik-yogunluk.csv",rows)});
 
 render();

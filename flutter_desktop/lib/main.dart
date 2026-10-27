@@ -168,6 +168,20 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           product['price'] = 45;
         }
       }
+      final printerSettings =
+          next.putIfAbsent('settings', () => <String, dynamic>{}) as Map;
+      printerSettings['printerModel'] = 'XP-237B';
+      printerSettings['paperWidthMm'] = 58;
+      printerSettings['printableWidthMm'] = 48;
+      printerSettings['receiptScale'] = 'shrink';
+      if ('${printerSettings['printerName'] ?? ''}'.trim().isEmpty) {
+        printerSettings['printerName'] = 'XP-237B';
+      }
+      printerSettings.putIfAbsent('autoPrint', () => true);
+      printerSettings.putIfAbsent(
+        'autoPrintEnabledAt',
+        () => DateTime.now().toUtc().toIso8601String(),
+      );
       seedPlatformMenu(next, asMaps(next['localMenu']));
       store.replace(next, snap.revision);
       if (mounted) setState(() => menu = products);

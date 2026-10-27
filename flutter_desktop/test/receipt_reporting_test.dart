@@ -23,7 +23,13 @@ void main() {
     () async {
       await expectLater(
         windowsPrint('Nohut test', '__NOHUT_NONEXISTENT_PRINTER__'),
-        isA<FormatException>().having((e) => e.message, 'message', contains('not installed')),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('not installed'),
+          ),
+        ),
       );
     },
     skip: !Platform.isWindows,

@@ -33,10 +33,10 @@ Sources read: `pos-demo/index.html` (including its extended platform and cash-bo
 | Product/staff sales report | Missing | N: retained batch staff, sold quantity, source price and timestamp, CSV | `SaleEntry`, `sales`; platform item gross can differ from discounted net |
 | CSV export | Missing | N: local output path, quoted cells, UTF-8 BOM, integer kuruş, formula protection | CSV domain test; refuses to overwrite existing files |
 | Staff administration | Active switch only | N: add/edit/name/role/active, stable IDs, duplicate-name checks | `saveEmployee` tests; historical batch names retained |
-| One kitchen printer queue | Mark-only | N/S: initial/addition/correction jobs, preview, explicit success/failure simulation and retry counts | `PrinterPanel`, `receiptText`; no physical printer configured |
+| One kitchen printer queue | Mark-only | N: durable initial/addition/correction jobs, logo preview, Windows driver spooling and explicit uncertain-send recovery | `PrinterPanel`, `receiptText`, `ReceiptPrinter`; XP-237B profile, physical acceptance pending |
 | Bill summary | Missing | N: native selectable paid/due/item/payment summary | `billText`; informational, not a fiscal receipt |
 | No KOPYA FİŞ | No explicit copy | N: no copy-print action or duplicate receipt generation | Queue jobs uniquely identified by order/batch |
-| Windows printer settings | Read-only text | N/S: one printer name, simulation mode persisted | `SettingsPanel`; selecting a name does not connect a device |
+| Windows printer settings | Read-only text | N: XP-237B profile, 58 mm media / 48 mm print area, shrink-only default, exact Windows queue selection | `SettingsPanel`, `windowsPrint`; automatic sends require an installed driver and matching queue |
 | Platform order snapshots | Read-only listing | N/S: source/package IDs, source prices/modifiers, discount, ETA/PIN/call placeholders, payment label, pickup/courier distinction | `platformFixture`, `importPlatform`; DEMO values visibly labelled |
 | Platform import/replay | Missing native | N/S: package identity + monotonic source revision; duplicates/older events ignored | Idempotency and terminal-import tests |
 | Incoming item revisions | Missing | N/S: superseded lines retained, current batch replaces earlier content, preparation jobs deduplicated | `importPlatform`; no real webhook receiver |

@@ -12,8 +12,8 @@ main{max-width:1260px;margin:0 auto;padding:25px 20px 50px}.demo{background:#fff
 .tap-product{border:0;background:transparent;color:#205a3b;cursor:pointer;text-align:left;font-size:14px;font-weight:850;padding:7px 4px 7px 0;max-width:100%;white-space:normal}.tap-product:disabled{opacity:.4;cursor:not-allowed}.tap-product:hover{color:#368256}.quick-cash{display:flex;gap:7px;margin:12px 0}.quick-cash button{border:1px solid #cfe0ce;background:#edf6e9;color:#2d603e;border-radius:9px;padding:10px 12px;font-size:11px;font-weight:800}.actions{gap:6px}.actions button{font-size:11px}.guest-tabs button{min-width:125px;padding:15px}.guest-tabs b{font-size:15px}@media(max-width:530px){.tap-product{font-size:15px}.guest-tabs button{min-width:120px}.quick-cash button{flex:1}}.logo-receipt{text-align:center;margin-bottom:10px}.logo-receipt img{display:block;margin:0 auto 5px;width:65px;height:65px;object-fit:contain}.logo-receipt b{display:block;font-size:17px}.logo-receipt small{display:block;font-size:10px}@media print{.logo-receipt img{width:48px;height:48px}.logo-receipt b{font-size:15px}}
 /* Minimal monochrome split-bill account slip; no names or payment methods. */
 @media print{
- @page{size:80mm auto;margin:3mm}
- #receipt-print{display:block!important;width:72mm!important;max-width:72mm!important;margin:auto!important;padding:1mm!important;background:#fff!important;color:#000!important;font:11px/1.35 Arial,Helvetica,sans-serif!important}
+ @page{size:auto;margin:5mm}
+ #receipt-print{display:block!important;width:72mm!important;max-width:72mm!important;margin:auto!important;padding:0!important;background:#fff!important;color:#000!important;font:11px/1.35 Arial,Helvetica,sans-serif!important}
  #receipt-print *{color:#000!important;background:transparent!important;box-shadow:none!important;border-color:#111!important}
  #receipt-print .logo-receipt img{display:block!important;width:125px!important;max-width:65%!important;height:auto!important;max-height:90px!important;object-fit:contain!important;filter:grayscale(1) contrast(240%) brightness(1.05)!important}
  #receipt-print h2{font-size:18px!important;font-weight:900!important;letter-spacing:.2px!important;margin:9px 0!important}
@@ -27,12 +27,12 @@ main{max-width:1260px;margin:0 auto;padding:25px 20px 50px}.demo{background:#fff
  #receipt-print .receipt-copy{font-size:11px!important;font-weight:800!important;text-align:center!important;margin:6px 0!important}
  #receipt-print p{font-size:9px!important;margin:8px 0!important}
 }
-/* Monochrome 80mm receipt matching reference: used after multi-person payment. */
+/* Monochrome XP-237B 58mm receipt matching reference: used after multi-person payment. */
 @media print{
- @page{size:80mm auto;margin:3mm}
+ @page{size:auto;margin:5mm}
  body{background:#fff!important;color:#000!important}
  body>header,body>main{display:none!important}
- #receipt-print{display:block!important;width:74mm!important;max-width:74mm!important;margin:0 auto!important;padding:1mm!important;color:#000!important;background:#fff!important;font-family:Arial,"Arial Narrow",Helvetica,sans-serif!important;line-height:1.35!important}
+ #receipt-print{display:block!important;width:100%!important;max-width:48mm!important;margin:0 auto!important;padding:0!important;color:#000!important;background:#fff!important;font-family:Arial,"Arial Narrow",Helvetica,sans-serif!important;line-height:1.35!important}
  #receipt-print *{color:#000!important;background:transparent!important;box-sizing:border-box!important;box-shadow:none!important}
  #receipt-print .nf-receipt-logo{text-align:center!important;margin:4px auto 14px!important}
  #receipt-print .nf-receipt-logo img{width:30mm!important;max-width:100%!important;height:30mm!important;max-height:30mm!important;object-fit:contain!important;display:block!important;margin:0 auto!important;filter:none!important}

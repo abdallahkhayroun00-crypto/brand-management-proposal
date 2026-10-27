@@ -63,7 +63,7 @@ GitHub Actions runs strict Flutter analysis, domain/SQLite/HTTP/widget tests, th
 
 ## Receipt printing, daily numbers and busy hours (0.2.0)
 
-- Open **Ayarlar → Yazıcı Ayarı**, enter the exact physical printer name shown in Windows **Printers & scanners**, and save. The setting enables **Otomatik Masa / Gel-Al Fişi**. Select the correct roll width in the Windows driver (the existing receipt design uses 80 mm paper). File-output printers such as Microsoft Print to PDF are rejected for automatic printing.
+- Open **Ayarlar → Yazıcı Ayarı**, verify the selected XP-237B or enter its exact physical printer name shown in Windows **Printers & scanners**, and save. The setting enables **Otomatik Masa / Gel-Al Fişi**. Use the XP-237B Windows receipt driver with 58 mm continuous paper and receipt mode (ESC/POS), not TSPL label mode. The design uses its 48 mm printable area. Oversized content shrinks by default and is never enlarged. A uniquely named installed XP-237B is detected automatically; otherwise enter its exact Windows queue name. File-output printers such as Microsoft Print to PDF are rejected for automatic printing.
 - Confirmed PC and staff-phone orders enter the same SQLite print queue. Only the laptop sends them to the selected printer, using the installed Windows driver and the packaged monochrome Nohut logo. Added items print only their new batch. Payments do not produce another kitchen ticket. Platform simulation printing remains separate.
 - Old jobs from before printing was enabled are held for manual review. Use **Yazdırma Kuyruğu → Kontrol Ettim · Yeniden Kuyruğa Al** when an old job or a failed job really needs another copy. Never retry without checking the physical printer first.
 - `Kuyruğa gönderildi` means Windows accepted the spool request, not that a paper sensor confirmed it. An interrupted or uncertain send becomes `Kontrol gerekli`, with no blind automatic retry. Order data stays saved even if printing fails.
@@ -72,3 +72,5 @@ GitHub Actions runs strict Flutter analysis, domain/SQLite/HTTP/widget tests, th
 - The HTML prototype has the same logo, daily numbering and workload chart. It automatically opens browser printing for newly confirmed local orders on the PC; normal browsers still show their print dialog. Use the Windows app for direct printing without that dialog.
 
 Validation: HTML logic regressions, SQLite/domain/receipt/report tests and desktop widget tests. The Linux workspace cannot enumerate network interfaces (`Bad value for ai_flags`); the existing real HTTP concurrency test must run on Windows CI. A physical receipt test on the restaurant laptop remains necessary.
+
+XP-237B specification: https://www.xprintertech.com/desktop-label-printer-xp-237b — 58 mm receipt paper, 48 mm print width, ESC/POS receipt mode. Browser print dialog preferences are owned by the browser; CSS constrains the receipt to the 48 mm content area.
