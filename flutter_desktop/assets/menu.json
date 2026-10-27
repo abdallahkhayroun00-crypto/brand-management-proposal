@@ -265,7 +265,7 @@
       "id": 37,
       "category": "drink",
       "name": "Çamlıca Gazoz",
-      "price": null
+      "price": 45
     },
     {
       "id": 38,
@@ -277,7 +277,7 @@
       "id": 39,
       "category": "drink",
       "name": "Beypazarı Mandalina Aromalı Maden Suyu",
-      "price": null
+      "price": 45
     },
     {
       "id": 40,
@@ -307,31 +307,31 @@
       "id": 44,
       "category": "drink",
       "name": "Didi Limon Aromalı Soğuk Çay",
-      "price": null
+      "price": 45
     },
     {
       "id": 45,
       "category": "drink",
       "name": "Didi Çilek Aromalı Soğuk Çay",
-      "price": null
+      "price": 45
     },
     {
       "id": 46,
       "category": "drink",
       "name": "Didi Şeftali Aromalı Soğuk Çay",
-      "price": null
+      "price": 45
     },
     {
       "id": 47,
       "category": "drink",
       "name": "Sarıyer Portakal Aromalı Gazoz",
-      "price": null
+      "price": 45
     },
     {
       "id": 48,
       "category": "drink",
       "name": "Sarıyer Mandalina Aromalı Gazoz",
-      "price": null
+      "price": 45
     },
     {
       "id": 49,

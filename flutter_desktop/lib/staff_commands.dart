@@ -1,3 +1,4 @@
+import 'order_reporting.dart';
 import 'pos_logic.dart';
 import 'pos_store.dart';
 
@@ -95,6 +96,11 @@ Json submitStaffOrder(PosStore store, Json payload) {
         };
       }
     }
-    return {'ok': true, 'orderId': order['id'], 'requestId': id};
+    return {
+      'ok': true,
+      'orderId': order['id'],
+      'orderNumber': displayOrderNumber(order),
+      'requestId': id,
+    };
   });
 }

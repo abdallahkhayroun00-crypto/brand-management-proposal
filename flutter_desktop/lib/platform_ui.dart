@@ -1,4 +1,7 @@
+import 'order_reporting.dart';
+
 import 'package:flutter/material.dart';
+
 import 'pos_logic.dart';
 import 'operations.dart';
 import 'operations_ui.dart';
@@ -138,7 +141,7 @@ class _PlatformPanelState extends State<PlatformPanel> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   panelTitle(
-                    '#${o['id']} · ${o['platformPackageId']} · ${o['demoRemoteStatus']}',
+                    '#${displayOrderNumber(o)} · ${o['platformPackageId']} · ${o['demoRemoteStatus']}',
                   ),
                   Text(
                     'Toplam ${formatTry(orderTotalCents(o))} · ${o['platformDeliveryType']} · Tahsilat ${o['platformCollection']}',
@@ -856,7 +859,7 @@ class _PlatformPanelState extends State<PlatformPanel> {
             o['cancelled'] != true,
       ))
         button(
-          '#${o['id']} Fatura Bağlantısı İste',
+          '#${displayOrderNumber(o)} Fatura Bağlantısı İste',
           source == 'Yemeksepeti'
               ? null
               : () async {

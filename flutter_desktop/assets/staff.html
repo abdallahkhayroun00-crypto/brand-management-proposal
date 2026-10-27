@@ -27,7 +27,7 @@ function render(){
  const selected=$('staff').value||localStorage.getItem('nohut-staff')||'';
  $('staff').innerHTML='<option value="">Adınızı seçin</option>'+state.employees.filter(e=>e.active).map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join('');$('staff').value=selected;
  renderMenu();
- $('orders').innerHTML=state.orders.filter(o=>!o.closed&&!o.cancelled&&['Masa','Gel-Al'].includes(o.source)).map(o=>`<p>#${o.id} · ${esc(o.source)} ${o.table??''} · ${esc(o.serviceStatus)} · ${o.batches.reduce((n,b)=>n+b.lines.filter(l=>!l.voided&&!l.correction).reduce((a,l)=>a+l.qty,0),0)} ürün</p>`).join('')||'<p>Açık sipariş yok.</p>';controls();
+ $('orders').innerHTML=state.orders.filter(o=>!o.closed&&!o.cancelled&&['Masa','Gel-Al'].includes(o.source)).map(o=>`<p>#${o.dailyNumber??o.id} · ${esc(o.source)} ${o.table??''} · ${esc(o.serviceStatus)} · ${o.batches.reduce((n,b)=>n+b.lines.filter(l=>!l.voided&&!l.correction).reduce((a,l)=>a+l.qty,0),0)} ürün</p>`).join('')||'<p>Açık sipariş yok.</p>';controls();
 }
 function renderMenu(){
  const search=$('search').value.toLocaleLowerCase('tr-TR');
@@ -45,7 +45,7 @@ async function send(){if(!pending||busy)return;busy=true;notice('Kaydediliyor…
  const r=await fetch('/api/staff/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pending)});const b=await r.json();
  if(r.status===409){pending=null;sessionStorage.removeItem('nohut-pending');notice('Başka cihaz değişiklik yaptı. Sepet korundu; güncel veriyi alın ve yeniden gönderin.');online=false;return}
  if(!r.ok){pending=null;sessionStorage.removeItem('nohut-pending');notice(b.message||'İstek reddedildi');return}
- pending=null;sessionStorage.removeItem('nohut-pending');cart.clear();notice('✓ Laptop SQLite kaydı onaylandı · Sipariş #'+b.orderId);revision=b.revision;
+ pending=null;sessionStorage.removeItem('nohut-pending');cart.clear();notice('✓ Laptop SQLite kaydı onaylandı · Sipariş #'+(b.orderNumber??b.orderId));revision=b.revision;
  // Refresh separately so the confirmed order number remains visible.
  const next=await fetch('/api/bootstrap',{cache:'no-store'});if(next.ok){const data=await next.json();state=data.state;revision=data.revision;render()}
  }catch{online=false;notice('Onay alınamadı. Aynı isteği yeniden deneyin; çift sipariş oluşturulmaz.')}finally{busy=false;controls()}}

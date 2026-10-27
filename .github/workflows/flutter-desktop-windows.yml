@@ -46,6 +46,13 @@ jobs:
           node-version: '22'
       - name: Preserved HTML prototype regression
         run: node pos-demo/tests/logic.test.cjs
+      - name: Validate Windows receipt script syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD 'flutter_desktop/assets/printing/print-receipt.ps1'), [ref]$tokens, [ref]$parseErrors) | Out-Null
+          if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
       - name: Compile Windows desktop release
         working-directory: flutter_desktop
         run: flutter build windows --release

@@ -27,10 +27,10 @@ Payments and management are native PC workflows. The LAN server does not serve t
 - Cash/card/partial/mixed entries, change, partial/full refunds, product-level guest shares, equal cent-conserving splits and mapping earlier payments to guests.
 - Opening/closing cash sessions, counted variance, cash in/out and historical refund dates.
 - Staff creation/editing/activation, local price configuration, filtered history and collection/product/staff reports, CSV exports, consistent SQLite backups.
-- Single kitchen printer queue and native previews with explicit simulated success/failure; informational bill summary.
+- Single persistent kitchen printer queue, automatic Windows driver printing for Masa / Gel-Al and added batches, branded previews and printable bill summaries.
 - Explicit platform simulation tabs for orders, acceptance/status/cancellation, store hours, catalog/mapping/prices, claims, reviews, invoice links and sync request log; settlements under Reports, configuration under Settings.
 
-**No Yemeksepeti/Trendyol Go API, bank POS, physical printer or fiscal ÖKC is connected.** Card and platform entries are prototypes. Courier delivery and platform collections remain with the platforms; the restaurant has no courier workflow. Yemeksepeti unverified management capabilities stay gated. Invoice-link submission does not generate a fiscal invoice. The example 15% commission is not an accounting rate.
+**No Yemeksepeti/Trendyol Go API, bank POS or fiscal ÖKC is connected.** Windows receipt printing now uses the installed driver; physical device acceptance remains required. Card and platform entries are prototypes. Courier delivery and platform collections remain with the platforms; the restaurant has no courier workflow. Yemeksepeti unverified management capabilities stay gated. Invoice-link submission does not generate a fiscal invoice. The example 15% commission is not an accounting rate.
 
 ## Storage and concurrency
 
@@ -60,3 +60,15 @@ python -m unittest discover -s pos-demo/tests -p test_local_server.py -v
 ```
 
 GitHub Actions runs strict Flutter analysis, domain/SQLite/HTTP/widget tests, the preserved HTML regressions and a Windows release build, then uploads the whole release folder. Tests use isolated temporary databases. They do not establish real phone, printer, fiscal or platform readiness. Keep the HTML demo until the acceptance checks in the parity matrix are completed.
+
+## Receipt printing, daily numbers and busy hours (0.2.0)
+
+- Open **Ayarlar → Yazıcı Ayarı**, enter the exact physical printer name shown in Windows **Printers & scanners**, and save. The setting enables **Otomatik Masa / Gel-Al Fişi**. Select the correct roll width in the Windows driver (the existing receipt design uses 80 mm paper). File-output printers such as Microsoft Print to PDF are rejected for automatic printing.
+- Confirmed PC and staff-phone orders enter the same SQLite print queue. Only the laptop sends them to the selected printer, using the installed Windows driver and the packaged monochrome Nohut logo. Added items print only their new batch. Payments do not produce another kitchen ticket. Platform simulation printing remains separate.
+- Old jobs from before printing was enabled are held for manual review. Use **Yazdırma Kuyruğu → Kontrol Ettim · Yeniden Kuyruğa Al** when an old job or a failed job really needs another copy. Never retry without checking the physical printer first.
+- `Kuyruğa gönderildi` means Windows accepted the spool request, not that a paper sensor confirmed it. An interrupted or uncertain send becomes `Kontrol gerekli`, with no blind automatic retry. Order data stays saved even if printing fails.
+- Visible receipt numbers start at **#1 at 00:00 Europe/Istanbul** each day; archived records are preserved. Stable database IDs never reset, so yesterday's open table, phone retries and payments keep pointing to the correct account. The order date distinguishes repeated daily numbers.
+- **Raporlar → Saatlik Sipariş Yoğunluğu** shows the arrival count in each of the 24 Istanbul hours, highlights peaks and exports CSV. It uses the report's date/source/staff filters. Payments and extra batches are not extra arrivals; cancelled and unaccepted platform orders are excluded. This measures arriving orders, not queue length or occupied-seat duration.
+- The HTML prototype has the same logo, daily numbering and workload chart. It automatically opens browser printing for newly confirmed local orders on the PC; normal browsers still show their print dialog. Use the Windows app for direct printing without that dialog.
+
+Validation: HTML logic regressions, SQLite/domain/receipt/report tests and desktop widget tests. The Linux workspace cannot enumerate network interfaces (`Bad value for ai_flags`); the existing real HTTP concurrency test must run on Windows CI. A physical receipt test on the restaurant laptop remains necessary.

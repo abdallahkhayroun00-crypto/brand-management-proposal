@@ -1,8 +1,12 @@
+import 'order_reporting.dart';
+
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as paths;
 import 'package:sqlite3/sqlite3.dart';
+
 import 'pos_logic.dart';
 import 'operations.dart';
 
@@ -64,6 +68,12 @@ class PosStore extends ChangeNotifier {
     _db.execute(
       'CREATE TABLE IF NOT EXISTS command_receipts (request_id TEXT PRIMARY KEY, payload TEXT NOT NULL, result TEXT NOT NULL)',
     );
+    final old = read();
+    final migrated = copyJson(old.data);
+    assignDailyNumbers(migrated);
+    if (jsonEncode(migrated) != jsonEncode(old.data)) {
+      replace(migrated, old.revision);
+    }
   }
 
   late final String filePath;

@@ -1,8 +1,15 @@
+import 'order_reporting.dart';
+
 import 'dart:async';
+
+import 'receipt_printer.dart';
+
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+
 import 'floor_plan.dart';
 import 'lan_server.dart';
 import 'pos_logic.dart';
@@ -94,6 +101,7 @@ class ManagerDesktop extends StatefulWidget {
 
 class _ManagerDesktopState extends State<ManagerDesktop> {
   late final PosStore store;
+  late final ReceiptPrinter receiptPrinter;
   late final PosLanServer lan;
   List<Product> menu = const [];
   String page = 'dashboard';
@@ -125,6 +133,8 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     super.initState();
     store = PosStore(databaseFile: widget.databaseFile);
     lan = PosLanServer(store);
+    receiptPrinter = ReceiptPrinter(store);
+    receiptPrinter.start();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Menu initialization precedes staff order acceptance.
       unawaited(_startLan());
@@ -153,6 +163,11 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
       final snap = store.read();
       final next = copyJson(snap.data);
       next.putIfAbsent('localMenu', () => data['products']);
+      for (final product in (next['localMenu'] as List).cast<Map>()) {
+        if (product['category'] == 'drink' && product['price'] == null) {
+          product['price'] = 45;
+        }
+      }
       seedPlatformMenu(next, asMaps(next['localMenu']));
       store.replace(next, snap.revision);
       if (mounted) setState(() => menu = products);
@@ -163,6 +178,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
 
   @override
   void dispose() {
+    receiptPrinter.dispose();
     lan.dispose();
     store.dispose();
     super.dispose();
@@ -298,7 +314,9 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialog) => AlertDialog(
-          title: Text('Ödeme · #${order['id']} ${guestName ?? ''}'),
+          title: Text(
+            'Ödeme · #${displayOrderNumber(order)} ${guestName ?? ''}',
+          ),
           content: SizedBox(
             width: 360,
             child: Column(
@@ -808,7 +826,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                   ListTile(
                     leading: const Icon(Icons.receipt_long_outlined),
                     title: Text(
-                      '#${o['id']} · ${o['source']}${o['table'] == null ? '' : ' · Masa ${o['table']}'}',
+                      '#${displayOrderNumber(o)} · ${o['source']}${o['table'] == null ? '' : ' · Masa ${o['table']}'}',
                     ),
                     subtitle: Text(o['closed'] == true ? 'Kapalı' : 'Açık'),
                     trailing: Text(formatTry(orderTotalCents(o))),
@@ -936,7 +954,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Sipariş #$id · ${o['source']}${o['table'] == null ? '' : ' · Masa ${o['table']}'}',
+                        'Sipariş #${displayOrderNumber(o)} · ${o['source']}${o['table'] == null ? '' : ' · Masa ${o['table']}'}',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
@@ -1096,7 +1114,12 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                     ),
                 ],
               ),
-            OrderOperations(order: o, edit: _edit),
+            OrderOperations(
+              order: o,
+              edit: _edit,
+              printerName:
+                  '${store.read().data['settings']?['printerName'] ?? ''}',
+            ),
             if (closed)
               const Padding(
                 padding: EdgeInsets.only(top: 12),
@@ -1122,7 +1145,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
               .substring(0, 10) ??
           '';
       final text =
-          '${o['id']} ${o['table'] ?? ''} ${o['customer']} ${activeLines(o).map((l) => l['name']).join(' ')}'
+          '${o['id']} ${displayOrderNumber(o)} ${o['numberDay'] ?? ''} ${o['table'] ?? ''} ${o['customer']} ${activeLines(o).map((l) => l['name']).join(' ')}'
               .toLowerCase();
       final staff = asMaps(
         o['batches'],
@@ -1225,7 +1248,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                     backgroundColor: cream,
                     child: Text('${o['table'] ?? '#'}'),
                   ),
-                  title: Text('#${o['id']} · ${o['source']}'),
+                  title: Text('#${displayOrderNumber(o)} · ${o['source']}'),
                   subtitle: Text(
                     o['closed'] == true
                         ? 'Kapalı'
@@ -1291,7 +1314,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
               for (final o in locals)
                 ListTile(
                   title: Text(
-                    '#${o['id']} · ${o['source']}${o['table'] == null ? '' : ' · Masa ${o['table']}'}',
+                    '#${displayOrderNumber(o)} · ${o['source']}${o['table'] == null ? '' : ' · Masa ${o['table']}'}',
                   ),
                   subtitle: Text('Toplam ${formatTry(orderTotalCents(o))}'),
                   trailing: FilledButton(

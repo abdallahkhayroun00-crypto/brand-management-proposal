@@ -1,6 +1,12 @@
+import 'order_reporting.dart';
+
 import 'dart:io';
+
+import 'receipt_printer.dart';
+
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
+
 import 'pos_logic.dart';
 import 'pos_store.dart';
 import 'operations.dart';
@@ -167,8 +173,14 @@ class CashPanel extends StatelessWidget {
 }
 
 class OrderOperations extends StatelessWidget {
-  const OrderOperations({super.key, required this.order, required this.edit});
+  const OrderOperations({
+    super.key,
+    required this.order,
+    required this.edit,
+    this.printerName = '',
+  });
   final Json order;
+  final String printerName;
   final EditState edit;
   @override
   Widget build(BuildContext context) {
@@ -184,7 +196,16 @@ class OrderOperations extends StatelessWidget {
             builder: (ctx) => AlertDialog(
               title: const Text('Hesap Özeti'),
               content: SingleChildScrollView(
-                child: SelectableText(billText(o)),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/printing/nohut-receipt-logo.png',
+                      width: 150,
+                    ),
+                    SelectableText(billText(o)),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -195,6 +216,21 @@ class OrderOperations extends StatelessWidget {
             ),
           ),
           child: const Text('Hesap Özeti Önizle'),
+        ),
+        OutlinedButton(
+          onPressed: () async {
+            try {
+              final printer = printerName;
+              await windowsPrint(billText(o), printer);
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('$e')));
+              }
+            }
+          },
+          child: const Text('Hesap Özeti Yazdır'),
         ),
         if (o['closed'] != true)
           for (final g in asMaps(o['guestChecks']))
@@ -577,6 +613,85 @@ class _ReportsPanelState extends State<ReportsPanel> {
         (to.isEmpty || date.compareTo(to) <= 0);
   }
 
+  Widget _hourlyChart(Json state) {
+    final counts = hourlyOrderCounts(
+      asMaps(state['orders']),
+      from: from,
+      to: to,
+      source: source,
+      staff: staff,
+    );
+    final maximum = counts.reduce((a, b) => a > b ? a : b);
+    final total = counts.fold<int>(0, (a, b) => a + b);
+    final peaks = [
+      for (var h = 0; h < 24; h++)
+        if (maximum > 0 && counts[h] == maximum)
+          '${h.toString().padLeft(2, '0')}:00',
+    ];
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            panelTitle('Saatlik Sipariş Yoğunluğu'),
+            Text(
+              total == 0
+                  ? 'Bu filtrelerde henüz sipariş yok.'
+                  : 'En yoğun: ${peaks.join(', ')} · $maximum sipariş · Toplam $total',
+            ),
+            const SizedBox(height: 15),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  for (var h = 0; h < 24; h++)
+                    SizedBox(
+                      width: 38,
+                      child: Tooltip(
+                        message: '$h:00 · ${counts[h]} sipariş',
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text('${counts[h]}'),
+                            const SizedBox(height: 5),
+                            Container(
+                              width: 25,
+                              height: maximum == 0
+                                  ? 2
+                                  : 2 + 150 * counts[h] / maximum,
+                              decoration: BoxDecoration(
+                                color: counts[h] == maximum && maximum > 0
+                                    ? Colors.orange
+                                    : const Color(0xff25523e),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            Text(h.toString().padLeft(2, '0')),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            info(
+              'Europe/Istanbul · İlk sipariş saati · Ek ürün ve ödemeler yeniden sayılmaz. İptal ve kabul bekleyen kayıtlar hariç. Tarih, kaynak ve personel filtreleri uygulanır; ödeme yöntemi grafiği değiştirmez.',
+            ),
+            OutlinedButton(
+              onPressed: () => export(
+                '\uFEFFSaat (Europe/Istanbul),Sipariş sayısı\r\n${[for (var h = 0; h < 24; h++) '$h:00,${counts[h]}'].join('\r\n')}',
+                'nohut-yogunluk',
+              ),
+              child: const Text('Yoğunluk CSV'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = copyJson(widget.state), hub = platformHub(s);
@@ -636,6 +751,7 @@ class _ReportsPanelState extends State<ReportsPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        _hourlyChart(s),
         panelTitle('Raporlar · Tahsilat ve İade'),
         Wrap(
           spacing: 8,
@@ -746,7 +862,7 @@ class _ReportsPanelState extends State<ReportsPanel> {
           OutlinedButton(
             onPressed: () =>
                 widget.edit((s) => sampleSettlement(s, o['id'] as int)),
-            child: Text('#${o['id']} Örnek Finans Kaydı Al'),
+            child: Text('#${displayOrderNumber(o)} Örnek Finans Kaydı Al'),
           ),
         OutlinedButton(
           onPressed: () => export(
@@ -786,13 +902,13 @@ class PrinterPanel extends StatelessWidget {
     children: [
       panelTitle('Tek Yazıcı · Mutfak İşleri'),
       info(
-        'Fiziksel yazıcı bağlı değil. Önizleme ve demo sonuçları. Mali fiş değildir.',
+        'Masa / Gel-Al ve ek siparişler PC kuyruğundan otomatik basılır. Ayarlar → Yazıcı Ayarı: Windows yazıcı adını kaydedin. Kuyruğa gönderildi, kağıt çıktısını doğrulamaz.',
       ),
       for (final j in asMaps(state['printJobs']).reversed)
         Card(
           child: ListTile(
             title: Text(
-              '#${j['orderId']} · Parti ${j['batchId']} · ${j['state']}',
+              '#${displayOrderNumber(mutableOrder(state, j['orderId'] as int) ?? {'id': j['orderId']})} · Parti ${j['batchId']} · ${j['state']}',
             ),
             subtitle: Text('${j['error'] ?? ''}'),
             trailing: Wrap(
@@ -807,7 +923,16 @@ class PrinterPanel extends StatelessWidget {
                         builder: (ctx) => AlertDialog(
                           title: const Text('Mutfak Önizleme'),
                           content: SingleChildScrollView(
-                            child: SelectableText(text),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Image.asset(
+                                  'assets/printing/nohut-receipt-logo.png',
+                                  width: 150,
+                                ),
+                                SelectableText(text),
+                              ],
+                            ),
                           ),
                           actions: [
                             TextButton(
@@ -825,26 +950,24 @@ class PrinterPanel extends StatelessWidget {
                   },
                   child: const Text('Önizle'),
                 ),
-                if (!['İşaretlendi', 'Simüle edildi'].contains(j['state'])) ...[
-                  for (final success in [true, false])
-                    OutlinedButton(
-                      onPressed: () => edit((s) {
-                        final job = (s['printJobs'] as List)
-                            .cast<Map>()
-                            .firstWhere(
-                              (r) =>
-                                  r['orderId'] == j['orderId'] &&
-                                  r['batchId'] == j['batchId'],
-                            );
-                        job['state'] = success ? 'Simüle edildi' : 'Hata';
-                        job['error'] = success
-                            ? ''
-                            : 'DEMO · Yazıcı erişilemiyor';
-                        job['attempts'] = (job['attempts'] as int? ?? 0) + 1;
-                      }),
-                      child: Text(success ? 'Test: Tamamlandı' : 'Test: Hata'),
-                    ),
-                ],
+                if (j['state'] != 'Gönderiliyor')
+                  OutlinedButton(
+                    onPressed: () => edit((s) {
+                      final job = (s['printJobs'] as List)
+                          .cast<Map>()
+                          .firstWhere(
+                            (r) =>
+                                r['orderId'] == j['orderId'] &&
+                                r['batchId'] == j['batchId'],
+                          );
+                      job['state'] = 'Bekliyor';
+                      job['createdAt'] = DateTime.now()
+                          .toUtc()
+                          .toIso8601String();
+                      job['error'] = '';
+                    }),
+                    child: const Text('Kontrol Ettim · Yeniden Kuyruğa Al'),
+                  ),
               ],
             ),
           ),
@@ -908,7 +1031,7 @@ class SettingsPanel extends StatelessWidget {
         '5 masa · Tek yazıcı · Telefon siparişleri Gel-Al · Kasa (PC) · Prototipte şifre yok.',
       ),
       info(
-        'Yemeksepeti / Trendyol Go: DEMO. Banka POS / ÖKC / fiziksel yazıcı bağlı değil. Gerçek API anahtarı girmeyin.',
+        'Yemeksepeti / Trendyol Go: DEMO. Banka POS / ÖKC bağlı değil. Termal yazıcı Windows sürücüsüyle çalışır. Gerçek API anahtarı girmeyin.',
       ),
       for (final src in platformSources)
         ListTile(
@@ -920,11 +1043,27 @@ class SettingsPanel extends StatelessWidget {
             child: const Text('Örnek Bağlantı İsteği'),
           ),
         ),
+      SwitchListTile(
+        title: const Text('Otomatik Masa / Gel-Al Fişi'),
+        subtitle: const Text(
+          'Yazıcı adını bir kez kaydedin; eski işler kendiliğinden basılmaz.',
+        ),
+        value: state['settings']?['autoPrint'] == true,
+        onChanged: (enabled) => edit((s) {
+          final cfg =
+              s.putIfAbsent('settings', () => <String, dynamic>{}) as Map;
+          cfg['autoPrint'] = enabled;
+          cfg.putIfAbsent(
+            'autoPrintEnabledAt',
+            () => DateTime.now().toUtc().toIso8601String(),
+          );
+        }),
+      ),
       OutlinedButton(
         onPressed: () async {
           final v = await askFields(context, 'Tek Yazıcı Ayarı', [
             (
-              'Yazıcı adı (henüz bağlanmaz)',
+              'Windows termal yazıcısının tam adı',
               '${state['settings']?['printerName'] ?? ''}',
             ),
           ]);
@@ -934,7 +1073,12 @@ class SettingsPanel extends StatelessWidget {
                   (s.putIfAbsent('settings', () => <String, dynamic>{}) as Map);
               settings['printerName'] = v[0];
               settings['printerCount'] = 1;
-              settings['printerMode'] = 'simulation';
+              settings['printerMode'] = 'windows';
+              settings['autoPrint'] = true;
+              settings.putIfAbsent(
+                'autoPrintEnabledAt',
+                () => DateTime.now().toUtc().toIso8601String(),
+              );
             });
           }
         },

@@ -1,3 +1,5 @@
+import 'order_reporting.dart';
+
 import 'dart:convert';
 
 typedef Json = Map<String, dynamic>;
@@ -156,11 +158,13 @@ Json newLocalOrder({
     'events': ['${nowTime()} · $cashier — Sipariş oluşturuldu'],
   };
   (state['orders'] as List).add(order);
+  assignDailyNumbers(state);
   (state['printJobs'] as List).add({
     'orderId': id,
     'batchId': 1,
     'state': 'Bekliyor',
     'created': nowTime(),
+    'createdAt': DateTime.now().toUtc().toIso8601String(),
   });
   return order;
 }
@@ -197,6 +201,7 @@ void addOrderBatch(Json state, int orderId, List<Json> productLines) {
     'batchId': nextBatchId,
     'state': 'Bekliyor',
     'created': nowTime(),
+    'createdAt': DateTime.now().toUtc().toIso8601String(),
   });
 }
 

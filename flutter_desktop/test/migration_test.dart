@@ -593,7 +593,7 @@ void main() {
       () async {
         final server = PosLanServer(a, port: 0, staffHtml: '<h1>Personel</h1>');
         await server.start();
-        expect(server.running, true);
+        expect(server.running, true, reason: server.error);
         final client = HttpClient();
         Future<(int, Json)> post(Json p) async {
           final req = await client.postUrl(

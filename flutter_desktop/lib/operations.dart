@@ -1,3 +1,4 @@
+import 'order_reporting.dart';
 import 'pos_logic.dart';
 
 String utcNow() => DateTime.now().toUtc().toIso8601String();
@@ -162,7 +163,8 @@ void changeGuest(Json o, int id, String name, {bool remove = false}) {
 String billText(Json o) => [
   'NOHUT FALAFEL · HESAP ÖZETİ',
   'MALİ FİŞ DEĞİLDİR',
-  '#${o['id']} · ${o['source']} · ${o['table'] ?? ''}',
+  '#${displayOrderNumber(o)} · ${o['source']} · ${o['table'] ?? ''}',
+  istanbulStamp(o['createdAt']),
   for (final l in checkLines(o))
     '${l.line['qty']} × ${l.line['name']} · ${formatTry(l.total)}',
   'Toplam ${formatTry(orderTotalCents(o))}',
@@ -294,6 +296,7 @@ void cancelProduct(
     'orderId': orderId,
     'batchId': id,
     'state': 'Bekliyor',
+    'createdAt': utcNow(),
     'created': nowTime(),
   });
   (o.putIfAbsent('voids', () => <dynamic>[]) as List).add({
@@ -585,8 +588,8 @@ String receiptText(Json state, Json job) {
   return [
     'NOHUT FALAFEL · MUTFAK',
     'MALİ FİŞ DEĞİLDİR',
-    '#${o['id']} · ${o['source']} · ${o['table'] == null ? 'Gel-Al / Platform' : 'Masa ${o['table']}'}',
-    'Parti ${batch['id']} · ${batch['staff']} · ${batch['createdAt'] ?? batch['time']}',
+    '#${displayOrderNumber(o)} · ${o['source']} · ${o['table'] == null ? 'Gel-Al / Platform' : 'Masa ${o['table']}'}',
+    'Parti ${batch['id']} · ${batch['staff']} · ${istanbulStamp(batch['createdAt'] ?? o['createdAt'])}',
     for (final l in asMaps(batch['lines']))
       if (l['voided'] != true || l['correction'] == true)
         '${l['qty']} × ${l['name'] ?? l['productKey']}\n'
