@@ -1,3 +1,4 @@
+import 'order_reporting.dart';
 import 'operations.dart';
 import 'pos_logic.dart';
 
@@ -151,7 +152,8 @@ TicketDocument kitchenTicket(Json state, Json job, {bool useSnapshot = true}) {
     batchId: batchId,
     source: '${order['source']}',
     destination: _destination(order),
-    reference: '#${order['id']}${batchId == 1 ? '' : '-${batchId - 1}'}',
+    reference:
+        '#${displayOrderNumber(order)}${batchId == 1 ? '' : '-${batchId - 1}'}',
     stamp: '${batch['createdAt'] ?? order['createdAt']}',
     lines: lines,
     totalCents: lines.fold<int>(0, (n, l) => n + l.amountCents),
@@ -168,7 +170,7 @@ TicketDocument billDocument(Json order) => TicketDocument(
   batchId: 0,
   source: '${order['source']}',
   destination: _destination(order),
-  reference: '#${order['id']}',
+  reference: '#${displayOrderNumber(order)}',
   stamp: utcNow(),
   lines: checkLines(order).map((l) => _line(l.line)).toList(),
   totalCents: orderTotalCents(order),

@@ -1,14 +1,18 @@
 import 'dart:convert';
+import 'dart:async';
 import 'dart:math';
 import 'dart:io';
+
 import 'package:crypto/crypto.dart';
 import 'package:printing/printing.dart';
+
 import 'ticket_document.dart';
 import 'ticket_pdf.dart';
 import 'pos_store.dart';
 import 'pos_logic.dart';
 import 'operations.dart';
 import 'platform_receipt.dart';
+
 import 'package:pdf/pdf.dart';
 
 bool printCompleted(Json j) => [
@@ -43,6 +47,7 @@ class WindowsPrinterGateway implements PrinterGateway {
       onLayout: (_) async => document.bytes,
       format: document.format,
       dynamicLayout: false,
+      usePrinterSettings: true,
     );
   }
 }
@@ -64,7 +69,7 @@ class PrintService {
   Map<dynamic, dynamic> find(Json s, String key) => (s['printJobs'] as List)
       .whereType<Map>()
       .firstWhere((j) => printJobKey(j.cast<String, dynamic>()) == key);
-  Future<String> print(String key) async {
+  Future<String> print(String key, {bool automatic = false}) async {
     if (!_active.add(store.filePath)) {
       throw const FormatException('Tek yazıcıda başka işlem devam ediyor.');
     }
@@ -80,7 +85,7 @@ class PrintService {
       } on FileSystemException {
         throw const FormatException('Tek yazıcıda başka işlem devam ediyor.');
       }
-      return await _print(key);
+      return await _print(key, automatic: automatic);
     } finally {
       if (held) lock?.unlockSync();
       lock?.closeSync();
@@ -88,7 +93,7 @@ class PrintService {
     }
   }
 
-  Future<String> _print(String key) async {
+  Future<String> _print(String key, {bool automatic = false}) async {
     final claim = token();
     final result = store.command('print_$claim', {'job': key}, (s) {
       final settings = s['settings'] as Map? ?? {};
@@ -99,6 +104,10 @@ class PrintService {
         );
       }
       final j = find(s, key);
+      if (automatic &&
+          (j['autoAttempted'] == true || j['state'] != 'Bekliyor')) {
+        throw const FormatException('Bu iş otomatik olarak zaten denendi.');
+      }
       if (printCompleted(j.cast<String, dynamic>()) ||
           printUncertain(j.cast<String, dynamic>())) {
         throw const FormatException(
@@ -117,6 +126,9 @@ class PrintService {
         throw const FormatException('Bu partide yazdırılacak ürün yok.');
       }
       if (document != null) j['ticketSnapshot'] = document.toJson();
+      if (automatic) {
+        j['autoAttempted'] = true;
+      }
       j['state'] = 'Gönderiliyor';
       j['claim'] = claim;
       j['attempts'] = (j['attempts'] as int? ?? 0) + 1;
@@ -261,5 +273,73 @@ class PrintService {
         return {};
       },
     );
+  }
+}
+
+/// Watches committed PC/phone jobs, using the existing v0.7 transactional lock
+/// and printer gateway. Failed, cancelled and uncertain sends never auto-retry.
+class AutomaticKitchenPrinter {
+  AutomaticKitchenPrinter(this.store, {PrintService? service})
+    : service = service ?? PrintService(store);
+  final PosStore store;
+  final PrintService service;
+  Timer? _timer;
+  bool _busy = false, _disposed = false;
+  void start() {
+    _timer = Timer.periodic(
+      const Duration(milliseconds: 800),
+      (_) => unawaited(pump()),
+    );
+  }
+
+  Future<void> pump() async {
+    if (_busy || _disposed) {
+      return;
+    }
+    _busy = true;
+    try {
+      final state = store.read().data,
+          settings = state['settings'] as Map? ?? {};
+      if (settings['autoPrint'] != true ||
+          settings['printerMode'] != 'windows' ||
+          '${settings['printerUrl'] ?? ''}'.isEmpty) {
+        return;
+      }
+      for (final j in asMaps(state['printJobs'])) {
+        if (j['state'] != 'Bekliyor' ||
+            j['autoAttempted'] == true ||
+            j['createdAt'] is! String) {
+          continue;
+        }
+        final cutoff = '${settings['autoPrintEnabledAt'] ?? ''}';
+        if (cutoff.isNotEmpty &&
+            DateTime.parse(
+              '${j['createdAt']}',
+            ).isBefore(DateTime.parse(cutoff))) {
+          continue;
+        }
+        final order = mutableOrder(state, j['orderId'] as int);
+        if (order == null || isPlatform(order)) {
+          continue;
+        }
+        if (order['cancelled'] == true &&
+            j['ticketSnapshot']?['kind'] != 'correction') {
+          continue;
+        }
+        await service.print(printJobKey(j), automatic: true);
+        break;
+      }
+    } on FormatException {
+      // Another manual print or a newly changed job owns the lock. Re-read later.
+    } catch (_) {
+      // The PrintService persists failure/uncertainty after entering the driver.
+    } finally {
+      _busy = false;
+    }
+  }
+
+  void dispose() {
+    _disposed = true;
+    _timer?.cancel();
   }
 }

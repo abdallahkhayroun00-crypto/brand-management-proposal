@@ -1,7 +1,10 @@
+import 'package:nohut_falafel_desktop/order_reporting.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pdf/pdf.dart';
 import 'package:nohut_falafel_desktop/pos_store.dart';
@@ -132,6 +135,93 @@ Future<PrintableTicket> fakeRender(TicketDocument _) async => PrintableTicket(
 );
 
 void main() {
+  test(
+    'daily receipt numbers reset at Istanbul midnight without resetting database IDs',
+    () {
+      final s = <String, dynamic>{
+        'orders': [
+          {'id': 1200, 'createdAt': '2026-10-27T20:59:59Z'},
+          {'id': 1201, 'createdAt': '2026-10-27T21:00:00Z'},
+          {'id': 1202, 'createdAt': '2026-10-27T22:00:00Z'},
+        ],
+      };
+      assignDailyNumbers(s);
+      assignDailyNumbers(s);
+      expect((s['orders'] as List).map((o) => o['dailyNumber']), [1, 1, 2]);
+      expect((s['orders'] as List).map((o) => o['id']), [1200, 1201, 1202]);
+    },
+  );
+  test(
+    'hourly workload counts only first arrivals and applies Istanbul dates',
+    () {
+      final counts = hourlyOrderCounts(
+        [
+          {
+            'createdAt': '2026-10-27T21:05:00Z',
+            'source': 'Masa',
+            'batches': [
+              {'staff': 'A'},
+              {'staff': 'A'},
+            ],
+          },
+          {
+            'createdAt': '2026-10-27T20:55:00Z',
+            'source': 'Gel-Al',
+            'batches': [],
+          },
+          {
+            'createdAt': '2026-10-27T21:15:00Z',
+            'source': 'Masa',
+            'cancelled': true,
+            'batches': [],
+          },
+        ],
+        from: '2026-10-28',
+        to: '2026-10-28',
+      );
+      expect(counts[0], 1);
+      expect(counts.reduce((a, b) => a + b), 1);
+    },
+  );
+  for (final result in [true, false]) {
+    test(
+      'automatic local printing sends each batch once, driver result=$result',
+      () async {
+        final dir = Directory.systemTemp.createTempSync('nohut-auto-v07-');
+        final store = PosStore(databaseFile: '${dir.path}/db.sqlite3');
+        final s = localState();
+        (s['settings'] as Map)['autoPrint'] = true;
+        store.replace(s, 0);
+        final gateway = FakePrinter()..result = () async => result;
+        final auto = AutomaticKitchenPrinter(
+          store,
+          service: PrintService(store, gateway: gateway, render: fakeRender),
+        );
+        try {
+          await auto.pump();
+          await auto.pump();
+          expect(gateway.calls, 1);
+          expect(
+            asMaps(store.read().data['printJobs']).single['autoAttempted'],
+            true,
+          );
+          final snap = store.read(), next = copyJson(snap.data);
+          addOrderBatch(next, 1200, [
+            {'name': 'Çay', 'qty': 1, 'price': 15, 'removed': [], 'note': ''},
+          ]);
+          store.replace(next, snap.revision);
+          await auto.pump();
+          await auto.pump();
+          expect(gateway.calls, 2);
+        } finally {
+          auto.dispose();
+          store.dispose();
+          dir.deleteSync(recursive: true);
+        }
+      },
+    );
+  }
+
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
     'platform receipts retain original bytes, forbid replacement and reject local receipt generation',
@@ -301,7 +391,7 @@ void main() {
       expect(initial.lines.single.quantity, 2);
       expect(initial.totalCents, 28000);
       expect(addition.kind, TicketKind.addition);
-      expect(addition.reference, '#1200-1');
+      expect(addition.reference, '#1-1');
       expect(addition.totalCents, 11500);
       expect(addition.quantity, 3);
       expect(
@@ -316,13 +406,13 @@ void main() {
     },
   );
   test(
-    '80 mm PDF embeds Turkish fonts and uses finite roll height; long orders split without duplicating lines',
+    '58 mm PDF embeds Turkish fonts and uses finite roll height; long orders split without duplicating lines',
     () async {
       final s = localState(),
           ticket = kitchenTicket(s, asMaps(s['printJobs']).first);
       final pdf = await TicketPdf.render(ticket);
       expect(ascii.decode(pdf.bytes.take(4).toList()), '%PDF');
-      expect(pdf.format.width, closeTo(80 * PdfPageFormat.mm, .01));
+      expect(pdf.format.width, closeTo(58 * PdfPageFormat.mm, .01));
       expect(pdf.format.height.isFinite, isTrue);
       expect(pdf.format.height, greaterThan(200));
       final longer = TicketDocument.fromJson({

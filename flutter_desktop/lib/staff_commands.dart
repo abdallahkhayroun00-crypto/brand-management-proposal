@@ -1,3 +1,4 @@
+import 'order_reporting.dart';
 import 'pos_logic.dart';
 import 'pos_store.dart';
 import 'order_actions.dart';
@@ -113,6 +114,7 @@ Json submitStaffOrder(
     (s.putIfAbsent('activity', () => <dynamic>[]) as List).add({
       'id': commandId,
       'orderId': order['id'],
+      'orderNumber': displayOrderNumber(order),
       'action': existing == null ? 'Sipariş Al' : 'Ek Sipariş',
       'actor':
           principal?.actor ??
@@ -120,7 +122,12 @@ Json submitStaffOrder(
       'at': DateTime.now().toUtc().toIso8601String(),
       'platformSync': 'Yerel',
     });
-    return {'ok': true, 'orderId': order['id'], 'requestId': id};
+    return {
+      'ok': true,
+      'orderId': order['id'],
+      'orderNumber': displayOrderNumber(order),
+      'requestId': id,
+    };
   });
 }
 

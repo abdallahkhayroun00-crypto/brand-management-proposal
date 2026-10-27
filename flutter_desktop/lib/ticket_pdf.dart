@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+
 import 'ticket_document.dart';
 import 'pos_logic.dart';
 import 'workspace_ui.dart' show istanbulTime;
@@ -21,7 +22,7 @@ class TicketPdf {
       await rootBundle.load('assets/fonts/NotoSans-Bold.ttf'),
     );
     final logo = pw.MemoryImage(
-      (await rootBundle.load('assets/nohut-wordmark.png')).buffer.asUint8List(),
+      (await rootBundle.load('assets/receipt-logo.png')).buffer.asUint8List(),
     );
     final doc = pw.Document(
       title: '${ticket.heading} ${ticket.reference}',
@@ -40,8 +41,8 @@ class TicketPdf {
       final last = page == chunks.length - 1;
       doc.addPage(
         pw.Page(
-          pageFormat: PdfPageFormat.roll80,
-          margin: const pw.EdgeInsets.all(4 * PdfPageFormat.mm),
+          pageFormat: PdfPageFormat(58 * PdfPageFormat.mm, double.infinity),
+          margin: const pw.EdgeInsets.all(5 * PdfPageFormat.mm),
           theme: theme,
           build: (_) => pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.stretch,
@@ -50,8 +51,8 @@ class TicketPdf {
               pw.Center(
                 child: pw.Image(
                   logo,
-                  width: 148,
-                  height: 106,
+                  width: 85,
+                  height: 85,
                   fit: pw.BoxFit.contain,
                 ),
               ),
@@ -59,7 +60,7 @@ class TicketPdf {
               pw.Text(
                 ticket.heading,
                 textAlign: pw.TextAlign.center,
-                style: pw.TextStyle(font: bold, fontSize: 18),
+                style: pw.TextStyle(font: bold, fontSize: 13),
               ),
               if (chunks.length > 1)
                 pw.Text(
@@ -74,7 +75,7 @@ class TicketPdf {
                   pw.Expanded(
                     child: pw.Text(
                       ticket.destination,
-                      style: pw.TextStyle(font: bold, fontSize: 15),
+                      style: pw.TextStyle(font: bold, fontSize: 10),
                     ),
                   ),
                   pw.SizedBox(width: 4),
@@ -83,7 +84,7 @@ class TicketPdf {
                     children: [
                       pw.Text(
                         ticket.reference,
-                        style: pw.TextStyle(font: bold, fontSize: 12),
+                        style: pw.TextStyle(font: bold, fontSize: 9),
                       ),
                       pw.SizedBox(height: 3),
                       pw.Text(
@@ -110,7 +111,7 @@ class TicketPdf {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.SizedBox(
-                        width: 19,
+                        width: 14,
                         child: pw.Text(
                           '${line.quantity}',
                           style: pw.TextStyle(font: bold, fontSize: 13),
@@ -122,7 +123,7 @@ class TicketPdf {
                           children: [
                             pw.Text(
                               line.name,
-                              style: pw.TextStyle(font: bold, fontSize: 10.5),
+                              style: pw.TextStyle(font: bold, fontSize: 8.5),
                             ),
                             for (final removed in line.removed)
                               pw.Padding(
@@ -208,7 +209,7 @@ class TicketPdf {
                       ),
                       pw.Text(
                         formatTry(ticket.platformTotalCents!),
-                        style: pw.TextStyle(font: bold, fontSize: 15),
+                        style: pw.TextStyle(font: bold, fontSize: 10),
                       ),
                     ],
                   ),

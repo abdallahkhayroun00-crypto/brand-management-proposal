@@ -77,3 +77,16 @@ npm test
 ## 0.7.0 — branded tickets and invoice documents
 
 See [PRINTING_AND_INVOICES.md](PRINTING_AND_INVOICES.md) for the new native **Fiş & Fatura** destination, branded immutable preparation batches, 80 mm PDF exports, one Windows USB driver, uncertain-output reconciliation and externally issued invoice registration. The Trendyol Meal invoice-link adapter is implemented and mock-tested; no credentials or live account test are available. Yemeksepeti invoice upload and fiscal issuance remain unavailable. Physical printer output is unverified. This supersedes earlier descriptions of all printing and invoice-link operations as simulation-only. The original HTML demo remains unchanged.
+
+
+## v0.7.1 — local receipt updates on the v0.7 branch
+
+This update retains v0.7 staff sessions/QR, integrations, original platform receipts, invoice workflows, secure storage and transactional PDF print service.
+
+- Local Nohut PDF and preview use the campaign logo. XP-237B profile: 58 mm media, 48 mm content area, 203 DPI receipt mode. Choose the installed Windows queue in Settings and configure its driver for 58 mm continuous receipt paper. Windows printer settings are respected during direct printing; browser/PDF viewer dialog choices cannot be set by the app.
+- Automatic local kitchen printing is on by default once the Windows queue is selected. Only newly committed Masa / Gel-Al and addition/correction jobs are selected; platform-original printing retains the existing v0.7 workflow. Failed, cancelled and uncertain sends never auto-retry. Old jobs remain available for deliberate manual handling.
+- New display receipt numbers start at #1 for each Istanbul calendar day. Stable IDs, payment references and existing frozen ticket snapshots remain intact.
+- Reports → Yoğunluk shows 24 Istanbul-hour arrival counts and CSV, with source/staff/date filters. Added products and payments do not count as new arrivals. Cancelled and unaccepted platform orders are excluded.
+- Seven drinks without a price are 45 TL in the catalog and QR data; existing non-empty prices and historical order prices are preserved.
+
+Physical XP-237B output acceptance is still required. Built from `codex/staff-sessions-platform-integrations`, version 0.7.1+8.

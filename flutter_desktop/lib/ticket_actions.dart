@@ -9,7 +9,7 @@ Future<void> saveTicketPdf(
   BuildContext context,
   TicketDocument document,
 ) async {
-  final fields = await askFields(context, '80 mm PDF Kaydet', [
+  final fields = await askFields(context, '58 mm PDF Kaydet', [
     (
       'Yeni PDF dosya yolu',
       path.join(

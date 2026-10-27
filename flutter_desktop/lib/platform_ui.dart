@@ -1,4 +1,7 @@
+import 'order_reporting.dart';
+
 import 'package:flutter/material.dart';
+
 import 'pos_logic.dart';
 import 'operations.dart';
 import 'operations_ui.dart';
@@ -1145,7 +1148,7 @@ class _PlatformPanelState extends State<PlatformPanel> {
             o['cancelled'] != true,
       ))
         button(
-          '#${o['id']} Fatura Bağlantısı İste',
+          '#${displayOrderNumber(o)} Fatura Bağlantısı İste',
           source == 'Yemeksepeti'
               ? null
               : () async {

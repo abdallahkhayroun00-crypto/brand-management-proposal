@@ -1,10 +1,14 @@
+import 'order_reporting.dart';
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as paths;
 import 'package:sqlite3/sqlite3.dart';
+
 import 'pos_logic.dart';
 import 'operations.dart';
 import 'ticket_document.dart';
@@ -78,6 +82,11 @@ class PosStore extends ChangeNotifier {
       csrf TEXT NOT NULL, device_name TEXT NOT NULL, created_at TEXT NOT NULL,
       last_seen TEXT NOT NULL, expires_at TEXT NOT NULL, revoked_at TEXT
     )''');
+    final snap = read(), migrated = copyJson(read().data);
+    assignDailyNumbers(migrated);
+    if (jsonEncode(snap.data) != jsonEncode(migrated)) {
+      replace(migrated, snap.revision);
+    }
   }
 
   late final String filePath;
@@ -281,6 +290,7 @@ class PosStore extends ChangeNotifier {
       }
       final current = read(), next = copyJson(read().data);
       result = change(next);
+      assignDailyNumbers(next);
       freezeKitchenTickets(next);
       validate(next);
       final revision = current.revision + 1;
@@ -312,6 +322,7 @@ class PosStore extends ChangeNotifier {
   }
 
   WriteResult replace(Map<String, dynamic> next, int expectedRevision) {
+    assignDailyNumbers(next);
     freezeKitchenTickets(next);
     validate(next);
     _db.execute('BEGIN IMMEDIATE');

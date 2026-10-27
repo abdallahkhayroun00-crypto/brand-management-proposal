@@ -1,6 +1,10 @@
+import 'order_reporting.dart';
+
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
+
 import 'pos_logic.dart';
 import 'pos_store.dart';
 import 'operations.dart';
@@ -762,7 +766,7 @@ class _ReportsPanelState extends State<ReportsPanel> {
           OutlinedButton(
             onPressed: () =>
                 widget.edit((s) => sampleSettlement(s, o['id'] as int)),
-            child: Text('#${o['id']} Örnek Finans Kaydı Al'),
+            child: Text('#${displayOrderNumber(o)} Örnek Finans Kaydı Al'),
           ),
         OutlinedButton(
           onPressed: () => export(

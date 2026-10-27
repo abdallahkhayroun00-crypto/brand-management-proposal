@@ -1,3 +1,4 @@
+import 'order_reporting.dart';
 import 'package:flutter/material.dart';
 import 'pos_logic.dart';
 import 'operations.dart';
@@ -59,7 +60,8 @@ class _PrinterWorkspaceState extends State<PrinterWorkspace> {
                   filter == 'Hata' && j['state'] == 'Hata' ||
                   filter == 'Doğrula' && printUncertain(j) ||
                   filter == 'Tamamlanan' && completed(j)) &&
-              '${j['orderId']} ${j['batchId']}'.contains(search),
+              '${j['orderId']} ${displayOrderNumber(mutableOrder(widget.state, j['orderId'] as int) ?? {'id': j['orderId']})} ${j['batchId']}'
+                  .contains(search),
         )
         .toList();
     final job =
@@ -134,7 +136,7 @@ class _PrinterWorkspaceState extends State<PrinterWorkspace> {
                           ),
                         ),
                         title: Text(
-                          '#${j['orderId']} · ${order?['source'] ?? 'Sipariş'}${order?['table'] == null ? '' : ' ${order!['table']}'}',
+                          '#${order == null ? j['orderId'] : displayOrderNumber(order)} · ${order?['source'] ?? 'Sipariş'}${order?['table'] == null ? '' : ' ${order!['table']}'}',
                           style: const TextStyle(fontWeight: FontWeight.w800),
                         ),
                         subtitle: Text('Parti ${j['batchId']} · ${j['state']}'),

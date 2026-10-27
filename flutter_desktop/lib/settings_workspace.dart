@@ -1,12 +1,15 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
+
 import 'pos_logic.dart';
 import 'pos_store.dart';
 import 'operations_ui.dart';
 import 'platform_runtime.dart';
 import 'platform_settings_ui.dart';
 import 'workspace_ui.dart';
+
 import 'package:printing/printing.dart';
 
 class SettingsWorkspace extends StatefulWidget {
@@ -93,11 +96,18 @@ class _SettingsWorkspaceState extends State<SettingsWorkspace> {
             settings['printerUrl'] = chosen.url;
             settings['printerCount'] = 1;
             settings['printerMode'] = 'windows';
-            settings['paperWidthMm'] = 80;
+            settings['paperWidthMm'] = 58;
+            settings['printableWidthMm'] = 48;
+            settings['receiptScale'] = 'shrink';
+            settings['autoPrint'] = true;
+            settings.putIfAbsent(
+              'autoPrintEnabledAt',
+              () => DateTime.now().toUtc().toIso8601String(),
+            );
           })) {
         printer.text = chosen.name;
         message(
-          'Windows yazıcısı seçildi. Fiziksel 80 mm çıktı testi henüz yapılmadı.',
+          'Windows yazıcısı seçildi. Fiziksel 58 mm çıktı testi henüz yapılmadı.',
         );
       }
     } catch (e) {
@@ -404,7 +414,26 @@ class _SettingsWorkspaceState extends State<SettingsWorkspace> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        workHeading('Tek Sipariş Yazıcısı', 'Cihaz bilgisi ve mutfak kuyruğu'),
+        SwitchListTile(
+          title: const Text('Otomatik Masa / Gel-Al Fişi'),
+          subtitle: const Text(
+            'Onaylanan ilk ve ek siparişler tek yazıcıya gönderilir.',
+          ),
+          value: widget.state['settings']?['autoPrint'] == true,
+          onChanged: (v) => widget.edit((s) {
+            final cfg =
+                s.putIfAbsent('settings', () => <String, dynamic>{}) as Map;
+            cfg['autoPrint'] = v;
+            cfg.putIfAbsent(
+              'autoPrintEnabledAt',
+              () => DateTime.now().toUtc().toIso8601String(),
+            );
+          }),
+        ),
+        workHeading(
+          'Tek Sipariş Yazıcısı',
+          'XP-237B · 58 mm kâğıt / 48 mm baskı · Büyük sayfaları daralt',
+        ),
         WorkCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -484,7 +513,7 @@ class _SettingsWorkspaceState extends State<SettingsWorkspace> {
         const SizedBox(height: 14),
         const WorkCard(
           child: Text(
-            'İlk sipariş ve ek ürünler ayrı mutfak işleri oluşturur. Ek fişte yalnızca ek ürünler bulunur. Tek Windows yazıcısı kullanılır; tamamlanmış mutfak işi tekrar gönderilmez. Sürücüde 80 mm kâğıdı seçin. Kuyruk kabulü fiziksel çıktı doğrulaması değildir. Mali ÖKC / e-Fatura bağlantısı yoktur.',
+            'İlk sipariş ve ek ürünler ayrı mutfak işleri oluşturur. Ek fişte yalnızca ek ürünler bulunur. Tek Windows yazıcısı kullanılır; tamamlanmış mutfak işi tekrar gönderilmez. Sürücüde 58 mm kâğıdı seçin. Kuyruk kabulü fiziksel çıktı doğrulaması değildir. Mali ÖKC / e-Fatura bağlantısı yoktur.',
             style: TextStyle(fontSize: 12, height: 1.6, color: muted),
           ),
         ),

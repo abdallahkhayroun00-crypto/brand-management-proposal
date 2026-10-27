@@ -1,6 +1,10 @@
+import 'order_reporting.dart';
+
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
+
 import 'operations.dart';
 import 'operations_ui.dart';
 import 'pos_logic.dart';
@@ -277,8 +281,23 @@ class _ReportsWorkspaceState extends State<ReportsWorkspace> {
         .fold<int>(0, (n, r) => n + r.amount);
     String csv(List<List<Object?>> rows) =>
         '\uFEFF${rows.map((r) => r.map(csvCell).join(',')).join('\r\n')}\r\n';
+    final hours = hourlyOrderCounts(
+      asMaps(state['orders']),
+      from: dates?.start.toIso8601String().substring(0, 10) ?? '',
+      to: dates?.end.toIso8601String().substring(0, 10) ?? '',
+      source: source,
+      staff: staff == 'Tümü' ? '' : staff,
+    );
     void exportCurrent() {
-      if (tab == 'Tahsilatlar') {
+      if (tab == 'Yoğunluk') {
+        export(
+          csv([
+            ['Saat (Europe/Istanbul)', 'Sipariş sayısı'],
+            for (var h = 0; h < 24; h++) ['$h:00', hours[h]],
+          ]),
+          'nohut-yogunluk',
+        );
+      } else if (tab == 'Tahsilatlar') {
         export(ledgerCsv(receipts), 'nohut-tahsilat');
       } else if (tab == 'Ürünler') {
         export(salesCsv(products), 'nohut-urunler');
@@ -312,7 +331,80 @@ class _ReportsWorkspaceState extends State<ReportsWorkspace> {
     }
 
     Widget content;
-    if (tab == 'Özet') {
+    if (tab == 'Yoğunluk') {
+      final max = hours.reduce((a, b) => a > b ? a : b);
+      final peaks = [
+        for (var h = 0; h < 24; h++)
+          if (max > 0 && hours[h] == max) '${h.toString().padLeft(2, '0')}:00',
+      ];
+      content = WorkCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Saatlik Sipariş Yoğunluğu',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              max == 0
+                  ? 'Bu filtrelerde henüz sipariş yok.'
+                  : 'En yoğun saat: ${peaks.join(', ')} · $max sipariş',
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    for (var h = 0; h < 24; h++)
+                      SizedBox(
+                        width: 38,
+                        child: Tooltip(
+                          message: '$h:00 · ${hours[h]} sipariş',
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text('${hours[h]}'),
+                              const SizedBox(height: 5),
+                              Container(
+                                width: 25,
+                                height: max == 0 ? 2 : 2 + 150 * hours[h] / max,
+                                decoration: BoxDecoration(
+                                  color: max > 0 && hours[h] == max
+                                      ? const Color(0xffedb563)
+                                      : pine,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(h.toString().padLeft(2, '0')),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 15),
+            const Text(
+              'İstanbul saati · İlk sipariş saati esas alınır. Ek ürün ve ödemeler tekrar sayılmaz. İptal / kabul bekleyen siparişler hariç. Tarih, kaynak ve personel filtreleri uygulanır.',
+              style: TextStyle(fontSize: 12, color: muted),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => export(
+                '\uFEFFSaat (Europe/Istanbul),Sipariş Sayısı\r\n${[for (var h = 0; h < 24; h++) '$h:00,${hours[h]}'].join('\r\n')}',
+                'nohut-yogunluk',
+              ),
+              icon: const Icon(Icons.download_outlined),
+              label: const Text('Yoğunluk CSV'),
+            ),
+          ],
+        ),
+      );
+    } else if (tab == 'Özet') {
       content = Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -639,6 +731,7 @@ class _ReportsWorkspaceState extends State<ReportsWorkspace> {
               child: WorkTabs(
                 values: const [
                   'Özet',
+                  'Yoğunluk',
                   'Tahsilatlar',
                   'Ürünler',
                   'Personel',

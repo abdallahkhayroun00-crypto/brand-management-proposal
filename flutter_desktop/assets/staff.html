@@ -40,7 +40,7 @@ function render(){
  const platform=['Trendyol Go','Yemeksepeti'].includes(o.source), status=platform?o.demoRemoteStatus:o.serviceStatus; const label=({Created:'Yeni',Picking:'Hazırlanıyor',Invoiced:'Hazır',Shipped:'Kuryede'})[status]||status;
  const operations=o.operations||[],op=operations[0];
  const ready=platform?status==='Picking':status==='Hazırlanıyor';
- return `<article class="order"><div class="row between"><h3>#${o.id} · ${esc(o.source)} ${o.table??''}</h3><span class="badge busy">${esc(label)}</span></div><p class="muted">${esc(label)} ${platform&&status==='Created'?' · PC kabulü bekleniyor':''}</p>${o.batches.flatMap(b=>b.lines).map(l=>`<p>${l.qty} × ${esc(l.name)}${l.note?' · '+esc(l.note):''}${l.removed?.length?' · Çıkar: '+esc(l.removed.join(', ')):''}</p>`).join('')}${op?`<p class="sync">İşlem: Sipariş Hazır · ${esc(op.actor)} · ${esc(stamp(op.at))}<br>Platform Senkronizasyonu: ${esc(op.status)} ${esc(op.error)}</p>`:''}${ready&&!o.kitchenReady&&!op?`<button class="primary order-actions" data-ready="${o.id}" ${!online||busy?'disabled':''}>Sipariş Hazır</button>`:''}${op?.status==='Hata'?`<button data-retry="${esc(op.id)}" ${!online||busy?'disabled':''}>Hazır Bildirimini Yeniden Dene</button>`:''}</article>`;
+ return `<article class="order"><div class="row between"><h3>#${o.dailyNumber??o.id} · ${esc(o.source)} ${o.table??''}</h3><span class="badge busy">${esc(label)}</span></div><p class="muted">${esc(label)} ${platform&&status==='Created'?' · PC kabulü bekleniyor':''}</p>${o.batches.flatMap(b=>b.lines).map(l=>`<p>${l.qty} × ${esc(l.name)}${l.note?' · '+esc(l.note):''}${l.removed?.length?' · Çıkar: '+esc(l.removed.join(', ')):''}</p>`).join('')}${op?`<p class="sync">İşlem: Sipariş Hazır · ${esc(op.actor)} · ${esc(stamp(op.at))}<br>Platform Senkronizasyonu: ${esc(op.status)} ${esc(op.error)}</p>`:''}${ready&&!o.kitchenReady&&!op?`<button class="primary order-actions" data-ready="${o.dailyNumber??o.id}" ${!online||busy?'disabled':''}>Sipariş Hazır</button>`:''}${op?.status==='Hata'?`<button data-retry="${esc(op.id)}" ${!online||busy?'disabled':''}>Hazır Bildirimini Yeniden Dene</button>`:''}</article>`;
  }).join('')||'<p class="empty">Şu an açık sipariş yok.</p>';controls();
 }
 function renderMenu(){
@@ -69,7 +69,7 @@ async function send(){if(!pending||busy)return;busy=true;notice('Kaydediliyor…
  const r=await post('/api/staff/orders',pending),b=await r.json();
  if(r.status===409){pending=null;sessionStorage.removeItem('nohut-pending');message='Başka cihaz değişiklik yaptı. Sepet korundu; güncel veriyi kontrol edip yeniden gönderin.';return}
  if(!r.ok){pending=null;sessionStorage.removeItem('nohut-pending');message=b.message||'İstek reddedildi';return}
- online=true;pending=null;sessionStorage.removeItem('nohut-pending');cart.clear();message='✓ Sipariş kaydedildi · #'+b.orderId;showView('orders');
+ online=true;pending=null;sessionStorage.removeItem('nohut-pending');cart.clear();message='✓ Sipariş kaydedildi · #'+(b.orderNumber??b.orderId);showView('orders');
  }catch{online=false;message='Onay alınamadı. Aynı isteği yeniden deneyin; çift sipariş oluşturulmaz.'}
  finally{busy=false;if(online)await refresh(true);notice(message);controls()}}
 async function sendAction(){if(!pendingAction||busy)return;busy=true;controls();let message='';try{

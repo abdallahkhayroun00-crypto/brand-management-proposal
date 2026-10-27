@@ -1,3 +1,4 @@
+import 'order_reporting.dart';
 import 'pos_logic.dart';
 import 'operations.dart';
 
@@ -360,6 +361,7 @@ Json? importPlatform(Json s, Json packet) {
       'platformCancelledAmount': 0,
     };
     (s['orders'] as List).add(o);
+    assignDailyNumbers(s);
   }
   o['platformRevision'] = version;
   o['platformPickup'] = packet['storePickupSelected'] == true;

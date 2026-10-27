@@ -1,7 +1,11 @@
+import 'order_reporting.dart';
+
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'floor_plan.dart';
 import 'lan_server.dart';
 import 'pos_logic.dart';
@@ -146,6 +150,7 @@ class ManagerDesktop extends StatefulWidget {
 
 class _ManagerDesktopState extends State<ManagerDesktop> {
   late final PosStore store;
+  late final AutomaticKitchenPrinter automaticPrinter;
   late final PosLanServer lan;
   late final PlatformRuntime runtime;
   List<Product> menu = const [];
@@ -178,6 +183,8 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     super.initState();
     store = PosStore(databaseFile: widget.databaseFile);
     lan = PosLanServer(store);
+    automaticPrinter = AutomaticKitchenPrinter(store);
+    automaticPrinter.start();
     runtime = PlatformRuntime(
       store,
       CredentialVault(widget.secretStore ?? WindowsSecretStore()),
@@ -218,6 +225,22 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
       final snap = store.read();
       final next = copyJson(snap.data);
       next.putIfAbsent('localMenu', () => data['products']);
+      for (final product in (next['localMenu'] as List).cast<Map>()) {
+        if (product['category'] == 'drink' && product['price'] == null) {
+          product['price'] = 45;
+        }
+      }
+      final settings =
+          next.putIfAbsent('settings', () => <String, dynamic>{}) as Map;
+      settings['printerModel'] = 'XP-237B';
+      settings['paperWidthMm'] = 58;
+      settings['printableWidthMm'] = 48;
+      settings['receiptScale'] = 'shrink';
+      settings.putIfAbsent('autoPrint', () => true);
+      settings.putIfAbsent(
+        'autoPrintEnabledAt',
+        () => DateTime.now().toUtc().toIso8601String(),
+      );
       seedPlatformMenu(next, asMaps(next['localMenu']));
       store.replace(next, snap.revision);
       if (mounted) setState(() => menu = products);
@@ -228,6 +251,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
 
   @override
   void dispose() {
+    automaticPrinter.dispose();
     runtime.dispose();
     store.removeListener(_onStoreChange);
     lan.dispose();
@@ -327,7 +351,9 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
         selectedTable = request.table ?? table;
         selectedOrder = created;
       });
-      _notify('Sipariş SQLite veritabanına kaydedildi · #$created');
+      _notify(
+        'Sipariş SQLite veritabanına kaydedildi · #${displayOrderNumber(mutableOrder(store.read().data, created!)!)}',
+      );
     }
   }
 
@@ -365,7 +391,9 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialog) => AlertDialog(
-          title: Text('Ödeme · #${order['id']} ${guestName ?? ''}'),
+          title: Text(
+            'Ödeme · #${displayOrderNumber(order)} ${guestName ?? ''}',
+          ),
           content: SizedBox(
             width: 360,
             child: Column(
@@ -960,7 +988,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                   ListTile(
                     leading: const Icon(Icons.receipt_long_outlined),
                     title: Text(
-                      '#${o['id']} · ${o['source']}${o['table'] == null ? '' : ' · Masa ${o['table']}'}',
+                      '#${displayOrderNumber(o)} · ${o['source']}${o['table'] == null ? '' : ' · Masa ${o['table']}'}',
                     ),
                     subtitle: Text(o['closed'] == true ? 'Kapalı' : 'Açık'),
                     trailing: Text(formatTry(orderTotalCents(o))),
@@ -1155,7 +1183,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
               .substring(0, 10) ??
           '';
       final text =
-          '${o['id']} ${o['table'] ?? ''} ${o['customer']} ${activeLines(o).map((l) => l['name']).join(' ')}'
+          '${o['id']} ${displayOrderNumber(o)} ${o['numberDay'] ?? ''} ${o['table'] ?? ''} ${o['customer']} ${activeLines(o).map((l) => l['name']).join(' ')}'
               .toLowerCase();
       final staff = asMaps(
         o['batches'],
@@ -1347,7 +1375,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                                       child: Text('${order['table'] ?? '#'}'),
                                     ),
                                     title: Text(
-                                      '#${order['id']} · ${order['source']}',
+                                      '#${displayOrderNumber(order)} · ${order['source']}',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w700,
                                       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'ticket_document.dart';
 import 'pos_logic.dart';
 import 'workspace_ui.dart';
@@ -31,7 +32,7 @@ class TicketPaper extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Image.asset(
-                'assets/nohut-wordmark.png',
+                'assets/receipt-logo.png',
                 width: 210,
                 height: 150,
                 fit: BoxFit.contain,
