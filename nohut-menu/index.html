@@ -3,6 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#123e30">
 <title>Nohut Falafel | Menü • Menu</title><meta name="description" content="Nohut Falafel Serdivan: falafel, dürüm, fatte, mezeler, salatalar ve içecekler. Turkish, Arabic and English QR menu.">
 <link rel="icon" href="assets/original-logo.jpeg"><link rel="preload" href="assets/hero.png" as="image" fetchpriority="high"><link rel="stylesheet" href="fonts.css?v=20261025-readability1"><link rel="stylesheet" href="menu.css?v=20261025-performance2"><script src="menu-data.js?v=20261027-drinks45" defer></script><script src="menu-ar.js?v=20261025-appetizers2" defer></script><script src="menu.js?v=20261027-kavurmali-fatte1" defer></script>
+<link rel="stylesheet" href="campaigns.css?v=20261028-1"><script src="campaigns-data.js?v=20261028-1" defer></script><script src="campaigns.js?v=20261028-1" defer></script>
 </head><body>
 <a class="skip-link" href="#fullMenu" data-tr="Menüye geç" data-ar="انتقل إلى القائمة" data-en="Skip to menu">Menüye geç</a>
 <div class="page">
@@ -18,7 +19,9 @@
 <a class="delivery-link" href="https://tgoyemek.com/restoranlar/316490" target="_blank" rel="noopener noreferrer"><img class="trendyol-logo" src="assets/trendyol-go.png?v=20261025-logo1" alt="Trendyol Go" width="39" height="39" decoding="async"><span class="contact-copy"><strong>Trendyol Go Yemek</strong><small data-tr="Hemen Sipariş Ver" data-ar="اطلب الآن" data-en="Order online">Hemen Sipariş Ver</small></span><span class="arrow" aria-hidden="true">→</span></a>
 <a class="delivery-link" href="https://www.yemeksepeti.com/restaurant/q6kx/nohut-falafel" target="_blank" rel="noopener noreferrer"><span class="yemeksepeti-icon" aria-hidden="true">Y</span><span class="contact-copy"><strong>Yemeksepeti</strong><small data-tr="Hemen Sipariş Ver" data-ar="اطلب الآن" data-en="Order online">Hemen Sipariş Ver</small></span><span class="arrow" aria-hidden="true">→</span></a>
 </nav>
-<main class="content"><nav class="category-nav" id="categories" aria-label="Menü kategorileri"></nav>
+<main class="content">
+<section class="campaigns" id="campaigns" aria-labelledby="campaignsTitle" hidden><div class="campaigns-heading"><h2 id="campaignsTitle">Kampanyalar</h2><svg aria-hidden="true"><use href="#leaf"/></svg></div><div class="campaigns-list" id="campaignsList"></div></section>
+<nav class="category-nav" id="categories" aria-label="Menü kategorileri"></nav>
 <section id="fullMenu" aria-labelledby="sectionTitle"><div class="menu-toolbar"><div class="section-heading"><div class="title-line"><h2 id="sectionTitle">Dürümler</h2><span class="gold-rule" aria-hidden="true"></span><svg aria-hidden="true"><use href="#leaf"/></svg></div><p id="sectionDescription">Taptaze malzemeler, bol lezzet</p></div><label class="search"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input type="search" id="search" autocomplete="off" aria-label="Menüde ara" placeholder="Menüde ara..."></label></div><div class="menu-grid" id="grid"></div><p class="empty" id="empty" hidden></p><span class="sr-only" id="counter" role="status" aria-live="polite"></span></section></main>
 <section class="reviews-section" id="reviews" aria-labelledby="reviewsTitle">
   <div class="reviews-inner">
@@ -80,6 +83,7 @@
 </section>
 <section class="visit" aria-labelledby="visitTitle"><h2 id="visitTitle" data-tr="Bizi ziyaret edin" data-ar="زورونا" data-en="Visit us">Bizi ziyaret edin</h2><p>Kemalpaşa Mahallesi, Yeni Cadde No:4/B, Serdivan / Sakarya</p><p data-tr="Salı–Pazar 11:00–21:00 · Pazartesi kapalı" data-ar="الثلاثاء–الأحد ⁦11:00–21:00⁩ · مغلق يوم الاثنين" data-en="Tue–Sun 11:00–21:00 · Closed Mondays">Salı–Pazar 11:00–21:00 · Pazartesi kapalı</p><div class="visit-actions"><a href="https://maps.app.goo.gl/q3GJZfhSuJXXo8o87" target="_blank" rel="noopener noreferrer" data-tr="Yol tarifi al →" data-ar="الاتجاهات ←" data-en="Get directions →">Yol tarifi al →</a><a href="tel:+905413843314" data-tr="Bizi arayın" data-ar="اتصل بنا" data-en="Call us">Bizi arayın</a></div></section>
 <footer><img src="assets/original-logo.jpeg" alt="Nohut Falafel orijinal logo" width="66" height="66" loading="lazy"><div><span class="footer-brand">Nohut Falafel</span><p data-tr="Güzel yemek, güzel anlar." data-ar="أكل طيّب ولَمّة حلوة." data-en="Good food, good moments.">Güzel yemek, güzel anlar.</p></div><small>© Nohut Falafel · <span data-tr="QR Menü" data-ar="قائمة الطعام" data-en="QR Menu">QR Menü</span></small></footer></div>
+<dialog class="campaign-viewer" id="campaignViewer" aria-labelledby="campaignViewerTitle"><figure><h2 class="sr-only" id="campaignViewerTitle">Kampanya</h2><button class="campaign-viewer-close" type="button" aria-label="Kapat">×</button><img alt="" width="768" height="1152" decoding="async"></figure></dialog>
 <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
 <symbol id="leaf" viewBox="0 0 32 32"><path d="M7 26C3 12 14 5 27 4c0 13-5 24-18 20M5 29 25 6M11 21l1-10m6 4 7-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 <symbol id="leaves" viewBox="0 0 80 46"><path d="M39 41 14 8m18 25C15 35 8 20 8 7c18 5 27 13 24 26Zm8 6L68 9M46 32C42 14 56 7 73 5c-1 18-11 31-27 27Zm0 0 20-3M25 28l-3-12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -88,3 +92,4 @@
 <symbol id="all" viewBox="0 0 32 32"><rect x="2" y="2" width="12" height="12" rx="2" fill="currentColor"/><rect x="18" y="2" width="12" height="12" rx="2" fill="currentColor"/><rect x="2" y="18" width="12" height="12" rx="2" fill="currentColor"/><rect x="18" y="18" width="12" height="12" rx="2" fill="currentColor"/></symbol>
 <symbol id="drink" viewBox="0 0 32 40"><path d="m7 13 3 24h13l3-24Zm-2 0h23M10 2l8 5 2 9m-7 3 1 11h6l1-11M7 7c1-4 5-4 7 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></symbol>
 </defs></svg></body></html>
+
