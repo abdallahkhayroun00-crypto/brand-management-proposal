@@ -79,6 +79,15 @@
       "original_asset": "assets/products/ys-68085833.jpg",
       "display_crop": "Transparent plate cutout, perspective aligned to a centered 840px circle on a 1000px cream canvas.",
       "edit_method": "AI-assisted background extraction and perspective normalization from the restaurant source photo."
+    },
+    {
+      "menu_item": "Kavurmalı Fatte",
+      "asset": "assets/platter-cutouts/kavurmali-fatte-20261027.webp",
+      "provider": "Restaurant photograph uploaded by owner",
+      "source_file": "ff66ccb6-d52d-4617-83ff-8a46797d0f34_3AAB4E8E-F130-45B8-99DB-4BD63901E4A7.jpeg",
+      "added_on": "2026-10-27",
+      "display_crop": "Transparent plate cutout centered within an 840px footprint on the shared 1000px menu canvas.",
+      "edit_method": "Built-in image generation: background extraction, overhead perspective normalization, sharper natural food detail and balanced lighting. Preserve the patterned bowl, roasted meat, crispy bread and creamy base; no added garnish."
     }
   ]
 }
