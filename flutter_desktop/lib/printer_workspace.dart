@@ -224,7 +224,7 @@ class _PrinterWorkspaceState extends State<PrinterWorkspace> {
                     OutlinedButton.icon(
                       onPressed: () => saveTicketPdf(context, document!),
                       icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-                      label: const Text('80 mm PDF Kaydet'),
+                      label: const Text('58 mm PDF Kaydet'),
                     ),
                   if (widget.state['settings']?['printerMode'] == 'windows')
                     FilledButton.icon(
@@ -341,7 +341,7 @@ class _PrinterWorkspaceState extends State<PrinterWorkspace> {
               ),
             Text(
               widget.state['settings']?['printerMode'] == 'windows'
-                  ? 'Tek Windows / USB yazıcısı seçili. Sürücüde 80 mm kâğıdı ayarlayın. Kuyruk kabulü fiziksel baskı doğrulaması değildir. Mali fiş / fatura oluşturulmaz.'
+                  ? 'Tek Windows / USB yazıcısı seçili. Sürücüde 58 mm kâğıdı ayarlayın. Kuyruk kabulü fiziksel baskı doğrulaması değildir. Mali fiş / fatura oluşturulmaz.'
                   : 'Fiziksel yazıcı seçili değil. PDF ve simülasyon kullanılabilir; mali fiş veya fatura oluşturulmaz.',
               style: const TextStyle(fontSize: 11, color: Color(0xff7c8b80)),
             ),

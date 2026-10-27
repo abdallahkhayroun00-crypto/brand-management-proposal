@@ -542,7 +542,7 @@ class _DocumentsWorkspaceState extends State<DocumentsWorkspace> {
                                                   size: 18,
                                                 ),
                                                 label: const Text(
-                                                  'Hesap Özeti · 80 mm PDF Kaydet',
+                                                  'Hesap Özeti · 58 mm PDF Kaydet',
                                                 ),
                                               ),
                                             ],
