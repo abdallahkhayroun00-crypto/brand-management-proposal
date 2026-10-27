@@ -16,6 +16,18 @@ try {
   $doc.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(8,8,8,8)
   $logo = [System.Drawing.Image]::FromFile([string]$job.logo)
   $script:rows = @(([string]$job.text) -split "`n")
+  # A roll driver can default to a very long page. Size this job to its content.
+  $paperWidth = [Math]::Min(315, $doc.DefaultPageSettings.PaperSize.Width)
+  $measureBitmap = New-Object System.Drawing.Bitmap(1,1)
+  $measureBitmap.SetResolution(100,100)
+  $measure = [System.Drawing.Graphics]::FromImage($measureBitmap)
+  try {
+    $paperHeight = 175
+    foreach ($line in $script:rows) {
+      $paperHeight += [Math]::Max(16, $measure.MeasureString([string]$line, $font, [int]($paperWidth-25)).Height + 4)
+    }
+    $doc.DefaultPageSettings.PaperSize = New-Object System.Drawing.Printing.PaperSize('Nohut Receipt', [int]$paperWidth, [int][Math]::Min(32000,[Math]::Ceiling($paperHeight)))
+  } finally { $measure.Dispose(); $measureBitmap.Dispose() }
   $script:row = 0
   $script:firstPage = $true
   $doc.add_PrintPage({

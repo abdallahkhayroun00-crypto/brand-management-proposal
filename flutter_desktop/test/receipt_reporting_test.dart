@@ -17,6 +17,18 @@ List<Json> productLines() => [
   },
 ];
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  test(
+    'Windows invalid printer fails without printing or false success',
+    () async {
+      await expectLater(
+        windowsPrint('Nohut test', '__NOHUT_NONEXISTENT_PRINTER__'),
+        isA<FormatException>().having((e) => e.message, 'message', contains('not installed')),
+      );
+    },
+    skip: !Platform.isWindows,
+  );
+
   test('daily numbering resets at Istanbul midnight, never internal IDs', () {
     final state = <String, dynamic>{
       'orders': [
