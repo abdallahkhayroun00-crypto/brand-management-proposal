@@ -3,6 +3,27 @@
   "note": "Selected positive excerpts; no aggregate ratings or review counts are implied. Translations are identified; original sources are linked.",
   "reviews": [
     {
+      "id": "customer-20261022-ah",
+      "platform": null,
+      "author_tr": "A*** H********",
+      "author_en": "A*** H********",
+      "author_ar": "A*** H********",
+      "quote_tr": "başka bir ile gideceğim için özleyeceğim tek lezzetsin..",
+      "quote_en": "I'm moving to another city, and yours is the only food I'll miss.",
+      "quote_ar": "سأنتقل إلى مدينة أخرى، وطعم أكلكم هو الوحيد الذي سأشتاق إليه.",
+      "original_language": "tr",
+      "review_date": "2026-10-22",
+      "rating": 5,
+      "rating_scale": 5,
+      "taste_rating": 5,
+      "service_rating": 5,
+      "source": null,
+      "source_type": "user-provided screenshot",
+      "kind": "complete short review",
+      "verified_via": "User-provided screenshot IMG_8090.jpeg; masked reviewer name, five stars, Lezzet 5.0, Servis 5.0, dated 22.10.2026 04:17. Platform not attributed because the screenshot does not show its name or domain.",
+      "observed_on": "2026-10-27"
+    },
+    {
       "platform": "Google Maps",
       "platform_class": "google",
       "author_tr": "E. Gündüz",
