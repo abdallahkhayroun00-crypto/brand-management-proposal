@@ -33,6 +33,7 @@ const data=[
 ['salad','Falafel Salatası','Falafel Salad',200,'Falafelli salata','Fresh salad with falafel'],
 ['salad','Tabbule','Tabbouleh',165,'Maydanozlu salata','Traditional parsley and bulgur salad'],
 ['salad','Fettuş','Fattoush',185,'Lübnan usulü salata','Fresh Lebanese-style salad with crispy bread'],
+['dessert','Lübnan Geceleri','Lebanese Nights (Layali Lubnan)',150,'Geleneksel Lübnan tatlısı','Traditional Lebanese dessert'],
 ['dessert','Şambali Tatlısı','Şambali (Semolina Dessert)',70,'Geleneksel tatlı','Traditional Turkish semolina dessert'],
 ['dessert','Tahinli Muhallebi','Tahini Milk Pudding',90,'Tahinli muhallebi','Smooth milk pudding flavoured with tahini'],
 ['drink','Büyük Ayran','Eker Ayran (Large)','40','Eker ayran','Traditional Turkish yogurt drink'],

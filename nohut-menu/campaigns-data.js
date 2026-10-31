@@ -22,5 +22,36 @@ window.nohutCampaigns = [
       { tr: 'Şişe Cola Turka', ar: 'كولا توركا — زجاجة', en: 'Bottled Cola Turka' },
       { tr: 'Çay', ar: 'شاي', en: 'Tea' }
     ]
+  },
+  {
+    "id": "lubnan-geceleri-150",
+    "active": true,
+    "startsAt": null,
+    "endsAt": null,
+    "price": 150,
+    "poster": "assets/campaigns/lubnan-geceleri.svg",
+    "thumbnail": "assets/campaigns/lubnan-geceleri.svg",
+    "eyebrow": {
+      "tr": "YENİ TATLI",
+      "ar": "حلوى جديدة",
+      "en": "NEW DESSERT"
+    },
+    "title": {
+      "tr": "Lübnan Geceleri",
+      "ar": "ليالي لبنان",
+      "en": "Lebanese Nights"
+    },
+    "description": {
+      "tr": "Yeni Lübnan tatlımızla tanışın.",
+      "ar": "اكتشفوا حلوانا اللبنانية الجديدة.",
+      "en": "Discover our new Lebanese dessert."
+    },
+    "items": [
+      {
+        "tr": "Geleneksel Lübnan tatlısı",
+        "ar": "حلوى لبنانية تقليدية",
+        "en": "Traditional Lebanese dessert"
+      }
+    ]
   }
 ];

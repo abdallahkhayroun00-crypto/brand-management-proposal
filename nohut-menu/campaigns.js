@@ -36,7 +36,7 @@
    const title=translated(c.title,lang),alt=title+' — '+t.poster;
    return `<article class="campaign-card" aria-labelledby="campaignTitle${index}">
     <button class="campaign-poster-button" type="button" data-campaign="${index}" aria-label="${escape(t.details+': '+title)}" aria-haspopup="dialog" aria-controls="campaignViewer"><img class="campaign-poster" src="${escape(c.thumbnail||c.poster)}" alt="${escape(alt)}" width="144" height="216" decoding="async"><span class="campaign-image-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5M10 7v6M7 10h6"/></svg></span></button>
-    <div class="campaign-copy"><span class="campaign-eyebrow">${t.eyebrow}</span><h3 class="campaign-title" id="campaignTitle${index}">${escape(title)}</h3><p class="campaign-description">${escape(translated(c.description,lang))}</p><ul class="campaign-items">${c.items.map(item=>'<li>'+escape(translated(item,lang))+'</li>').join('')}</ul></div>
+    <div class="campaign-copy"><span class="campaign-eyebrow">${escape(translated(c.eyebrow,lang)||t.eyebrow)}</span><h3 class="campaign-title" id="campaignTitle${index}">${escape(title)}</h3><p class="campaign-description">${escape(translated(c.description,lang))}</p><ul class="campaign-items">${c.items.map(item=>'<li>'+escape(translated(item,lang))+'</li>').join('')}</ul></div>
     <div class="campaign-action"><div class="campaign-price" dir="ltr">${escape(c.price)}<small>TL</small></div><button class="campaign-detail-button" type="button" data-campaign="${index}" aria-haspopup="dialog" aria-controls="campaignViewer">${t.details}</button></div>
    </article>`;
   }).join('');
