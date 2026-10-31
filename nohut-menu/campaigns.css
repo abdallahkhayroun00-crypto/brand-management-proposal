@@ -46,3 +46,96 @@
  [dir=rtl] .campaigns-heading h2{font-size:24px}[dir=rtl] .campaign-title{font-size:21px}[dir=rtl] .campaign-items li{font-size:14px;line-height:1.65}[dir=rtl] .campaign-description{font-size:13px}[dir=rtl] .campaign-detail-button{font-size:13px}
 }
 @media(max-width:360px){.campaign-card{grid-template-columns:96px minmax(0,1fr);gap:13px}.campaign-poster{width:96px;height:144px}.campaign-title{font-size:23px}.campaign-items li{font-size:15px}.campaign-description{font-size:14px}}
+
+
+/* 2026-10-31: Keep offers together without pushing the menu down. */
+.campaigns{margin-bottom:21px}
+.campaigns-heading{margin-bottom:11px}
+.campaigns-list{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ align-items:stretch;
+ gap:12px;
+}
+.campaign-card{
+ min-width:0;
+ display:grid;
+ grid-template-columns:96px minmax(0,1fr);
+ align-content:center;
+ align-items:start;
+ gap:10px 14px;
+ padding:13px;
+ border-radius:18px;
+}
+.campaign-poster-button{align-self:start}
+.campaign-poster{width:96px;height:144px;object-fit:cover;border-radius:10px}
+.campaign-image-hint{width:24px;height:24px;inset-inline-end:5px;bottom:5px}
+.campaign-image-hint svg{width:13px;height:13px}
+.campaign-copy{align-self:center}
+.campaign-eyebrow{font-size:10px;letter-spacing:1px;margin-bottom:4px}
+.campaign-title{font-size:clamp(21px,2.15vw,27px);line-height:1.18;margin:0 0 5px}
+.campaign-description{font-size:14px;line-height:1.35;margin:0 0 9px}
+.campaign-items{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 8px;max-width:none}
+.campaign-items li{font-size:13px;line-height:1.4;gap:5px}
+.campaign-items li:before{font-size:13px}
+.campaign-action{
+ grid-column:1/-1;
+ display:flex;
+ flex-direction:row;
+ align-items:center;
+ justify-content:space-between;
+ border-inline-start:0;
+ border-top:1px solid #ddd3b7;
+ padding:9px 0 0;
+ gap:9px;
+}
+.campaign-price{font-size:30px;letter-spacing:-.5px}
+.campaign-price small{font-size:15px;margin-inline-start:4px}
+.campaign-detail-button{min-height:36px;padding:7px 12px;font-size:13px}
+[dir=rtl] .campaign-title{font-size:22px;line-height:1.38}
+[dir=rtl] .campaign-items li{font-size:13px;line-height:1.6}
+[dir=rtl] .campaign-description{font-size:13px;line-height:1.5}
+@media(max-width:930px){
+ .campaigns-list{
+  grid-template-columns:none;
+  grid-auto-flow:column;
+  grid-auto-columns:min(78%,490px);
+  overflow-x:auto;
+  overscroll-behavior-inline:contain;
+  scroll-snap-type:x mandatory;
+  scroll-padding-inline:1px;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:9px;
+ }
+ .campaign-card{scroll-snap-align:start}
+ .campaigns-list::-webkit-scrollbar{height:5px}
+ .campaigns-list::-webkit-scrollbar-thumb{background:#c6bb98;border-radius:5px}
+}
+@media(max-width:650px){
+ .campaigns{margin-bottom:16px}
+ .campaigns-heading{margin-bottom:9px}
+ .campaigns-list{grid-auto-columns:min(89%,390px);gap:10px}
+ .campaign-card{grid-template-columns:76px minmax(0,1fr);gap:8px 10px;padding:11px;border-radius:15px}
+ .campaign-poster{width:76px;height:114px}
+ .campaign-eyebrow{font-size:9px;margin-bottom:3px}
+ .campaign-title{font-size:20px;margin-bottom:4px}
+ .campaign-description{font-size:12px;margin-bottom:6px}
+ .campaign-items{grid-template-columns:1fr;gap:2px}
+ .campaign-items li{font-size:12px;line-height:1.38}
+ .campaign-items li:before{font-size:12px}
+ .campaign-action{padding-top:8px;gap:6px}
+ .campaign-price{font-size:26px}
+ .campaign-price small{font-size:13px}
+ .campaign-detail-button{min-height:35px;padding:6px 10px;font-size:12px}
+ [dir=rtl] .campaign-title{font-size:18px;line-height:1.35}
+ [dir=rtl] .campaign-description{font-size:12px}
+ [dir=rtl] .campaign-items li{font-size:12px;line-height:1.5}
+ [dir=rtl] .campaign-detail-button{font-size:11px}
+}
+@media(max-width:360px){
+ .campaign-card{grid-template-columns:70px minmax(0,1fr);gap:8px}
+ .campaign-poster{width:70px;height:105px}
+ .campaign-title{font-size:19px}
+ .campaign-description{font-size:12px}
+ .campaign-items li{font-size:12px}
+}
