@@ -27,7 +27,7 @@ const restaurantPhotos = {
  "Nohut Özel Tabağı": "assets/platter-cutouts/nohut-special-20261025.png",
  "Şambali Tatlısı": "assets/dessert-cutouts/sambali.png",
  "Tahinli Muhallebi": "assets/dessert-cutouts/tahinli-muhallebi.png",
- "Lübnan Geceleri": "assets/dessert-cutouts/lubnan-geceleri.svg",
+ "Lübnan Geceleri": "assets/dessert-cutouts/lubnan-geceleri-top.webp",
  "Kıymalı Sembusek (4 Adet)": "assets/side-cutouts/sides.png",
  "Nohut Özel Dürüm": "assets/wrap-cutouts/wraps.png",
  "Falafel Dürüm": "assets/wrap-cutouts/wraps.png",
@@ -341,6 +341,13 @@ function drinkProductVisual(item){
 }
 
 function productVisual(item,index){
+ if(item[1]==='Lübnan Geceleri'){
+  const labels=lang==='ar'?['من الفوق','من الجنب']:lang==='en'?['Top view','Side view']:['Üstten','Yandan'];
+  return `<div class="lubnan-photo-pair" role="group" aria-label="${escapeHtml(menuName(item))}">
+   <div class="lubnan-view"><img src="assets/dessert-cutouts/lubnan-geceleri-top.webp" alt="${escapeHtml(menuName(item)+' — '+labels[0])}" loading="lazy" decoding="async"><span class="lubnan-view-label">${labels[0]}</span></div>
+   <div class="lubnan-view"><img src="assets/dessert-cutouts/lubnan-geceleri-side.webp" alt="${escapeHtml(menuName(item)+' — '+labels[1])}" loading="lazy" decoding="async"><span class="lubnan-view-label">${labels[1]}</span></div>
+  </div>`;
+ }
  if(item[1]==='Şambali Tatlısı')return `<svg class="meze-cutout" viewBox="0 0 1000 1000" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="${escapeHtml(restaurantPhotos[item[1]])}" width="1254" height="1254" transform="matrix(0.69536 0 0 0.71795 61.22 44.10)"/></svg>`;
  if(item[1]==='Tahinli Muhallebi')return `<svg class="meze-cutout" viewBox="0 0 1254 1254" role="img" aria-label="${escapeHtml(menuName(item))}"><image href="${escapeHtml(restaurantPhotos[item[1]])}" width="1254" height="1254"/></svg>`;
  if(item[0]==='drink')return drinkProductVisual(item);

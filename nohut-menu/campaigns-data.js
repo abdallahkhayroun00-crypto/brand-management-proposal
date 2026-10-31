@@ -29,8 +29,8 @@ window.nohutCampaigns = [
     "startsAt": null,
     "endsAt": null,
     "price": 150,
-    "poster": "assets/campaigns/lubnan-geceleri.svg",
-    "thumbnail": "assets/campaigns/lubnan-geceleri.svg",
+    "poster": "assets/dessert-cutouts/lubnan-geceleri-top.webp",
+    "thumbnail": "assets/dessert-cutouts/lubnan-geceleri-top.webp",
     "eyebrow": {
       "tr": "YENİ TATLI",
       "ar": "حلوى جديدة",

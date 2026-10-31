@@ -139,3 +139,11 @@
  .campaign-description{font-size:12px}
  .campaign-items li{font-size:12px}
 }
+/* Both real dessert photographs without expanding the compact campaign section. */
+.campaign-photo-pair{display:grid;grid-template-rows:1fr 1fr;gap:4px;width:96px;height:144px;padding:3px;border-radius:10px;overflow:hidden;background:#f4eddf}
+.campaign-photo-pair img{display:block;width:100%;height:100%;min-height:0;object-fit:cover;border-radius:5px}
+.campaign-viewer-gallery figure{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:12px;padding:12px;border-radius:15px;background:#f6f2e7}
+.campaign-viewer-gallery figure>img{display:block;width:min(42vw,440px);max-width:100%;max-height:min(80vh,500px);aspect-ratio:1;object-fit:contain;background:#eee4ce}
+.campaign-viewer-gallery figure>img[hidden]{display:none!important}
+@media(max-width:650px){.campaign-photo-pair{width:76px;height:114px;gap:3px;padding:2px}.campaign-viewer-gallery figure{gap:5px;padding:7px}}
+@media(max-width:360px){.campaign-photo-pair{width:70px;height:105px}}
