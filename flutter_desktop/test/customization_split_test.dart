@@ -10,6 +10,49 @@ import 'package:nohut_falafel_desktop/order_reporting.dart';
 import 'updates16_test.dart' show fixture, row;
 
 void main() {
+  test('product shares commit atomically and print only the paid share', () {
+    final state = fixture();
+    final order = newLocalOrder(
+      state: state,
+      source: 'Masa',
+      table: 1,
+      productLines: [row()],
+    );
+    final receipt = recordProductPayment(
+      order,
+      {'1:0': 7000},
+      7000,
+      'Karışık',
+      cashCents: 3000,
+      receivedCents: 5000,
+    );
+    expect(allocatedTo(order, '1:0'), 7000);
+    expect(orderPaidCents(order), 7000);
+    expect(asMaps(order['payments']).first['change'], 20);
+    expect(receipt, contains('0,5 ×'));
+    expect(receipt, contains('Toplam 70,00'));
+    final before = copyJson(order);
+    expect(
+      () => recordProductPayment(order, {'1:0': 28000}, 28000, 'Kart'),
+      throwsFormatException,
+    );
+    expect(order, before);
+    expect(
+      () => recordProductPayment(
+        order,
+        {'1:0': 1000},
+        1000,
+        'Nakit',
+        receivedCents: 900,
+      ),
+      throwsFormatException,
+    );
+    expect(order, before);
+    recordProductPayment(order, {'1:0': 21000}, 21000, 'Kart');
+    expect(orderDueCents(order), 0);
+    PosStore.validate(state);
+  });
+
   test(
     'manual modifiers conserve base price and quantity; paid/allocated reductions cannot corrupt totals',
     () {
@@ -128,11 +171,13 @@ void main() {
           hasLength(2),
         );
         expect(store.read().data['printJobs'], hasLength(1));
-        submitStaffAction(
-          store,
-          cmd('ready_custom_001', 'status', {'orderId': id, 'status': 'Hazır'}),
+        expect(
+          () => submitStaffAction(
+            store,
+            cmd('serve_custom_001', 'status', {'orderId': id}),
+          ),
+          throwsFormatException,
         );
-        expect(mutableOrder(store.read().data, id)!['readyAt'], isNotNull);
         final beforeNumber = displayOrderNumber(
           mutableOrder(store.read().data, id)!,
         );

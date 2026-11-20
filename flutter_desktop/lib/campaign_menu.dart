@@ -93,10 +93,18 @@ List<Json> campaignProducts(Json state, {DateTime? now}) {
 List<Json> orderingProducts(Json state) => [
   ...campaignProducts(state),
   ...asMaps(state['localMenu']),
+  ...asMaps(state['internalMenu']),
+  {
+    'id': 2000000000,
+    'name': 'Ek Lavaş',
+    'category': 'side',
+    'price': 10,
+    'active': true,
+  },
 ];
-int componentExtraCents(Map line) =>
-    asMaps(line['components'])
-        .fold<int>(0, (n, c) => n + (c['adjustmentCents'] as int? ?? 0));
+int componentExtraCents(Map line) => asMaps(
+  line['components'],
+).fold<int>(0, (n, c) => n + (c['adjustmentCents'] as int? ?? 0));
 List<Json> mergeCampaignComponents(List<Json> baseline, Object? requested) {
   if (requested == null) return baseline.map((c) => copyJson(c)).toList();
   if (requested is! List ||
@@ -112,9 +120,7 @@ List<Json> mergeCampaignComponents(List<Json> baseline, Object? requested) {
         row['adjustmentCents'] != null && row['adjustmentCents'] is! int ||
         row['note'] != null && row['note'] is! String ||
         row['removed'] is! List ||
-        (row['removed'] as List).any(
-          (r) => r is! String || r.length > 100,
-        ))
+        (row['removed'] as List).any((r) => r is! String || r.length > 100))
       throw const FormatException('Kampanya bileşeni geçersiz');
     final delta = row['adjustmentCents'] as int? ?? 0;
     final note = (row['note'] ?? '').toString(),

@@ -9,8 +9,9 @@ class PaymentEntryDialog extends StatefulWidget {
     required this.orderNumber,
     this.guestName = '',
     this.inposReady = false,
+    this.fixedAmount = false,
   });
-  final bool inposReady;
+  final bool inposReady, fixedAmount;
   final int dueCents;
   final String orderNumber, guestName;
   @override
@@ -37,10 +38,20 @@ class _PaymentEntryDialogState extends State<PaymentEntryDialog> {
 
   String get change {
     try {
-      final n = parseMoney(amount.text), r = parseMoney(received.text);
+      final n = parseMoney(method == 'Karışık' ? cashPart.text : amount.text),
+          r = parseMoney(received.text);
       return r < n ? 'Alınan nakit yetersiz' : 'Para üstü: ${formatTry(r - n)}';
     } on FormatException {
       return 'Tutarları girin';
+    }
+  }
+
+  int get cardCents {
+    try {
+      final card = parseMoney(amount.text) - parseMoney(cashPart.text);
+      return card < 0 ? 0 : card;
+    } on FormatException {
+      return 0;
     }
   }
 
@@ -77,6 +88,7 @@ class _PaymentEntryDialogState extends State<PaymentEntryDialog> {
             TextField(
               key: const ValueKey('payment-amount'),
               controller: amount,
+              readOnly: widget.fixedAmount,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -86,6 +98,7 @@ class _PaymentEntryDialogState extends State<PaymentEntryDialog> {
             if (method == 'Karışık')
               TextField(
                 controller: cashPart,
+                onChanged: (_) => setState(() => error = null),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -93,7 +106,8 @@ class _PaymentEntryDialogState extends State<PaymentEntryDialog> {
                   labelText: 'Nakit kısmı (₺) · kalan Kart',
                 ),
               ),
-            if (method == 'Nakit') ...[
+            if (method == 'Karışık') Text('Kart: ${formatTry(cardCents)}'),
+            if (method == 'Nakit' || method == 'Karışık') ...[
               const SizedBox(height: 14),
               TextField(
                 key: const ValueKey('payment-received'),
@@ -106,15 +120,37 @@ class _PaymentEntryDialogState extends State<PaymentEntryDialog> {
                 ),
                 onChanged: (_) => setState(() => error = null),
               ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  for (final option in [0, 100, 200, 500])
+                    OutlinedButton(
+                      onPressed: () => setState(() {
+                        received.text = option == 0
+                            ? (method == 'Karışık'
+                                  ? cashPart.text
+                                  : amount.text)
+                            : '$option';
+                        error = null;
+                      }),
+                      child: Text(option == 0 ? 'Tam tutar' : '$option TL'),
+                    ),
+                ],
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Text(
                   change,
                   key: const ValueKey('payment-change'),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-            ] else ...[
+            ],
+            if (method != 'Nakit') ...[
               const SizedBox(height: 12),
               Text(
                 method == 'inPOS m530'
@@ -160,7 +196,13 @@ class _PaymentEntryDialogState extends State<PaymentEntryDialog> {
               );
             if (method == 'Nakit' && r != null && r < n)
               throw const FormatException('Alınan nakit tutarı yetersiz.');
-            Navigator.pop(context, (n, method, r));
+            final mixedReceived = method == 'Karışık'
+                ? parseMoney(received.text)
+                : null;
+            if (mixedReceived != null && mixedReceived < r!) {
+              throw const FormatException('Alınan nakit yetersiz.');
+            }
+            Navigator.pop(context, (n, method, r, mixedReceived));
           } on FormatException catch (e) {
             setState(() => error = e.message);
           }

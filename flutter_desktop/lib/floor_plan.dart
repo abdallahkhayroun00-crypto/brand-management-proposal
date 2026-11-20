@@ -138,7 +138,7 @@ class RestaurantFloorPlan extends StatelessWidget {
                                       Text(
                                         o == null
                                             ? 'Boş · Yeni sipariş'
-                                            : '${o['serviceStatus']}',
+                                            : '${orderDueCents(o) == 0 ? 'Ödendi · Masa açık' : 'Dolu'}',
                                       ),
                                       if (o != null)
                                         Text(
@@ -238,7 +238,7 @@ class RestaurantFloorPlan extends StatelessWidget {
             : null,
         child: Tooltip(
           message: busy
-              ? 'Masa $n · ${order['serviceStatus']} · Kalan ${formatTry(orderDueCents(order))}'
+              ? 'Masa $n · ${orderDueCents(order) == 0 ? 'Ödendi · Masa açık' : 'Dolu'} · Kalan ${formatTry(orderDueCents(order))}'
               : 'Masa $n · Boş · Yeni sipariş',
           child: DecoratedBox(
             decoration: BoxDecoration(
@@ -278,7 +278,9 @@ class RestaurantFloorPlan extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        busy ? '${order['serviceStatus']}' : '○ Boş',
+                        busy
+                            ? '${orderDueCents(order) == 0 ? 'Ödendi · Masa açık' : 'Dolu'}'
+                            : '○ Boş',
                         style: TextStyle(
                           fontSize: n == 5 ? 10 : 12,
                           color: busy

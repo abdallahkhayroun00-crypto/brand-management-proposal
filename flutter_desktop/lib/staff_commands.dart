@@ -41,14 +41,20 @@ Json submitStaffOrder(PosStore store, Json payload) {
     }
     final lines = <Json>[];
     for (final row in asMaps(payload['lines'])) {
-      final p = orderingProducts(s)
-          .where(
-            (p) =>
-                p['id'] == row['productId'] &&
-                p['price'] is num &&
-                p['active'] != false,
-          )
-          .firstOrNull;
+      final p = row['customItem'] == true
+          ? prepareInternalItem(s, row)
+          : orderingProducts(s)
+                .where(
+                  (p) =>
+                      p['id'] == row['productId'] &&
+                      p['price'] is num &&
+                      p['active'] != false,
+                )
+                .firstOrNull;
+      if (row['expectedPriceCents'] != null &&
+          (p == null || row['expectedPriceCents'] != cents(p['price']))) {
+        throw const FormatException('Ürün fiyatı değişti. Sepeti güncelleyin.');
+      }
       if (p == null ||
           row['qty'] is! int ||
           (row['qty'] as int) < 1 ||
@@ -63,6 +69,7 @@ Json submitStaffOrder(PosStore store, Json payload) {
         throw const FormatException('Not çok uzun');
       }
       lines.add({
+        if (row['customItem'] == true) 'customItem': true,
         if (p['campaignId'] != null) ...{
           'campaignId': p['campaignId'],
           'components': mergeCampaignComponents(
@@ -93,6 +100,14 @@ Json submitStaffOrder(PosStore store, Json payload) {
     final requested = payload['orderId'];
     if (requested != null && requested is! int)
       throw const FormatException('Sipariş kimliği geçersiz');
+    if (payload.containsKey('expectedTableOrderId') &&
+        source == 'Masa' &&
+        activeTable(s, table as int)?['id'] !=
+            payload['expectedTableOrderId']) {
+      throw const FormatException(
+        'Masa hesabı değişti. Sipariş hedefini kontrol edin.',
+      );
+    }
     final existing = requested != null
         ? mutableOrder(s, requested as int)
         : source == 'Masa'
@@ -146,6 +161,7 @@ Json submitStaffOrder(PosStore store, Json payload) {
         };
       }
     }
+    finishPickupIfSettled(order);
     recordStaffNotice(
       s,
       order,
@@ -192,6 +208,30 @@ Json submitStaffAction(PosStore store, Json payload) {
     final order = mutableOrder(s, orderId);
     if (order == null) throw const FormatException('Sipariş yok');
     requireLocal(order);
+    if (payload['action'] == 'printProductPayment') {
+      final paymentId = payload['paymentId'];
+      final payment = asMaps(order['payments'])
+          .where(
+            (p) =>
+                paymentId is String &&
+                p['productPaymentId'] == paymentId &&
+                p['staffId'] == staff['id'],
+          )
+          .firstOrNull;
+      final receipt = payment?['productReceipt'];
+      if (payment == null ||
+          receipt is! String ||
+          paymentNetCents(payment) <= 0) {
+        throw const FormatException('Ödeme fişi bulunamadı.');
+      }
+      queuePaymentReceipt(
+        s,
+        order,
+        requestId: 'receipt_$paymentId',
+        receipt: receipt,
+      );
+      return {'ok': true, 'orderId': orderId, 'action': 'printProductPayment'};
+    }
     requireOpen(order);
     if (payload['guestId'] != null && payload['guestId'] is! int)
       throw const FormatException('Kişi geçersiz');
@@ -242,11 +282,45 @@ Json submitStaffAction(PosStore store, Json payload) {
         if (payload['table'] is! int) throw const FormatException('Masa seçin');
         moveLocalTable(s, order, payload['table'] as int, by);
       case 'status':
-        setLocalService(order, '${payload['status']}');
+        markPickupDelivered(order);
+      case 'payProducts':
+        final shares = payload['shares'];
+        final amount = payload['amountCents'];
+        final method = payload['method'];
+        final received = payload['receivedCents'];
+        final cash = payload['cashCents'];
+        if (payload['confirmed'] != true ||
+            amount is! int ||
+            method is! String ||
+            !['Nakit', 'Kart', 'Karışık'].contains(method) ||
+            shares is! Map ||
+            shares.length > 200 ||
+            shares.entries.any((e) => e.key is! String || e.value is! int) ||
+            received != null && received is! int ||
+            cash != null && cash is! int) {
+          throw const FormatException('Ürün ödemesini doğrulayın.');
+        }
+        final receipt = recordProductPayment(
+          order,
+          shares.cast<String, int>(),
+          amount,
+          method,
+          receivedCents: received as int?,
+          cashCents: cash as int?,
+        );
+        final payments = (order['payments'] as List).cast<Map>();
+        for (final p in payments.reversed.take(method == 'Karışık' ? 2 : 1)) {
+          p['by'] = by;
+          p['staffId'] = staff['id'];
+        }
+        payments.last['productPaymentId'] = requestId;
+        payments.last['productReceipt'] = receipt;
       case 'payMixed':
         if (payload['confirmed'] != true ||
             payload['amountCents'] is! int ||
             payload['cashCents'] is! int ||
+            payload['receivedCents'] != null &&
+                payload['receivedCents'] is! int ||
             payload['printReceipt'] is! bool)
           throw const FormatException('Ödemeyi doğrulayın');
         recordMixedPayment(
@@ -254,6 +328,7 @@ Json submitStaffAction(PosStore store, Json payload) {
           payload['amountCents'] as int,
           payload['cashCents'] as int,
           guestId: payload['guestId'] as int?,
+          receivedCents: payload['receivedCents'] as int?,
         );
         for (final p in (order['payments'] as List).cast<Map>().reversed.take(
           2,
@@ -282,10 +357,13 @@ Json submitStaffAction(PosStore store, Json payload) {
         if (payload['printReceipt'] == true)
           queuePaymentReceipt(s, order, requestId: requestId);
       case 'close':
+        if (order['source'] != 'Masa')
+          throw const FormatException('Yalnız masa hesabı kapatılabilir');
         closeLocalOrder(order);
       default:
         throw const FormatException('İşlem desteklenmiyor');
     }
+    finishPickupIfSettled(order);
     recordStaffNotice(
       s,
       order,

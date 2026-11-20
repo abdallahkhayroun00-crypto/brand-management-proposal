@@ -5,6 +5,7 @@ class _OrderComposer extends StatefulWidget {
     required this.products,
     this.table,
     this.adding = false,
+    this.pickupOnly = false,
     this.tableOrders = const {},
     this.onSubmit,
     this.refreshProducts,
@@ -12,7 +13,7 @@ class _OrderComposer extends StatefulWidget {
   });
   final List<Product> products;
   final int? table;
-  final bool adding;
+  final bool adding, pickupOnly;
   final Map<int, Json> tableOrders;
   final bool Function(OrderRequest)? onSubmit;
   final List<Product> Function()? refreshProducts;
@@ -37,7 +38,8 @@ class _OrderComposerState extends State<_OrderComposer> {
     products = widget.products;
     tableOrders = widget.tableOrders;
     table = widget.table;
-    if (widget.adding) source = table == null ? 'Gel-Al' : 'Masa';
+    if (widget.pickupOnly || (widget.adding && table == null))
+      source = 'Gel-Al';
   }
 
   void add(Product p, {String note = '', String removed = ''}) {
@@ -95,6 +97,47 @@ class _OrderComposerState extends State<_OrderComposer> {
       });
   }
 
+  Future<void> addCustomItem() async {
+    if (draft.length >= 200) return;
+    final result = await askFields(
+      context,
+      'Özel Ürün Ekle',
+      [
+        ('Ürün adı', ''),
+        ('Birim fiyat (₺)', ''),
+        ('Adet', '1'),
+        ('Not', ''),
+        ('İç menüye kaydet', 'Hayır'),
+      ],
+      choices: {
+        4: ['Hayır', 'Evet'],
+      },
+    );
+    if (result == null || !mounted) return;
+    try {
+      final qty = int.tryParse(result[2]);
+      if (qty == null || qty < 1 || qty > 1000 || result[3].length > 500) {
+        throw const FormatException('Adet veya not geçersiz.');
+      }
+      final item = <String, dynamic>{
+        'customItem': true,
+        'saveToMenu': result[4] == 'Evet',
+        'name': result[0].trim(),
+        'price': fromCents(parseMoney(result[1])),
+        'qty': qty,
+        'note': result[3],
+        'removed': <String>[],
+      };
+      prepareInternalItem({}, {...item, 'saveToMenu': false});
+      setState(() {
+        draft.add({...item, '_draftId': nextLine++});
+        saveError = null;
+      });
+    } on FormatException catch (e) {
+      setState(() => saveError = e.message);
+    }
+  }
+
   Widget productList() {
     final visibleProducts = products
         .where(
@@ -138,6 +181,14 @@ class _OrderComposerState extends State<_OrderComposer> {
                   ),
                 ),
             ],
+          ),
+        ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: addCustomItem,
+            icon: const Icon(Icons.add),
+            label: const Text('Özel Ürün Ekle'),
           ),
         ),
         Expanded(
@@ -289,7 +340,9 @@ class _OrderComposerState extends State<_OrderComposer> {
                                 ),
                                 IconButton(
                                   tooltip: 'Satır notunu düzenle',
-                                  onPressed: line['_unavailable'] == true
+                                  onPressed:
+                                      line['_unavailable'] == true ||
+                                          line['customItem'] == true
                                       ? null
                                       : () => customize(
                                           products.firstWhere(
@@ -356,7 +409,7 @@ class _OrderComposerState extends State<_OrderComposer> {
                 spacing: 12,
                 runSpacing: 8,
                 children: [
-                  if (!widget.adding)
+                  if (!widget.adding && !widget.pickupOnly)
                     SizedBox(
                       width: 180,
                       child: DropdownButtonFormField<String>(
@@ -470,6 +523,7 @@ class _OrderComposerState extends State<_OrderComposer> {
                     products = widget.refreshProducts?.call() ?? products;
                     tableOrders = widget.refreshTables?.call() ?? tableOrders;
                     for (final line in draft) {
+                      if (line['customItem'] == true) continue;
                       final product = products
                           .where((p) => p.id == line['productId'])
                           .firstOrNull;
@@ -478,11 +532,14 @@ class _OrderComposerState extends State<_OrderComposer> {
                           !product.active ||
                           product.price == null;
                       if (product != null && product.price != null) {
-                        if(product.campaignData!=null) {
+                        if (product.campaignData != null) {
                           try {
-                            line['components']=mergeCampaignComponents(asMaps(product.campaignData!['components']),line['components']);
+                            line['components'] = mergeCampaignComponents(
+                              asMaps(product.campaignData!['components']),
+                              line['components'],
+                            );
                           } on FormatException {
-                            line['_unavailable']=true;
+                            line['_unavailable'] = true;
                           }
                         }
                         line['basePrice'] = product.price;
@@ -494,7 +551,8 @@ class _OrderComposerState extends State<_OrderComposer> {
                         line['name'] = product.name;
                       }
                     }
-                    saveError = 'Güncel fiyatlar ve masalar yüklendi. Sepeti kontrol edip kaydedin.';
+                    saveError =
+                        'Güncel fiyatlar ve masalar yüklendi. Sepeti kontrol edip kaydedin.';
                   }),
                   icon: const Icon(Icons.refresh),
                   label: const Text('Güncel Menü ve Masaları Al'),
@@ -540,7 +598,8 @@ class _OrderComposerState extends State<_OrderComposer> {
                               Navigator.pop(context, request);
                             } else {
                               setState(
-                                () => saveError = 'Kaydedilemedi. Güncel menü ve masaları alın; sepetiniz korunuyor.',
+                                () => saveError =
+                                    'Kaydedilemedi. Güncel menü ve masaları alın; sepetiniz korunuyor.',
                               );
                             }
                           },

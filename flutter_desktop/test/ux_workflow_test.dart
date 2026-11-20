@@ -164,7 +164,7 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.tap(find.byTooltip('Menüyü aç'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Masalar').last);
+      await tester.tap(find.text('Masalar & Siparişler').last);
       await tester.pumpAndSettle();
       expect(find.text('Masa 5'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -204,11 +204,10 @@ void main() {
       expect(find.text('Kasayı Aç'), findsNothing);
       expect(find.text('Kasayı Kapat'), findsNothing);
       expect(find.text('Yazdırma Kuyruğu'), findsNothing);
-      await tester.ensureVisible(find.text('Siparişler').first);
-      await tester.tap(find.text('Siparişler').first);
-      await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Online Siparişler').first);
       await tester.tap(find.text('Online Siparişler').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Yemeksepeti').first);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Örnek Online Kart'));
       await tester.pumpAndSettle();
@@ -221,4 +220,3 @@ void main() {
     },
   );
 }
-

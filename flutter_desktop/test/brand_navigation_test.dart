@@ -8,16 +8,38 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nohut_falafel_desktop/main.dart';
 import 'package:nohut_falafel_desktop/brand.dart';
 import 'package:nohut_falafel_desktop/pos_store.dart';
+import 'package:nohut_falafel_desktop/order_reporting.dart';
 
 void main() {
   testWidgets(
-    'six branded destinations retain online orders, employee management and pairing',
+    'seven branded destinations include separate orders and reviews',
     (t) async {
       final dir = Directory.systemTemp.createTempSync('nohut-brand-');
       final file = '${dir.path}/db';
       final db = PosStore(databaseFile: file);
       final state = emptyPosState();
       state['settings'] = {'qrAutoSync': false, 'autoPrint': false};
+      final today = DateTime.now().toUtc();
+      final yesterday = today.subtract(const Duration(days: 1));
+      state['trendyolGoOrders'] = [
+        {
+          'source': 'Trendyol Go',
+          'orderNumber': 'PLATFORM-99',
+          'createdAt': today.toIso8601String(),
+          'status': 'Delivered',
+          'paymentType': 'PAY_WITH_CARD',
+          'totalCents': 80000,
+          'lines': [{'qty': 2, 'name': 'Vegan Özel Tabağı'}],
+        },
+        {
+          'source': 'Trendyol Go',
+          'orderNumber': 'PLATFORM-98',
+          'createdAt': yesterday.toIso8601String(),
+          'status': 'Delivered',
+          'totalCents': 4500,
+          'lines': [{'qty': 1, 'name': 'Çay'}],
+        },
+      ];
       db.replace(state, db.read().revision);
       db.dispose();
       t.view.physicalSize = const Size(1440, 1000);
@@ -53,10 +75,10 @@ void main() {
               w.key is ValueKey<String> &&
               (w.key as ValueKey<String>).value.startsWith('navigation-'),
         ),
-        findsNWidgets(6),
+        findsNWidgets(7),
       );
       expect(find.text('Personel Yönetimi'), findsNothing);
-      expect(find.text('Online Siparişler'), findsNothing);
+      expect(find.text('Online Siparişler'), findsOneWidget);
       await t.runAsync(
         () => precacheImage(
           const AssetImage('assets/brand/nohut-logo.webp'),
@@ -75,9 +97,51 @@ void main() {
         proof.writeAsBytesSync(bytes!.buffer.asUint8List());
         image.dispose();
       });
-      await t.tap(find.byKey(const ValueKey('navigation-orders')));
+      await t.tap(find.byKey(const ValueKey('navigation-online')));
       await t.pumpAndSettle();
-      expect(find.text('Online Siparişler'), findsOneWidget);
+      expect(find.text('Uber Eats'), findsNothing);
+      expect(find.text('Yemeksepeti'), findsOneWidget);
+      expect(find.text('Değerlendirmeleri Getir'), findsNothing);
+      expect(find.text('Teslim Edildi'), findsOneWidget);
+      expect(find.text(istanbulStamp(today.toIso8601String())), findsOneWidget);
+      expect(find.text('Platform no: PLATFORM-98'), findsNothing);
+      await t.tap(find.text('Geçmiş'));
+      await t.pumpAndSettle();
+      expect(find.text('Platform no: PLATFORM-98'), findsOneWidget);
+      expect(find.text('Platform no: PLATFORM-99'), findsNothing);
+      await t.enterText(
+        find.widgetWithText(TextField, 'Sipariş No / Kod'),
+        'no-match',
+      );
+      await t.pumpAndSettle();
+      expect(find.text('Platform no: PLATFORM-98'), findsNothing);
+      await t.enterText(
+        find.widgetWithText(TextField, 'Sipariş No / Kod'),
+        'PLATFORM-98',
+      );
+      await t.pumpAndSettle();
+      expect(find.text('Platform no: PLATFORM-98'), findsOneWidget);
+      await t.tap(find.text('Bugüne Dön'));
+      await t.pumpAndSettle();
+      expect(find.text('Platform no: PLATFORM-99'), findsOneWidget);
+      expect(find.text('Platform no: PLATFORM-98'), findsNothing);
+      expect(find.text('PAY_WITH_CARD'), findsNothing);
+      await t.tap(find.text('Migros Yemek'));
+      await t.pumpAndSettle();
+      expect(find.text('Migros Yemek · Bağlı değil'), findsOneWidget);
+      expect(find.text('Migros Restoran Panelini Aç'), findsOneWidget);
+      expect(find.text('Platform no: PLATFORM-99'), findsNothing);
+      await t.tap(find.byKey(const ValueKey('navigation-reviews')));
+      await t.pumpAndSettle();
+      expect(find.text('Değerlendirmeleri Getir'), findsOneWidget);
+      expect(find.text('Şube ID (Store ID)'), findsOneWidget);
+      await t.tap(find.text('Google Maps'));
+      await t.pumpAndSettle();
+      expect(find.text('Google Maps’te Aç'), findsOneWidget);
+      expect(find.text('Değerlendirmeleri Getir'), findsNothing);
+      await t.tap(find.text('Yemeksepeti'));
+      await t.pumpAndSettle();
+      expect(find.text('Partner Panelini Aç'), findsOneWidget);
       await t.tap(find.byKey(const ValueKey('navigation-settings')));
       await t.pumpAndSettle();
       for (final tab in ['Personel', 'Bağlantı', 'Yazıcı']) {

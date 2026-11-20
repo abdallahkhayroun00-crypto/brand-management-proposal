@@ -89,7 +89,12 @@ void main() {
         ),
       );
       await t.pumpAndSettle();
-      expect(find.textContaining('Bassil · 1 sipariş'), findsOneWidget);
+      expect(find.text('Personel'), findsOneWidget);
+      expect(find.text('Bassil'), findsOneWidget);
+      final table = t.widget<Table>(find.byType(Table));
+      expect(table.children, hasLength(2));
+      expect((table.children.last.children[1] as Padding).child,
+          isA<Text>().having((text) => text.data, 'order count', '1'));
 
       expect(
         find.byWidgetPredicate(

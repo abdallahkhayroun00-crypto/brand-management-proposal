@@ -10,7 +10,13 @@ import 'platform_workflows.dart';
 String remoteStatusLabel(String value) => optionLabel(value);
 
 class PlatformPanel extends StatefulWidget {
-  const PlatformPanel({super.key, required this.state, required this.edit});
+  const PlatformPanel({
+    super.key,
+    required this.state,
+    required this.edit,
+    this.fixedSource,
+  });
+  final String? fixedSource;
   final Json state;
   final EditState edit;
   @override
@@ -19,13 +25,13 @@ class PlatformPanel extends StatefulWidget {
 
 class _PlatformPanelState extends State<PlatformPanel> {
   String tab = 'Siparişler',
-      source = 'Trendyol Go',
       status = 'Tümü',
       search = '',
       reviewFrom = '',
       reviewTo = '',
       reviewReply = 'Tümü',
       reviewComment = 'Tümü';
+  late String source = widget.fixedSource ?? 'Trendyol Go';
   final selectedMenu = <String>{}, selectedItems = <String>{};
   final claimItems = <String>{};
   static const tabs = [
@@ -76,16 +82,17 @@ class _PlatformPanelState extends State<PlatformPanel> {
       info(
         'Gerçek platform API’si bağlı değil. Test istekleri Senkronizasyon ekranında açık sonuç bekler. Kurye ve tahsilat platforma aittir.',
       ),
-      dropdown(source, platformSources, (v) {
-        source = v;
-        status = 'Tümü';
-        selectedMenu.clear();
-        selectedItems.clear();
-        claimItems.clear();
-        search = '';
-        reviewFrom = reviewTo = '';
-        reviewReply = reviewComment = 'Tümü';
-      }),
+      if (widget.fixedSource == null)
+        dropdown(source, platformSources, (v) {
+          source = v;
+          status = 'Tümü';
+          selectedMenu.clear();
+          selectedItems.clear();
+          claimItems.clear();
+          search = '';
+          reviewFrom = reviewTo = '';
+          reviewReply = reviewComment = 'Tümü';
+        }),
       if (source == 'Yemeksepeti')
         info(
           'Yemeksepeti restoran yönetim yetenekleri doğrulanmadı. Mağaza, menü, talep, yorum, fatura ve finans yazmaları kapalı.',

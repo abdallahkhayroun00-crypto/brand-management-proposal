@@ -51,10 +51,12 @@ int guestBalance(Json o, int id) {
     (g) => g['id'] == id,
     orElse: () => throw const FormatException('Kişi bulunamadı'),
   );
-  final allocated = asMaps(g['allocations'])
-      .fold<int>(0, (n, a) => n + (a['cents'] as int));
-  final paid = asMaps(o['payments'])
-      .fold<int>(0, (n, p) => n + paymentGuestCents(p, id));
+  final allocated = asMaps(
+    g['allocations'],
+  ).fold<int>(0, (n, a) => n + (a['cents'] as int));
+  final paid = asMaps(
+    o['payments'],
+  ).fold<int>(0, (n, p) => n + paymentGuestCents(p, id));
   return allocated - paid;
 }
 
@@ -69,8 +71,9 @@ void addGuest(Json o, String name) {
   if (name.trim().isEmpty) throw const FormatException('Kişi adı gerekli');
   final guests = o.putIfAbsent('guestChecks', () => <dynamic>[]) as List;
   final id =
-      asMaps(guests)
-          .fold<int>(0, (n, g) => (g['id'] as int) > n ? g['id'] as int : n) +
+      asMaps(
+        guests,
+      ).fold<int>(0, (n, g) => (g['id'] as int) > n ? g['id'] as int : n) +
       1;
   guests.add({'id': id, 'name': name.trim(), 'allocations': <dynamic>[]});
 }
@@ -229,8 +232,9 @@ void refundPayment(Json o, int index, int amount, String reason) {
   if (amount > paymentNetCents(p)) {
     throw const FormatException('Tahsilattan fazla iade edilemez');
   }
-  if (asMaps(p['guestAllocations'])
-          .fold<int>(0, (n, a) => n + cents(a['amount'])) >
+  if (asMaps(
+        p['guestAllocations'],
+      ).fold<int>(0, (n, a) => n + cents(a['amount'])) >
       paymentNetCents(p) - amount) {
     throw const FormatException('Önce geçmiş ödeme kişi eşlemesini azaltın');
   }
@@ -284,8 +288,9 @@ void cancelProduct(
   l['voided'] = l['qty'] == 0;
   final batches = o['batches'] as List;
   final id =
-      asMaps(batches)
-          .fold<int>(0, (n, b) => (b['id'] as int) > n ? b['id'] as int : n) +
+      asMaps(
+        batches,
+      ).fold<int>(0, (n, b) => (b['id'] as int) > n ? b['id'] as int : n) +
       1;
   batches.add({
     'id': id,
@@ -355,6 +360,30 @@ void setLocalService(Json o, String status) {
   (o['events'] as List).add('${utcNow()} · Hizmet: $status');
 }
 
+void markPickupDelivered(Json order) {
+  requireOpen(order);
+  if (order['source'] != 'Gel-Al' || order['deliveredAt'] != null) {
+    throw const FormatException('Teslim işlemi geçersiz');
+  }
+  order['serviceStatus'] = 'Teslim Edildi';
+  order['deliveredAt'] = utcNow();
+  (order['events'] as List).add('${utcNow()} · Teslim Edildi');
+  finishPickupIfSettled(order);
+}
+
+void finishPickupIfSettled(Json order) {
+  if (order['source'] == 'Gel-Al' &&
+      order['closed'] != true &&
+      order['cancelled'] != true &&
+      order['terminalPending'] == null &&
+      (order['deliveredAt'] != null ||
+          order['serviceStatus'] == 'Teslim Edildi') &&
+      orderDueCents(order) == 0) {
+    order['closed'] = true;
+    order['closedAt'] = utcNow();
+  }
+}
+
 void closePickup(Json o) {
   requireLocal(o);
   requireOpen(o);
@@ -366,14 +395,20 @@ void closePickup(Json o) {
   o['closed'] = true;
 }
 
-Json cashBook(Json s) => (s.putIfAbsent(
-  'cashBook',
-  () => {'sessions': <dynamic>[], 'movements': <dynamic>[], 'next': 1},
-) as Map).cast<String, dynamic>();
-Json? activeCash(Json s) =>
-    asMaps(cashBook(s)['sessions'])
-        .where((c) => c['closedAt'] == null)
-        .firstOrNull;
+Json cashBook(Json s) =>
+    (s.putIfAbsent(
+              'cashBook',
+              () => {
+                'sessions': <dynamic>[],
+                'movements': <dynamic>[],
+                'next': 1,
+              },
+            )
+            as Map)
+        .cast<String, dynamic>();
+Json? activeCash(Json s) => asMaps(
+  cashBook(s)['sessions'],
+).where((c) => c['closedAt'] == null).firstOrNull;
 void openCash(Json s, int opening) {
   if (opening < 0 || activeCash(s) != null) {
     throw const FormatException('Açık kasa var veya tutar geçersiz');
@@ -568,8 +603,9 @@ void saveEmployee(Json state, int? id, String name, String role, bool active) {
   }
   if (id == null) {
     id =
-        asMaps(employees)
-            .fold<int>(0, (n, e) => (e['id'] as int) > n ? e['id'] as int : n) +
+        asMaps(
+          employees,
+        ).fold<int>(0, (n, e) => (e['id'] as int) > n ? e['id'] as int : n) +
         1;
     employees.add({
       'id': id,
@@ -593,9 +629,9 @@ String receiptText(Json state, Json job) {
   if (o == null) throw const FormatException('Sipariş bulunamadı');
   final batch = snapshot is Map && snapshot['batch'] is Map
       ? Map<String, dynamic>.from(snapshot['batch'] as Map)
-      : asMaps(o['batches'])
-            .where((b) => b['id'] == job['batchId'])
-            .firstOrNull;
+      : asMaps(
+          o['batches'],
+        ).where((b) => b['id'] == job['batchId']).firstOrNull;
   if (batch == null) throw const FormatException('Mutfak partisi bulunamadı');
   return [
     'NOHUT FALAFEL · MUTFAK',
@@ -605,7 +641,109 @@ String receiptText(Json state, Json job) {
     for (final l in asMaps(batch['lines']))
       if (l['voided'] != true || l['correction'] == true)
         '${l['qty']} × ${l['name'] ?? l['productKey']}\n'
-            '${(l['removed'] as List? ?? []).isEmpty ? '' : 'Çıkar: ${(l['removed'] as List).join(', ')}\n'}'
-            '${l['note'] ?? ''}\n' + asMaps(l['components']).map((c)=>c['name'].toString()+' · '+campaignComponentDetails(c)).join('\n'),
+                '${(l['removed'] as List? ?? []).isEmpty ? '' : 'Çıkar: ${(l['removed'] as List).join(', ')}\n'}'
+                '${l['note'] ?? ''}\n' +
+            asMaps(l['components'])
+                .map(
+                  (c) =>
+                      c['name'].toString() +
+                      ' · ' +
+                      campaignComponentDetails(c),
+                )
+                .join('\n'),
   ].join('\n');
+}
+
+void recordMixedPayment(
+  Json o,
+  int total,
+  int cash, {
+  int? guestId,
+  int? receivedCents,
+}) {
+  requireLocal(o);
+  requireOpen(o);
+  if (cash <= 0 || cash >= total)
+    throw const FormatException('Nakit ve Kart kısmı sıfırdan büyük olmalı');
+  final trial = copyJson(o);
+  recordPayment(
+    trial,
+    cash,
+    'Nakit',
+    receivedCents: receivedCents ?? cash,
+    guestId: guestId,
+  );
+  recordPayment(trial, total - cash, 'Kart', guestId: guestId);
+  o.addAll(trial);
+}
+
+/// The phone and cashier use the same rules, and only commit after payment.
+String recordProductPayment(
+  Json order,
+  Map<String, int> shares,
+  int amount,
+  String method, {
+  int? receivedCents,
+  int? cashCents,
+}) {
+  requireLocal(order);
+  requireOpen(order);
+  if (shares.isEmpty ||
+      shares.values.any((value) => value <= 0) ||
+      shares.values.fold<int>(0, (sum, value) => sum + value) != amount) {
+    throw const FormatException('Seçilen ürünlerin toplamı değişti.');
+  }
+  final trial = copyJson(order);
+  addGuest(trial, 'Ürün ödemesi');
+  final guestId = asMaps(trial['guestChecks']).last['id'] as int;
+  for (final entry in shares.entries) {
+    allocateProduct(trial, guestId, entry.key, entry.value);
+  }
+  if (method == 'Karışık') {
+    recordMixedPayment(
+      trial,
+      amount,
+      cashCents ?? 0,
+      guestId: guestId,
+      receivedCents: receivedCents,
+    );
+  } else {
+    recordPayment(
+      trial,
+      amount,
+      method,
+      guestId: guestId,
+      receivedCents: receivedCents,
+    );
+  }
+  final receipt = [
+    'NOHUT FALAFEL · HESAP ÖZETİ',
+    'MALI FIS DEGILDIR',
+    '#${displayOrderNumber(trial)} · ${trial['source']} · ${trial['table'] ?? ''}',
+    istanbulStamp(utcNow()),
+    for (final item in checkLines(trial))
+      if (shares[item.key] case final int share) ...[
+        '${_quantityLabel(item, share)} × ${item.line['name']} · ${formatTry(share)}',
+        for (final component in asMaps(item.line['components']))
+          '${component['name']} · ${campaignComponentDetails(component)}',
+      ],
+    'Toplam ${formatTry(amount)}',
+    if (method == 'Karışık') ...[
+      'Nakit · ${formatTry(cashCents!)}',
+      'Kart · ${formatTry(amount - cashCents)}',
+    ] else
+      '$method · ${formatTry(amount)}',
+  ].join('\n');
+  order.addAll(trial);
+  return receipt;
+}
+
+String _quantityLabel(CheckLine item, int share) {
+  final unit = cents(item.line['price']);
+  return share % unit == 0
+      ? '${share ~/ unit}'
+      : (share / unit)
+            .toStringAsFixed(3)
+            .replaceFirst(RegExp(r'0+$'), '')
+            .replaceAll('.', ',');
 }

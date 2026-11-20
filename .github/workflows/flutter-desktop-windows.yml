@@ -77,6 +77,23 @@ jobs:
       - name: Compile Windows desktop release
         working-directory: flutter_desktop
         run: flutter build windows --release
+      - name: Bundle the Visual C++ runtime
+        shell: pwsh
+        run: |
+          $release = 'flutter_desktop/build/windows/x64/runner/Release'
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+          $vs = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $vs) { throw 'Visual Studio with x64 C++ tools was not found' }
+          $versions = Get-ChildItem -LiteralPath (Join-Path $vs 'VC/Redist/MSVC') -Directory |
+            Where-Object Name -Match '^\d+\.\d+\.\d+$' |
+            Sort-Object { [version] $_.Name } -Descending
+          $runtime = $versions | ForEach-Object {
+            Get-ChildItem -LiteralPath (Join-Path $_.FullName 'x64') -Directory -Filter 'Microsoft.VC*.CRT'
+          } | Select-Object -First 1
+          if (-not $runtime) { throw 'The redistributable x64 CRT was not found' }
+          foreach ($dll in @('msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll')) {
+            Copy-Item -LiteralPath (Join-Path $runtime.FullName $dll) -Destination $release
+          }
       - name: Record release checksums and source revision
         shell: pwsh
         run: |
@@ -85,6 +102,19 @@ jobs:
             [pscustomobject]@{ path = $_.FullName.Substring((Resolve-Path $release).Path.Length + 1); sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash }
           }
           @{ sourceRevision = '${{ github.sha }}'; files = @($manifest) } | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 "$release/build-manifest.json"
+      - name: Build and test the Windows installer
+        shell: pwsh
+        run: |
+          & ./flutter_desktop/windows/installer/build-setup.ps1 `
+            -ReleaseDir flutter_desktop/build/windows/x64/runner/Release `
+            -InstallerDir flutter_desktop/build/windows/installer -VerifyUpgrade
+      - name: Upload the Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: NohutFalafel-Windows-Setup
+          path: flutter_desktop/build/windows/installer/
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload Windows program (folder with exe and DLL files)
         uses: actions/upload-artifact@v4
         with:

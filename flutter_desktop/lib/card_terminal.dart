@@ -131,6 +131,7 @@ class InposPayments {
         'transactionId': reply.transactionId,
       });
       attempt['transactionId'] = reply.transactionId;
+      finishPickupIfSettled(o);
     } else if ([
       TerminalStatus.declined,
       TerminalStatus.cancelled,

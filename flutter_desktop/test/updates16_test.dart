@@ -121,21 +121,12 @@ void main() {
         ),
       );
       expect(store.read().data['orders'], hasLength(1));
-      submitStaffAction(
-        store,
-        command(
-          'ready_00001',
-          action: 'status',
-          fields: {'orderId': id, 'status': 'Hazır'},
+      expect(
+        () => submitStaffAction(
+          store,
+          command('serve_00001', action: 'status', fields: {'orderId': id}),
         ),
-      );
-      submitStaffAction(
-        store,
-        command(
-          'serve_00001',
-          action: 'status',
-          fields: {'orderId': id, 'status': 'Teslim Edildi'},
-        ),
+        throwsFormatException,
       );
       final pay = command(
         'pay_0000001',

@@ -44,23 +44,32 @@ bool onIstanbulDay(Object? rawTimestamp, String day) {
   return stamp != null && istanbulDay(stamp) == day;
 }
 
+/// Reserve one daily display sequence across local and imported platform orders.
+/// Existing assigned numbers never change on restart or remote status refresh.
+/// New imports use their original Turkish business date but receive numbers in
+/// the order they are first stored locally; late API sync cannot reorder tickets.
 void assignDailyNumbers(Map<String, dynamic> state) {
-  final orders = (state['orders'] as List).cast<Map>();
+  final local = (state['orders'] as List).cast<Map>();
+  final remote = state['trendyolGoOrders'] is List
+      ? (state['trendyolGoOrders'] as List).whereType<Map>().toList()
+      : <Map>[];
+  final all = <Map>[...local, ...remote];
   final next = <String, int>{};
-  for (final o in orders) {
-    if (o['dailyNumber'] is int && o['numberDay'] is String) {
-      final n = o['dailyNumber'] as int, day = o['numberDay'] as String;
+  for (final order in all) {
+    if (order['dailyNumber'] is int && order['numberDay'] is String) {
+      final n = order['dailyNumber'] as int;
+      final day = order['numberDay'] as String;
       if (n > (next[day] ?? 0)) next[day] = n;
     }
   }
-  // Stored insertion order also handles imports with earlier platform timestamps.
-  for (final o in orders) {
-    if (o['dailyNumber'] is int && o['numberDay'] is String) continue;
-    final stamp = DateTime.tryParse('${o['createdAt']}');
-    if (stamp == null) continue; // Do not invent a date for historical records.
-    final day = istanbulDay(stamp), number = (next[day] ?? 0) + 1;
-    o['numberDay'] = day;
-    o['dailyNumber'] = number;
+  for (final order in all) {
+    if (order['dailyNumber'] is int && order['numberDay'] is String) continue;
+    final created = DateTime.tryParse('${order['createdAt']}');
+    if (created == null) continue;
+    final day = istanbulDay(created);
+    final number = (next[day] ?? 0) + 1;
+    order['numberDay'] = day;
+    order['dailyNumber'] = number;
     next[day] = number;
   }
 }

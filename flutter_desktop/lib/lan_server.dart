@@ -1,4 +1,5 @@
 import 'operations.dart';
+import 'floor_plan.dart' show positionsFromJson;
 
 import 'dart:convert';
 import 'dart:io';
@@ -161,6 +162,15 @@ class PosLanServer extends ChangeNotifier {
     // Phone ordering does not need the cash book, settings, old receipts,
     // payments, reconciliation records or the closed-order archive.
     return {
+      'floorPlan': {
+        for (final entry in positionsFromJson(source['floorPositions']).entries)
+          '${entry.key}': {
+            'x': entry.value.left,
+            'y': entry.value.top,
+            'width': entry.value.width,
+            'height': entry.value.height,
+          },
+      },
       'employees': asMaps(source['employees'])
           .map(
             (e) => {
@@ -170,6 +180,42 @@ class PosLanServer extends ChangeNotifier {
           .toList(),
       'localMenu': orderingProducts(source)
           .where((p) => p['active'] != false)
+          .toList(),
+      // Send only sanitized order information to the staff panel.
+      // API credentials, customer address, contact and financial internals stay on the laptop.
+      'trendyolGoOrders': asMaps(source['trendyolGoOrders']).reversed
+          .where((order) => const {'created', 'picking', 'invoiced', 'shipped'}
+              .contains('${order['status'] ?? ''}'.trim().toLowerCase()))
+          .map(
+            (o) => {
+              for (final key in [
+                'dailyNumber',
+                'numberDay',
+                'orderNumber',
+                'orderCode',
+                'status',
+                'createdAt',
+                'totalCents',
+                'paymentType',
+                'customerNote',
+                'pickup',
+                'testPackage',
+              ])
+                key: o[key],
+              'lines': [
+                for (final l in asMaps(o['lines']))
+                  {
+                    for (final key in [
+                      'name',
+                      'qty',
+                      'unitPriceCents',
+                      'options',
+                    ])
+                      key: l[key],
+                  },
+              ],
+            },
+          )
           .toList(),
       'orders': asMaps(source['orders'])
           .where(

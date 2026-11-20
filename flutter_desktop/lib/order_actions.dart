@@ -3,6 +3,8 @@ import 'campaign_menu.dart';
 import 'operations.dart';
 import 'product_customization.dart';
 
+export 'operations.dart' show recordMixedPayment, recordProductPayment;
+
 /// Applied only inside revision-checked SQLite commands.
 void editLocalLine(
   Json order,
@@ -111,7 +113,12 @@ void closeLocalOrder(Json order) {
   (order['events'] as List).add('${utcNow()} · Hesap kapatıldı');
 }
 
-void queuePaymentReceipt(Json state, Json order, {required String requestId}) {
+void queuePaymentReceipt(
+  Json state,
+  Json order, {
+  required String requestId,
+  String? receipt,
+}) {
   requireLocal(order);
   if (orderPaidCents(order) <= 0)
     throw const FormatException('Önce ödeme kaydedin');
@@ -133,7 +140,7 @@ void queuePaymentReceipt(Json state, Json order, {required String requestId}) {
     'state': 'Bekliyor',
     'createdAt': utcNow(),
     'created': nowTime(),
-    'text': billText(order),
+    'text': receipt ?? billText(order),
   });
 }
 
@@ -154,15 +161,4 @@ void recordStaffNotice(
     'at': utcNow(),
   });
   if (notices.length > 100) notices.removeRange(0, notices.length - 100);
-}
-
-void recordMixedPayment(Json o, int total, int cash, {int? guestId}) {
-  requireLocal(o);
-  requireOpen(o);
-  if (cash <= 0 || cash >= total)
-    throw const FormatException('Nakit ve Kart kısmı sıfırdan büyük olmalı');
-  final trial = copyJson(o);
-  recordPayment(trial, cash, 'Nakit', receivedCents: cash, guestId: guestId);
-  recordPayment(trial, total - cash, 'Kart', guestId: guestId);
-  o.addAll(trial);
 }

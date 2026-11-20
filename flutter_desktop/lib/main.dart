@@ -3,6 +3,8 @@ import 'order_actions.dart';
 import 'product_customization.dart';
 import 'service_metrics.dart';
 import 'simple_settings.dart';
+import 'trendyol_go_readonly.dart';
+import 'trendyol_go_ui.dart';
 import 'sales_reports.dart';
 import 'order_alerts.dart';
 import 'card_terminal.dart';
@@ -13,6 +15,7 @@ import 'receipt_printer.dart';
 import 'qr_menu_sync.dart';
 
 import 'dart:convert';
+import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,8 +30,8 @@ import 'campaign_menu.dart';
 import 'pos_store.dart';
 import 'operations.dart';
 import 'operations_ui.dart';
-import 'platform_workflows.dart';
 import 'platform_ui.dart';
+import 'platform_workflows.dart';
 
 part 'order_composer.dart';
 
@@ -124,6 +127,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
   late final ReceiptPrinter receiptPrinter;
   late final PosLanServer lan;
   late final QrMenuAutoSync qrSync;
+  late final TrendyolGoReadonly tgo;
   Timer? _midnightTimer;
   Timer? _serviceTimer;
   final Set<String> seenNotices = {};
@@ -132,7 +136,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
   String businessDay = istanbulDay(DateTime.now());
   List<Product> menu = const [];
   String page = 'dashboard';
-  bool onlineOrders = false;
+  String localView = 'plan';
   int? selectedTable, selectedOrder;
   bool floorEditing = false;
   Map<int, Rect> draftFloor = {...floorDefaults};
@@ -145,8 +149,9 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
 
   static const sections = [
     ('dashboard', Icons.dashboard_outlined, 'Genel Bakış'),
-    ('tables', Icons.table_restaurant_outlined, 'Masalar'),
-    ('orders', Icons.receipt_long_outlined, 'Siparişler'),
+    ('tables', Icons.table_restaurant_outlined, 'Masalar & Siparişler'),
+    ('online', Icons.delivery_dining_outlined, 'Online Siparişler'),
+    ('reviews', Icons.star_outline, 'Geri Bildirimler'),
     ('payments', Icons.point_of_sale_outlined, 'Kasa & Ödemeler'),
     ('reports', Icons.bar_chart_outlined, 'Raporlar'),
     ('settings', Icons.settings_outlined, 'Ayarlar'),
@@ -166,6 +171,17 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     lan = PosLanServer(store);
     receiptPrinter = ReceiptPrinter(store);
     qrSync = QrMenuAutoSync(store);
+    tgo = TrendyolGoReadonly(store, onNewOrders: (orders) {
+      if (!mounted) return;
+      final message = orders.length == 1
+          ? "Trendyol Go · Yeni sipariş ${orders.single['orderNumber']}"
+          : 'Trendyol Go · ${orders.length} yeni sipariş';
+      _notify(message);
+      if (store.read().data['settings']?['soundAlerts'] != false) {
+        unawaited(playOrderAlert());
+      }
+    });
+    if (widget.startServer) unawaited(tgo.start());
     _scheduleIstanbulMidnight();
     _serviceTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) setState(() {});
@@ -277,6 +293,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
   void dispose() {
     _midnightTimer?.cancel();
     _serviceTimer?.cancel();
+    tgo.dispose();
     qrSync.dispose();
     receiptPrinter.dispose();
     lan.dispose();
@@ -321,7 +338,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
   void _switch(String next) {
     setState(() {
       page = next;
-      if (next == 'orders') onlineOrders = false;
+      if (next == 'online') onlineHistory = false;
       selectedOrder = null;
       if (next != 'tables') selectedTable = null;
       floorEditing = false;
@@ -332,10 +349,10 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     setState(() {
       selectedOrder = order['id'] as int;
       selectedTable = order['table'] as int?;
-      page = order['source'] == 'Masa' ? 'tables' : 'orders';
+      page = 'tables';
       orderFrom = orderTo = '${order['numberDay'] ?? ''}';
       orderFilter = 'Tümü';
-      onlineOrders = false;
+      localView = order['source'] == 'Masa' ? 'plan' : 'pickup';
       orderSearch = orderStatus = orderStaff = '';
     });
     _showOrder(order['id'] as int);
@@ -357,7 +374,11 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           )
           .toList();
 
-  Future<void> _composer({int? table, int? addToOrder}) async {
+  Future<void> _composer({
+    int? table,
+    int? addToOrder,
+    bool pickup = false,
+  }) async {
     menu = _currentProducts();
     if (menu.isEmpty) {
       _notify('Menü yükleniyor veya okunamadı.', error: true);
@@ -408,6 +429,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
         },
         table: table,
         adding: addToOrder != null,
+        pickupOnly: pickup,
         tableOrders: {
           for (var n = 1; n <= 5; n++)
             if (activeTable(store.read().data, n) != null)
@@ -538,7 +560,10 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
               final current = mutableOrder(
                 store.read().data,
                 order['id'] as int,
-              )!;
+              );
+              if (current == null || current['closed'] == true) {
+                return const Text('Hesap artık düzenlenemiyor.');
+              }
               return SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -551,6 +576,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                         subtitle: Text('${line.line['note'] ?? ''}'),
                         trailing: const Icon(Icons.edit_outlined),
                         onTap: () async {
+                          final original = jsonEncode(line.line);
                           final result = await customizeLineDialog(
                             ctx,
                             line.line,
@@ -564,9 +590,28 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                                 '',
                           );
                           if (result != null)
-                            _edit(
-                              (s) => editLocalLine(
-                                mutableOrder(s, order['id'] as int)!,
+                            _edit((s) {
+                              final target = mutableOrder(
+                                s,
+                                order['id'] as int,
+                              );
+                              if (target == null) {
+                                throw const FormatException(
+                                  'Sipariş artık yok.',
+                                );
+                              }
+                              requireOpen(target);
+                              final updated = checkLines(target)
+                                  .where((entry) => entry.key == line.key)
+                                  .firstOrNull;
+                              if (updated == null ||
+                                  jsonEncode(updated.line) != original) {
+                                throw const FormatException(
+                                  'Ürün başka bir cihazda değişti. Güncel satırı tekrar açın.',
+                                );
+                              }
+                              editLocalLine(
+                                target,
                                 line.key,
                                 result['qty'] as int,
                                 '${result['note']}',
@@ -575,8 +620,8 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                                 adjustmentCents:
                                     result['adjustmentCents'] as int,
                                 components: result['components'],
-                              ),
-                            );
+                              );
+                            });
                         },
                       ),
                   ],
@@ -595,30 +640,140 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     );
   }
 
+  Future<void> _selectProductsToPay(Json order) async {
+    final lines = checkLines(order)
+        .where((line) => line.total > allocatedTo(order, line.key))
+        .toList();
+    if (lines.isEmpty) return;
+    final shares = <String, int>{};
+    final selected = await showDialog<Map<String, int>>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, change) {
+          int left(CheckLine line) => line.total - allocatedTo(order, line.key);
+          final total = shares.values.fold<int>(0, (a, b) => a + b);
+          return AlertDialog(
+            title: const Text('Ürün seçerek öde'),
+            content: SizedBox(
+              width: 480,
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final line in lines) ...[
+                    CheckboxListTile(
+                      value: shares.containsKey(line.key),
+                      title: Text('${line.line['name']}'),
+                      subtitle: Text('Dağıtılmamış ${formatTry(left(line))}'),
+                      onChanged: (value) => change(() {
+                        if (value == true) {
+                          shares[line.key] = min(
+                            left(line),
+                            cents(line.line['price']),
+                          );
+                        } else {
+                          shares.remove(line.key);
+                        }
+                      }),
+                    ),
+                    if (shares.containsKey(line.key))
+                      ListTile(
+                        title: Text(formatTry(shares[line.key]!)),
+                        trailing: TextButton(
+                          child: const Text('Adet / pay'),
+                          onPressed: () async {
+                            final result = await askFields(
+                              context,
+                              'Adet / pay',
+                              [
+                                (
+                                  'Adet (ör. 1 veya 0,5)',
+                                  (shares[line.key]! /
+                                          cents(line.line['price']))
+                                      .toStringAsFixed(3),
+                                ),
+                              ],
+                            );
+                            if (result == null || !context.mounted) return;
+                            final units = double.tryParse(
+                              result.first.replaceAll(',', '.'),
+                            );
+                            if (units == null ||
+                                !units.isFinite ||
+                                units <= 0 ||
+                                units > line.line['qty'])
+                              return;
+                            final value = (cents(line.line['price']) * units)
+                                .round();
+                            if (value <= 0 || value > left(line)) return;
+                            change(() => shares[line.key] = value);
+                          },
+                        ),
+                      ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Vazgeç'),
+              ),
+              TextButton(
+                onPressed: () => change(() {
+                  for (final line in lines) {
+                    shares[line.key] = left(line);
+                  }
+                }),
+                child: const Text('Dağıtılmamış ürünleri seç'),
+              ),
+              FilledButton(
+                onPressed: total == 0 || total > orderDueCents(order)
+                    ? null
+                    : () => Navigator.pop(
+                        dialogContext,
+                        Map<String, int>.of(shares),
+                      ),
+                child: Text('Öde · ${formatTry(total)}'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    if (selected != null && mounted) await _pay(order, productShares: selected);
+  }
+
   Future<void> _pay(
     Json order, {
     int? guestId,
     String? guestName,
     int? maximumCents,
+    Map<String, int>? productShares,
   }) async {
     if (order['source'] != 'Masa' && order['source'] != 'Gel-Al') return;
-    final due = maximumCents ?? orderDueCents(order);
+    final due =
+        productShares?.values.fold<int>(0, (sum, value) => sum + value) ??
+        maximumCents ??
+        orderDueCents(order);
+    final paymentSnapshot = jsonEncode(order);
     if (due <= 0) {
       _notify('Bu hesapta kalan ödeme bulunmuyor.');
       return;
     }
-    final result = await showDialog<(int, String, int?)>(
+    final result = await showDialog<(int, String, int?, int?)>(
       context: context,
       builder: (ctx) => PaymentEntryDialog(
         dueCents: due,
-        inposReady: inpos.gateway.ready && guestId == null,
+        inposReady:
+            inpos.gateway.ready && guestId == null && productShares == null,
+        fixedAmount: productShares != null,
         orderNumber: displayOrderNumber(order),
         guestName: guestName ?? '',
       ),
     );
     if (!mounted) return;
     if (result == null) return;
-    final (amountCents, methodName, receivedCents) = result;
+    final (amountCents, methodName, receivedCents, mixedReceived) = result;
     if (methodName == 'inPOS m530') {
       if (terminalBusy) return;
       terminalBusy = true;
@@ -663,18 +818,34 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           : 'Nakdi Aldım · Kaydet',
     );
     if (!confirmed || !mounted) return;
+    String? receipt;
     final ok = _edit((data) {
       final target = mutableOrder(data, order['id'] as int);
       if (target == null) throw const FormatException('Sipariş bulunamadı');
       if (guestId != null && amountCents > (maximumCents ?? 0)) {
         throw const FormatException('Kişi bakiyesi aşıldı');
       }
-      if (methodName == 'Karışık') {
+      if (jsonEncode(target) != paymentSnapshot) {
+        throw const FormatException('Hesap değişti. Ödemeyi tekrar açın.');
+      }
+      if (productShares != null) {
+        receipt = recordProductPayment(
+          target,
+          productShares,
+          amountCents,
+          methodName,
+          cashCents: methodName == 'Karışık' ? receivedCents : null,
+          receivedCents: methodName == 'Karışık'
+              ? mixedReceived
+              : receivedCents,
+        );
+      } else if (methodName == 'Karışık') {
         recordMixedPayment(
           target,
           amountCents,
           receivedCents!,
           guestId: guestId,
+          receivedCents: mixedReceived,
         );
       } else
         recordPayment(
@@ -684,6 +855,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           receivedCents: receivedCents,
           guestId: guestId,
         );
+      finishPickupIfSettled(target);
       if (guestId != null) {
         final payments = target['payments'] as List;
         final latest = payments.last as Map;
@@ -694,11 +866,11 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     if (ok) {
       _notify('Ödeme kaydedildi · ${formatTry(amountCents)}');
       if (!mounted) return;
-      await _offerReceipt(order['id'] as int);
+      await _offerReceipt(order['id'] as int, receipt: receipt);
     }
   }
 
-  Future<void> _offerReceipt(int orderId) async {
+  Future<void> _offerReceipt(int orderId, {String? receipt}) async {
     if (!mounted) return;
     final print = await confirmAction(
       context,
@@ -712,6 +884,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           data,
           mutableOrder(data, orderId)!,
           requestId: 'pc_${DateTime.now().microsecondsSinceEpoch}',
+          receipt: receipt,
         ),
       );
   }
@@ -738,7 +911,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-    animation: Listenable.merge([store, lan]),
+    animation: Listenable.merge([store, lan, tgo]),
     builder: (ctx, _) {
       final data = store.read().data;
       final width = MediaQuery.sizeOf(context).width;
@@ -782,6 +955,8 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                               const SizedBox(height: 4),
                               Text(
                                 sections.firstWhere((s) => s.$1 == page).$3,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontSize: 24,
                                   fontFamily: NohutBrand.headingFont,
@@ -976,32 +1151,32 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
   Widget _page(Json db) {
     switch (page) {
       case 'tables':
-        return _tables(db);
-      case 'orders':
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(
-                  value: false,
-                  label: Text('Sipariş Listesi'),
-                  icon: Icon(Icons.receipt_long_outlined),
-                ),
-                ButtonSegment(
-                  value: true,
-                  label: Text('Online Siparişler'),
-                  icon: Icon(Icons.delivery_dining_outlined),
-                ),
-              ],
-              selected: {onlineOrders},
-              onSelectionChanged: (v) =>
-                  setState(() => onlineOrders = v.single),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'plan', label: Text('Masa Planı')),
+                  ButtonSegment(value: 'list', label: Text('Liste')),
+                  ButtonSegment(value: 'pickup', label: Text('Gel-Al')),
+                ],
+                selected: {localView},
+                onSelectionChanged: (value) => setState(() {
+                  localView = value.single;
+                  orderFilter = 'Tümü';
+                }),
+              ),
             ),
-            const SizedBox(height: 18),
-            onlineOrders ? _online(db) : _orders(db),
+            const SizedBox(height: 16),
+            if (localView == 'plan') _tables(db) else _orders(db),
           ],
         );
+      case 'online':
+        return _online(db);
+      case 'reviews':
+        return FeedbackPanel(orders: tgoOrders(db), integration: tgo);
       case 'payments':
         return _payments(db);
       case 'reports':
@@ -1085,6 +1260,21 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
 
   Widget _dashboard(Json db) {
     final orders = asMaps(db['orders']);
+    final remoteToday = tgoOrders(db)
+        .where((o) => onIstanbulDay(o['createdAt'], businessDay))
+        .toList();
+    final remoteValid = remoteToday
+        .where(
+          (o) =>
+              o['testPackage'] != true &&
+              !['Cancelled', 'UnSupplied'].contains(o['status']),
+        )
+        .toList();
+    final remoteSales = remoteToday.where(tgoCountsAsSale).toList();
+    final remoteAmount = remoteSales.fold<int>(
+      0,
+      (sum, o) => sum + (o['totalCents'] as int? ?? 0),
+    );
     final todayOrders = orders
         .where(
           (o) =>
@@ -1109,131 +1299,157 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
       5,
       (i) => activeTable(db, i + 1),
     ).where((o) => o != null).length;
+    final localReceipts = ledger(db).where(
+      (entry) =>
+          ['Masa', 'Gel-Al'].contains(entry.source) &&
+          onIstanbulDay(entry.stamp, businessDay),
+    );
+    int receiptsFor(String method) => localReceipts
+        .where((entry) => entry.method == method)
+        .fold(0, (total, entry) => total + entry.amount);
+    final sales = todayOrders
+        .where((order) => !isPlatform(order))
+        .fold<int>(0, (total, order) => total + orderTotalCents(order));
+    final due = active
+        .where((order) => !isPlatform(order))
+        .fold<int>(0, (total, order) => total + orderDueCents(order));
+    final pickups = active.where((order) => order['source'] == 'Gel-Al').length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: const EdgeInsets.all(25),
-          decoration: BoxDecoration(
-            color: dark,
-            borderRadius: BorderRadius.circular(22),
+        _sectionTitle(
+          'Bugün',
+          businessDay,
+          action: FilledButton.icon(
+            onPressed: () => _composer(),
+            icon: const Icon(Icons.add),
+            label: const Text('Sipariş Al'),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                padding: const EdgeInsets.all(5),
-                decoration: const BoxDecoration(
-                  color: NohutBrand.cream,
-                  shape: BoxShape.circle,
-                ),
-                child: Image.asset(
-                  'assets/brand/nohut-logo.webp',
-                  width: 54,
-                  height: 54,
-                  semanticLabel: 'Nohut Falafel',
-                ),
+        ),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            for (final metric in [
+              ('Nakit', receiptsFor('Nakit'), Icons.payments_outlined),
+              ('Kart', receiptsFor('Kart'), Icons.credit_card_outlined),
+              (
+                'Net Tahsilat',
+                todayNetReceipts,
+                Icons.account_balance_wallet_outlined,
               ),
-              const SizedBox(width: 16),
-              const Expanded(
+              ('Satış', sales, Icons.receipt_long_outlined),
+              ('Açık Bakiye', due, Icons.pending_actions_outlined),
+            ])
+              SizedBox(
+                width: 184,
+                child: _metric(metric.$1, formatTry(metric.$2), metric.$3),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text('Masa: $busy dolu · ${5 - busy} boş  |  Gel-Al: $pickups açık'),
+        const SizedBox(height: 16),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final staffPanel = StaffMetrics(state: db, day: businessDay);
+            final hasPlatformData =
+                remoteToday.isNotEmpty || db['tgoSyncInfo'] != null;
+            final platformPanel = Card(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Nohut Falafel · İşletme Sistemi',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.delivery_dining_outlined,
+                          color: NohutBrand.green,
+                        ),
+                        const SizedBox(width: 9),
+                        Expanded(
+                          child: Text(
+                            'Trendyol Go',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: tgo.status.startsWith('Bağlı ·')
+                            ? const Color(0xffe5ebdf)
+                            : const Color(0xfff3e8d1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 4,
+                        ),
+                        child: Text(tgo.status),
                       ),
                     ),
-                    SizedBox(height: 6),
-                    Text(
-                      'Masalar, siparişler ve ödemeler tek yerde.',
-                      style: TextStyle(color: Color(0xffbddec6), fontSize: 12),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 18,
+                      runSpacing: 10,
+                      children: [
+                        for (final (label, value) in [
+                          ('Sipariş', '${remoteValid.length}'),
+                          ('Teslim', '${remoteSales.length}'),
+                          ('Tamamlanan Satış', formatTry(remoteAmount)),
+                        ])
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                hasPlatformData ? value : '—',
+                                style: const TextStyle(
+                                  fontSize: 23,
+                                  fontWeight: FontWeight.w800,
+                                  color: NohutBrand.green,
+                                ),
+                              ),
+                              Text(
+                                label,
+                                style: const TextStyle(color: NohutBrand.muted),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: _showTrendyolOrders,
+                      icon: const Icon(Icons.arrow_forward, size: 18),
+                      label: const Text('Online Siparişleri Gör'),
                     ),
                   ],
                 ),
               ),
-              FilledButton.icon(
-                onPressed: () => _composer(),
-                icon: const Icon(Icons.add),
-                label: const Text('Sipariş Al'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text('Açık sipariş: ${active.length} · Dolu masa: $busy / 5'),
-        const SizedBox(height: 18),
-        LayoutBuilder(
-          builder: (context, c) {
-            final n = c.maxWidth > 1100 ? 4 : 2;
-            return GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: n,
-              mainAxisExtent:
-                  160 *
-                  MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 3.0),
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
+            );
+            if (constraints.maxWidth < 980) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  staffPanel,
+                  const SizedBox(height: 10),
+                  platformPanel,
+                ],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _metric(
-                  'Bugünün Siparişleri · $businessDay',
-                  '${todayOrders.length}',
-                  Icons.receipt_outlined,
-                ),
-                _metric(
-                  'Bugün Net Tahsilat',
-                  formatTry(todayNetReceipts),
-                  Icons.payments_outlined,
-                ),
-                _metric(
-                  'Açık Sipariş · Devreden Dahil',
-                  '${active.length}',
-                  Icons.pending_actions_outlined,
-                ),
-                _metric(
-                  'Dolu Masa · Devreden Dahil',
-                  '$busy / 5',
-                  Icons.table_restaurant_outlined,
-                ),
+                Expanded(flex: 6, child: staffPanel),
+                const SizedBox(width: 12),
+                Expanded(flex: 4, child: platformPanel),
               ],
             );
           },
-        ),
-        const SizedBox(height: 15),
-        StaffMetrics(state: db, day: businessDay),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Bugünün Son Siparişleri',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 13),
-                if (todayOrders.isEmpty)
-                  const Text(
-                    'Bugün henüz sipariş yok. Eski kayıtlar Siparişler bölümünde saklanır.',
-                  ),
-                for (final o in todayOrders.reversed.take(6))
-                  ListTile(
-                    leading: const Icon(Icons.receipt_long_outlined),
-                    title: Text(
-                      '#${displayOrderNumber(o)} · ${o['source']}${o['table'] == null ? '' : ' · Masa ${o['table']}'}',
-                    ),
-                    subtitle: Text(o['closed'] == true ? 'Kapalı' : 'Açık'),
-                    trailing: Text(formatTry(orderTotalCents(o))),
-                    onTap: () => _focusOrder(o),
-                  ),
-              ],
-            ),
-          ),
         ),
       ],
     );
@@ -1373,7 +1589,11 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${o['numberDay'] ?? ''} · ${closed ? 'Kapalı' : 'Açık · ${o['serviceStatus'] ?? 'Hazırlanıyor'}'}',
+                        '${o['numberDay'] ?? ''} · ${closed
+                            ? 'Kapalı'
+                            : o['source'] == 'Gel-Al' && o['deliveredAt'] != null
+                            ? 'Teslim Edildi'
+                            : 'Açık'}',
                         style: const TextStyle(
                           color: Color(0xff708273),
                           fontSize: 12,
@@ -1540,6 +1760,14 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                       icon: const Icon(Icons.payments),
                       label: const Text('Nakit / Kart'),
                     ),
+                  if (orderDueCents(o) > 0 &&
+                      checkLines(o)
+                          .any((line) => line.total > allocatedTo(o, line.key)))
+                    OutlinedButton.icon(
+                      onPressed: () => _selectProductsToPay(o),
+                      icon: const Icon(Icons.checklist),
+                      label: const Text('Ürün seçerek öde'),
+                    ),
                   if (split.isEmpty && orderPaidCents(o) == 0)
                     PopupMenuButton<int>(
                       onSelected: (n) => _equalSplit(o, n),
@@ -1571,17 +1799,15 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
                     ),
                 ],
               ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(elapsedService(o)),
-            ),
+
             if (!isPlatform(o))
               OutlinedButton.icon(
                 onPressed: () async {
                   if (await confirmAction(
                     context,
                     'Siparişi kalıcı sil?',
-                    'Sipariş, ödemeleri ve rapor tutarları aktif veritabanından kaldırılır. Son günlük numara yeniden kullanılabilir; diğer numaralar değişmez.',
+                    '#${displayOrderNumber(o)} · Toplam ${formatTry(total)} · Tahsilat ${formatTry(paid)}\n'
+                        'Sipariş, ödemeleri ve rapor tutarları aktif veritabanından kaldırılır. Son günlük numara yeniden kullanılabilir; diğer numaralar değişmez.',
                     confirm: 'Kalıcı Sil',
                   )) {
                     try {
@@ -1621,7 +1847,13 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
   }
 
   Widget _orders(Json db) {
-    final all = asMaps(db['orders']).reversed.toList();
+    final all = asMaps(db['orders']).reversed
+        .where(
+          (o) =>
+              !isPlatform(o) &&
+              (localView != 'pickup' || o['source'] == 'Gel-Al'),
+        )
+        .toList();
     final filtered = all.where((o) {
       final date =
           DateTime.tryParse('${o['createdAt']}')
@@ -1647,10 +1879,52 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
               orderStatus == 'Ödendi' &&
                   orderDueCents(o) == 0 &&
                   o['cancelled'] != true ||
-              o['serviceStatus'] == orderStatus) &&
+              o['source'] == 'Gel-Al' &&
+                  orderStatus == 'Teslim Edildi' &&
+                  o['deliveredAt'] != null) &&
           (orderFrom.isEmpty || date.compareTo(orderFrom) >= 0) &&
           (orderTo.isEmpty || date.compareTo(orderTo) <= 0);
     }).toList();
+    final remoteFiltered = tgoOrders(db).where((o) {
+      if (localView == 'pickup') return false;
+      final day = '${o['numberDay'] ?? ''}';
+      final search =
+          '${o['orderNumber']} ${displayOrderNumber(o)} ${o['customerNote']} ${o['lines']}'
+              .toLowerCase();
+      return (orderFilter == 'Tümü' || orderFilter == 'Trendyol Go') &&
+          (orderStaff.isEmpty) &&
+          search.contains(orderSearch.toLowerCase()) &&
+          (orderFrom.isEmpty || day.compareTo(orderFrom) >= 0) &&
+          (orderTo.isEmpty || day.compareTo(orderTo) <= 0) &&
+          (orderStatus.isEmpty || o['status'] == orderStatus);
+    }).toList();
+    final combined = <Json>[...filtered, ...remoteFiltered]
+      ..sort((a, b) {
+        final day = '${b['numberDay'] ?? ''}'.compareTo(
+          '${a['numberDay'] ?? ''}',
+        );
+        if (day != 0) return day;
+        return (b['dailyNumber'] as int? ?? 0).compareTo(
+          a['dailyNumber'] as int? ?? 0,
+        );
+      });
+    bool isRemote(Json order) => order['source'] == 'Trendyol Go';
+    int total(Json order) => isRemote(order)
+        ? order['totalCents'] as int? ?? 0
+        : orderTotalCents(order);
+    String remaining(Json order) =>
+        isRemote(order) ? '—' : formatTry(orderDueCents(order));
+    String orderStamp(Json order) => isRemote(order)
+        ? '${order['numberDay']} · #${order['orderNumber']} · ${order['status']}'
+        : '${order['numberDay'] ?? ''} · ${order['created'] ?? ''}';
+    void openOrder(Json order) {
+      if (isRemote(order)) {
+        _showTrendyolOrders();
+      } else {
+        _showOrder(order['id'] as int);
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1658,7 +1932,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
           'Siparişler',
           'Varsayılan: Bugün ($businessDay). Geçmiş siparişler tarih filtresiyle açılır.',
           action: FilledButton.icon(
-            onPressed: () => _composer(),
+            onPressed: () => _composer(pickup: localView == 'pickup'),
             icon: const Icon(Icons.add),
             label: const Text('Sipariş Al'),
           ),
@@ -1676,9 +1950,8 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
             for (final status in [
               '',
               'Kalan',
-              'Hazırlanıyor',
-              'Hazır',
-              'Teslim Edildi',
+              'Ödendi',
+              if (localView == 'pickup') 'Teslim Edildi',
               'Kapalı',
             ])
               ChoiceChip(
@@ -1725,7 +1998,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
               });
             }
           },
-          child: Text('Sipariş Filtreleri · ${filtered.length} kayıt'),
+          child: Text('Sipariş Filtreleri · ${combined.length} kayıt'),
         ),
         Wrap(
           spacing: 7,
@@ -1734,8 +2007,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
               'Tümü',
               'Masa',
               'Gel-Al',
-              'Yemeksepeti',
-              'Trendyol Go',
+              if (localView != 'pickup') 'Trendyol Go',
             ])
               ChoiceChip(
                 label: Text(filter),
@@ -1750,36 +2022,141 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
         const SizedBox(height: 12),
 
         Card(
-          child: Column(
-            children: [
-              if (filtered.isEmpty)
-                const ListTile(title: Text('Sipariş bulunamadı')),
-              for (final o in filtered)
-                ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: cream,
-                    child: Text('${o['table'] ?? '#'}'),
-                  ),
-                  title: Text('#${displayOrderNumber(o)} · ${o['source']}'),
-                  subtitle: Text(
-                    '${o['numberDay'] ?? ''} · ${o['created'] ?? ''} · ${o['closed'] == true ? 'Kapalı' : o['serviceStatus'] ?? 'Açık'}',
-                  ),
-                  trailing: Text(
-                    o['closed'] == true
-                        ? formatTry(orderTotalCents(o))
-                        : 'Kalan ${formatTry(orderDueCents(o))}',
-                  ),
-                  onTap: () => _showOrder(o['id'] as int),
+          child: combined.isEmpty
+              ? const ListTile(title: Text('Sipariş bulunamadı'))
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxWidth < 690;
+                    if (compact) {
+                      return Column(
+                        children: [
+                          for (final o in combined)
+                            ListTile(
+                              title: Text(
+                                '#${displayOrderNumber(o)} · ${o['table'] == null ? o['source'] : "Masa ${o['table']}"}',
+                              ),
+                              subtitle: Text(orderStamp(o)),
+                              trailing: Text(remaining(o)),
+                              onTap: () => openOrder(o),
+                            ),
+                        ],
+                      );
+                    }
+                    return SizedBox(
+                      width: double.infinity,
+                      child: DataTable(
+                        columnSpacing: 14,
+                        horizontalMargin: 14,
+                        columns: const [
+                          DataColumn(label: Text('Sipariş')),
+                          DataColumn(label: Text('Masa / Kaynak')),
+                          DataColumn(label: Text('Zaman')),
+                          DataColumn(numeric: true, label: Text('Toplam')),
+                          DataColumn(numeric: true, label: Text('Kalan')),
+                          DataColumn(label: Text('İşlem')),
+                        ],
+                        rows: [
+                          for (final o in combined)
+                            DataRow(
+                              cells: [
+                                DataCell(Text('#${displayOrderNumber(o)}')),
+                                DataCell(
+                                  Text(
+                                    o['table'] == null
+                                        ? '${o['source']}'
+                                        : "Masa ${o['table']}",
+                                  ),
+                                ),
+                                DataCell(Text(orderStamp(o))),
+                                DataCell(Text(formatTry(total(o)))),
+                                DataCell(Text(remaining(o))),
+                                DataCell(
+                                  TextButton(
+                                    onPressed: () => openOrder(o),
+                                    child: Text(
+                                      isRemote(o)
+                                          ? 'Platform Siparişi'
+                                          : 'Hesabı Aç',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-            ],
-          ),
         ),
       ],
     );
   }
 
   Json? platformDemo;
+  String onlinePlatform = 'Trendyol Go';
+  bool onlineHistory = false;
+
+  void _showTrendyolOrders() => setState(() {
+    page = 'online';
+    onlinePlatform = 'Trendyol Go';
+    onlineHistory = false;
+  });
+
   Widget _online(Json db) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SegmentedButton<String>(
+          segments: const [
+            ButtonSegment(
+              value: 'Trendyol Go',
+              label: Text('Trendyol Go'),
+              icon: Icon(Icons.delivery_dining_outlined),
+            ),
+            ButtonSegment(value: 'Yemeksepeti', label: Text('Yemeksepeti')),
+            ButtonSegment(value: 'Migros Yemek', label: Text('Migros Yemek')),
+          ],
+          selected: {onlinePlatform},
+          onSelectionChanged: (value) =>
+              setState(() => onlinePlatform = value.single),
+        ),
+        const SizedBox(height: 16),
+        if (onlinePlatform == 'Trendyol Go')
+          TgoOrdersPanel(
+            orders: tgoOrders(db),
+            integration: tgo,
+            businessDay: businessDay,
+            showHistory: onlineHistory,
+            onPeriodChanged: () => setState(() => onlineHistory = !onlineHistory),
+            autoKitchen: db['settings']?['tgoAutoKitchen'] == true,
+            onAutoKitchenChanged: (value) {
+              _edit((data) => (data['settings'] as Map)['tgoAutoKitchen'] = value);
+            },
+            onKitchenPrint: (order) {
+              final key = tgoOrderKey(order);
+              _edit((data) {
+                for (final current in mutableTgoOrders(data)) {
+                  if (tgoOrderKey(current) == key &&
+                      current['kitchenPrintState'] == null &&
+                      tgoKitchenActive(current)) {
+                    current['kitchenPrintState'] = 'Bekliyor';
+                  }
+                }
+              });
+            },
+          )
+        else if (onlinePlatform == 'Migros Yemek')
+          const MigrosOrdersPanel()
+        else ...[
+          _notice('Yemeksepeti · Bağlı değil'),
+          const SizedBox(height: 12),
+          _platformDemo(db),
+        ],
+      ],
+    );
+  }
+
+  Widget _platformDemo(Json db) {
     platformDemo ??= {...emptyPosState(), 'localMenu': asMaps(db['localMenu'])};
     seedPlatformMenu(
       platformDemo!,
@@ -1789,6 +2166,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     );
     return PlatformPanel(
       state: platformDemo!,
+      fixedSource: 'Yemeksepeti',
       edit: (change) {
         try {
           final next = copyJson(platformDemo!);
@@ -2111,6 +2489,7 @@ class _ManagerDesktopState extends State<ManagerDesktop> {
     edit: _edit,
     store: store,
     qrSync: qrSync,
+    tgoIntegration: tgo,
     staffPanel: _staff(db),
     wifiPanel: _wifi(db),
   );

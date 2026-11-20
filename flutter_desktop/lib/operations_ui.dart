@@ -432,23 +432,13 @@ class OrderOperations extends StatelessWidget {
                 },
                 child: const Text('Kişi Paylarını Sıfırla'),
               ),
-              if (['Hazırlanıyor', 'Hazır'].contains(o['serviceStatus']))
-                OutlinedButton(
-                  onPressed: () => edit(
-                    (s) => setLocalService(
-                      mutableOrder(s, id)!,
-                      o['serviceStatus'] == 'Hazır' ? 'Teslim Edildi' : 'Hazır',
-                    ),
-                  ),
-                  child: Text(
-                    o['serviceStatus'] == 'Hazır' ? 'Teslim Edildi' : 'Hazır',
-                  ),
-                ),
-              if (o['source'] == 'Gel-Al')
+              if (o['source'] == 'Gel-Al' &&
+                  o['deliveredAt'] == null &&
+                  o['serviceStatus'] != 'Teslim Edildi')
                 OutlinedButton(
                   onPressed: () =>
-                      edit((s) => closePickup(mutableOrder(s, id)!)),
-                  child: const Text('Gel-Al Hesabını Kapat'),
+                      edit((s) => markPickupDelivered(mutableOrder(s, id)!)),
+                  child: const Text('Teslim Edildi'),
                 ),
               OutlinedButton(
                 onPressed: () async {

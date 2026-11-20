@@ -8,8 +8,11 @@ import 'pos_store.dart';
 import 'operations_ui.dart';
 import 'qr_menu_sync.dart';
 import 'qr_menu_preview.dart';
+import 'trendyol_go_readonly.dart';
+import 'trendyol_go_ui.dart';
 import 'receipt_printer.dart';
 import 'receipt_layout.dart';
+import 'receipt_preview.dart';
 
 class SimpleSettings extends StatefulWidget {
   const SimpleSettings({
@@ -18,6 +21,7 @@ class SimpleSettings extends StatefulWidget {
     required this.edit,
     required this.store,
     required this.qrSync,
+    required this.tgoIntegration,
     this.staffPanel,
     this.wifiPanel,
   });
@@ -25,6 +29,7 @@ class SimpleSettings extends StatefulWidget {
   final EditState edit;
   final PosStore store;
   final QrMenuAutoSync qrSync;
+  final TrendyolGoReadonly tgoIntegration;
   final Widget? staffPanel, wifiPanel;
   @override
   State<SimpleSettings> createState() => _SimpleSettingsState();
@@ -32,6 +37,55 @@ class SimpleSettings extends StatefulWidget {
 
 class _SimpleSettingsState extends State<SimpleSettings> {
   String tab = 'Genel', search = '';
+  Widget printerLayout(Map settings, Widget controls) {
+    final preview = section(
+      'Fiş Önizleme',
+      'Örnek hesap · ${settings['paperWidthMm'] ?? 56} mm',
+      [
+        ReceiptPreview(
+          settings: settings,
+          order: {
+            'id': 1,
+            'dailyNumber': 1,
+            'source': 'Masa',
+            'table': 3,
+            'createdAt': '2026-11-18T09:00:00Z',
+            'batches': [
+              {
+                'id': 1,
+                'lines': [
+                  {'name': 'Falafel Dürüm', 'qty': 1, 'price': 140},
+                  {'name': 'Ek Lavaş', 'qty': 1, 'price': 10},
+                ],
+              },
+            ],
+            'payments': [
+              {'method': 'Nakit', 'amount': 150},
+            ],
+          },
+        ),
+      ],
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 790) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [controls, const SizedBox(height: 12), preview],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: controls),
+            const SizedBox(width: 16),
+            SizedBox(width: 270, child: preview),
+          ],
+        );
+      },
+    );
+  }
+
   Widget section(String title, String description, List<Widget> children) =>
       Card(
         child: Padding(
@@ -70,6 +124,7 @@ class _SimpleSettingsState extends State<SimpleSettings> {
               'Genel',
               'Menü',
               'Yazıcı',
+              'Trendyol Go',
               if (widget.staffPanel != null) 'Personel',
               if (widget.wifiPanel != null) 'Bağlantı',
               'inPOS',
@@ -106,6 +161,8 @@ class _SimpleSettingsState extends State<SimpleSettings> {
               ),
             ],
           ),
+        if (tab == 'Trendyol Go')
+          TgoSettingsPanel(integration: widget.tgoIntegration),
         if (tab == 'Menü')
           section(
             'Menü ve fiyatlar',
@@ -173,192 +230,196 @@ class _SimpleSettingsState extends State<SimpleSettings> {
             ],
           ),
         if (tab == 'Yazıcı')
-          section(
-            'Ödemede sor, istenirse yazdır',
-            'Sipariş ve ek ürünlerde otomatik çıktı alınmaz. Ödeme kaydında fiş isteği sorulur.',
-            [
-              ListTile(
-                leading: const Icon(Icons.print_outlined),
-                title: Text('${settings['printerName'] ?? 'XP-237B'}'),
-                subtitle: Text(
-                  '${settings['paperWidthMm'] ?? 56} mm kağıt · ${settings['printableWidthMm'] ?? 48} mm baskı · Aynı fiş tasarımı',
-                ),
-              ),
-              DropdownButtonFormField<String>(
-                key: ValueKey(
-                  'receipt-transport-${settings['receiptTransport'] ?? 'windows'}',
-                ),
-                initialValue: '${settings['receiptTransport'] ?? 'windows'}',
-                decoration: const InputDecoration(
-                  labelText: 'Yazdırma yöntemi',
-                ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'windows',
-                    child: Text('Windows · Fiş görseli'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'escpos',
-                    child: Text('ESC/POS · Fiş modu'),
-                  ),
-                ],
-                onChanged: (v) {
-                  if (v != null)
-                    widget.edit((s) {
-                      final cfg = s['settings'] as Map;
-                      cfg['receiptTransport'] = v;
-                      if (v == 'escpos') cfg['receiptOffsetMm'] = 0;
-                    });
-                },
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'XP-237B: Önce yazıcının fiş modunda olduğunu doğrulayın. ESC/POS, sayfa uzunluğu sınırını kullanmaz. Etiket modunda seçmeyin.',
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.settings_outlined),
-                label: const Text('Yazıcı Ayarı'),
-                onPressed: () async {
-                  final v = await askFields(
-                    context,
-                    'Yazıcı Ayarı',
-                    [
-                      (
-                        'Windows yazıcı adı',
-                        '${settings['printerName'] ?? 'XP-237B'}',
-                      ),
-                      (
-                        'Kağıt genişliği (mm)',
-                        '${settings['paperWidthMm'] ?? 56}',
-                      ),
-                      (
-                        'Baskı genişliği (mm)',
-                        '${settings['printableWidthMm'] ?? 48}',
-                      ),
-                      (
-                        'Üst / alt güvenli boşluk (mm)',
-                        '${settings['receiptMarginMm'] ?? 4}',
-                      ),
-                      (
-                        'Yatay kaydırma (mm, + sağa)',
-                        '${settings['receiptOffsetMm'] ?? 0}',
-                      ),
-                      (
-                        'Logo boyutu (mm)',
-                        '${settings['receiptLogoMm'] ?? 18}',
-                      ),
-                    ],
-                    validate: (v) {
-                      final values = v
-                          .skip(1)
-                          .map((x) => double.tryParse(x.replaceAll(',', '.')))
-                          .toList();
-                      if (v[0].isEmpty ||
-                          values.any((x) => x == null || !x.isFinite))
-                        return 'Yazıcı adı ve sayısal ölçüler gerekli';
-                      final p = values.cast<double>();
-                      try {
-                        ReceiptDimensions({
-                          'paperWidthMm': p[0],
-                          'printableWidthMm': p[1],
-                          'receiptMarginMm': p[2],
-                          'receiptOffsetMm': p[3],
-                          'receiptLogoMm': p[4],
-                        });
-                      } on FormatException catch (e) {
-                        return e.message;
-                      }
-                      if (settings['receiptTransport'] == 'escpos' && p[3] != 0)
-                        return 'ESC/POS için yatay kaydırma 0 olmalı';
-
-                      if (p[0] < 40 ||
-                          p[0] > 80 ||
-                          p[1] < 30 ||
-                          p[1] > 48 ||
-                          p[1] > p[0] ||
-                          p[2] < 2 ||
-                          p[2] > 10 ||
-                          p[3].abs() > 10 ||
-                          p[4] < 10 ||
-                          p[4] > 25)
-                        return 'Ölçüler: kağıt 40–80, baskı 30–48, boşluk 2–10, kaydırma ±10, logo 10–25 mm';
-                      return null;
-                    },
-                  );
-                  if (v != null)
-                    widget.edit((s) {
-                      final cfg = s['settings'] as Map;
-                      cfg['printerName'] = v[0];
-                      for (var i = 0; i < 5; i++)
-                        cfg[[
-                          'paperWidthMm',
-                          'printableWidthMm',
-                          'receiptMarginMm',
-                          'receiptOffsetMm',
-                          'receiptLogoMm',
-                        ][i]] = double.parse(
-                          v[i + 1].replaceAll(',', '.'),
-                        );
-                      cfg['receiptScale'] = 'actual';
-                    });
-                },
-              ),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.print_outlined),
-                label: const Text('Hizalama Testi Yazdır'),
-                onPressed: () async {
-                  try {
-                    await windowsPrint(
-                      'HİZALAMA TESTİ\nSol |--------------------| Sağ\nOrtalanmış baskı alanı\nKağıt: ${settings['paperWidthMm'] ?? 56} mm\nBu bir sipariş değildir.',
-                      '${settings['printerName'] ?? 'XP-237B'}',
-                      settings: settings,
-                    );
-                    if (context.mounted)
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Test yazıcı kuyruğuna gönderildi'),
-                        ),
-                      );
-                  } catch (e) {
-                    if (context.mounted)
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(SnackBar(content: Text('$e')));
-                  }
-                },
-              ),
-              for (final j in asMaps(widget.state['printJobs']).where(
-                (j) =>
-                    j['kind'] == 'paymentReceipt' &&
-                    j['state'] == 'Kontrol gerekli',
-              ))
+          printerLayout(
+            settings,
+            section(
+              'Ödemede sor, istenirse yazdır',
+              'Sipariş ve ek ürünlerde otomatik çıktı alınmaz. Ödeme kaydında fiş isteği sorulur.',
+              [
                 ListTile(
-                  title: const Text('Fiş çıktısını kontrol edin'),
-                  subtitle: Text('${j['error']}'),
-                  trailing: TextButton(
-                    child: const Text('Kontrol Ettim · Yeniden Dene'),
-                    onPressed: () async {
-                      if (await confirmAction(
-                        context,
-                        'Tekrar yazdır?',
-                        'Aynı çıktı iki kez basılabilir. Önce yazıcıyı kontrol edin.',
-                      ))
-                        widget.edit((s) {
-                          final job = (s['printJobs'] as List)
-                              .cast<Map>()
-                              .firstWhere(
-                                (x) =>
-                                    x['receiptRequestId'] ==
-                                    j['receiptRequestId'],
-                              );
-                          if (job['state'] != 'Kontrol gerekli')
-                            throw const FormatException('Durum değişti');
-                          job['state'] = 'Bekliyor';
-                        });
-                    },
+                  leading: const Icon(Icons.print_outlined),
+                  title: Text('${settings['printerName'] ?? 'XP-237B'}'),
+                  subtitle: Text(
+                    '${settings['paperWidthMm'] ?? 56} mm kağıt · ${settings['printableWidthMm'] ?? 48} mm baskı · Aynı fiş tasarımı',
                   ),
                 ),
-            ],
+                DropdownButtonFormField<String>(
+                  key: ValueKey(
+                    'receipt-transport-${settings['receiptTransport'] ?? 'windows'}',
+                  ),
+                  initialValue: '${settings['receiptTransport'] ?? 'windows'}',
+                  decoration: const InputDecoration(
+                    labelText: 'Yazdırma yöntemi',
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'windows',
+                      child: Text('Windows · Fiş görseli'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'escpos',
+                      child: Text('ESC/POS · Fiş modu'),
+                    ),
+                  ],
+                  onChanged: (v) {
+                    if (v != null)
+                      widget.edit((s) {
+                        final cfg = s['settings'] as Map;
+                        cfg['receiptTransport'] = v;
+                        if (v == 'escpos') cfg['receiptOffsetMm'] = 0;
+                      });
+                  },
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'XP-237B: Önce yazıcının fiş modunda olduğunu doğrulayın. ESC/POS, sayfa uzunluğu sınırını kullanmaz. Etiket modunda seçmeyin.',
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.settings_outlined),
+                  label: const Text('Yazıcı Ayarı'),
+                  onPressed: () async {
+                    final v = await askFields(
+                      context,
+                      'Yazıcı Ayarı',
+                      [
+                        (
+                          'Windows yazıcı adı',
+                          '${settings['printerName'] ?? 'XP-237B'}',
+                        ),
+                        (
+                          'Kağıt genişliği (mm)',
+                          '${settings['paperWidthMm'] ?? 56}',
+                        ),
+                        (
+                          'Baskı genişliği (mm)',
+                          '${settings['printableWidthMm'] ?? 48}',
+                        ),
+                        (
+                          'Üst / alt güvenli boşluk (mm)',
+                          '${settings['receiptMarginMm'] ?? 4}',
+                        ),
+                        (
+                          'Yatay kaydırma (mm, + sağa)',
+                          '${settings['receiptOffsetMm'] ?? 0}',
+                        ),
+                        (
+                          'Logo boyutu (mm)',
+                          '${settings['receiptLogoMm'] ?? 18}',
+                        ),
+                      ],
+                      validate: (v) {
+                        final values = v
+                            .skip(1)
+                            .map((x) => double.tryParse(x.replaceAll(',', '.')))
+                            .toList();
+                        if (v[0].isEmpty ||
+                            values.any((x) => x == null || !x.isFinite))
+                          return 'Yazıcı adı ve sayısal ölçüler gerekli';
+                        final p = values.cast<double>();
+                        try {
+                          ReceiptDimensions({
+                            'paperWidthMm': p[0],
+                            'printableWidthMm': p[1],
+                            'receiptMarginMm': p[2],
+                            'receiptOffsetMm': p[3],
+                            'receiptLogoMm': p[4],
+                          });
+                        } on FormatException catch (e) {
+                          return e.message;
+                        }
+                        if (settings['receiptTransport'] == 'escpos' &&
+                            p[3] != 0)
+                          return 'ESC/POS için yatay kaydırma 0 olmalı';
+
+                        if (p[0] < 40 ||
+                            p[0] > 80 ||
+                            p[1] < 30 ||
+                            p[1] > 48 ||
+                            p[1] > p[0] ||
+                            p[2] < 2 ||
+                            p[2] > 10 ||
+                            p[3].abs() > 10 ||
+                            p[4] < 10 ||
+                            p[4] > 25)
+                          return 'Ölçüler: kağıt 40–80, baskı 30–48, boşluk 2–10, kaydırma ±10, logo 10–25 mm';
+                        return null;
+                      },
+                    );
+                    if (v != null)
+                      widget.edit((s) {
+                        final cfg = s['settings'] as Map;
+                        cfg['printerName'] = v[0];
+                        for (var i = 0; i < 5; i++)
+                          cfg[[
+                            'paperWidthMm',
+                            'printableWidthMm',
+                            'receiptMarginMm',
+                            'receiptOffsetMm',
+                            'receiptLogoMm',
+                          ][i]] = double.parse(
+                            v[i + 1].replaceAll(',', '.'),
+                          );
+                        cfg['receiptScale'] = 'actual';
+                      });
+                  },
+                ),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.print_outlined),
+                  label: const Text('Hizalama Testi Yazdır'),
+                  onPressed: () async {
+                    try {
+                      await windowsPrint(
+                        'HİZALAMA TESTİ\nSol |--------------------| Sağ\nOrtalanmış baskı alanı\nKağıt: ${settings['paperWidthMm'] ?? 56} mm\nBu bir sipariş değildir.',
+                        '${settings['printerName'] ?? 'XP-237B'}',
+                        settings: settings,
+                      );
+                      if (context.mounted)
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Test yazıcı kuyruğuna gönderildi'),
+                          ),
+                        );
+                    } catch (e) {
+                      if (context.mounted)
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(SnackBar(content: Text('$e')));
+                    }
+                  },
+                ),
+                for (final j in asMaps(widget.state['printJobs']).where(
+                  (j) =>
+                      j['kind'] == 'paymentReceipt' &&
+                      j['state'] == 'Kontrol gerekli',
+                ))
+                  ListTile(
+                    title: const Text('Fiş çıktısını kontrol edin'),
+                    subtitle: Text('${j['error']}'),
+                    trailing: TextButton(
+                      child: const Text('Kontrol Ettim · Yeniden Dene'),
+                      onPressed: () async {
+                        if (await confirmAction(
+                          context,
+                          'Tekrar yazdır?',
+                          'Aynı çıktı iki kez basılabilir. Önce yazıcıyı kontrol edin.',
+                        ))
+                          widget.edit((s) {
+                            final job = (s['printJobs'] as List)
+                                .cast<Map>()
+                                .firstWhere(
+                                  (x) =>
+                                      x['receiptRequestId'] ==
+                                      j['receiptRequestId'],
+                                );
+                            if (job['state'] != 'Kontrol gerekli')
+                              throw const FormatException('Durum değişti');
+                            job['state'] = 'Bekliyor';
+                          });
+                      },
+                    ),
+                  ),
+              ],
+            ),
           ),
         if (tab == 'inPOS')
           section('inPOS m530', 'Otomatik bağlantı henüz etkin değil.', [

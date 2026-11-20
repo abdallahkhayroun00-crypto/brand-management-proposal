@@ -18,6 +18,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   });
   await page.goto('http://pos.test/');await page.locator('#staff option[value="1"]').waitFor({state:'attached'});await page.locator('#staff').selectOption('1');
   assert.equal(await page.locator('#categories button').first().innerText(),'Kampanyalar');
+  await page.locator('.top-nav [data-view=menu]').click();
   await page.locator('[data-category=campaign]').click();assert.equal(await page.locator('.product').count(),1);
   await page.locator('[data-custom="-100"]').click();assert.equal(await page.locator('[data-component]').count(),4);
   await page.locator('[data-component="0"]').click();await page.locator('#component-chips [data-ingredient="Domates"]').click();await page.locator('#component-note').fill('Ek falafel');await page.locator('#component-adjustment').fill('+10');await page.locator('#component-form button[type=submit]').click();

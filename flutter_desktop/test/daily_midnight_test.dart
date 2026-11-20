@@ -68,6 +68,46 @@ void main() {
     expect(db['orders'],hasLength(3));
   });
 
+  test('one daily POS sequence for Masa, Trendyol Go and Gel-Al', () {
+    final db = emptyPosState();
+    final masa = datedOrder(1200, '2026-11-15T11:00:00Z');
+    masa['source'] = 'Masa';
+    masa['table'] = 1;
+    db['orders'] = [masa];
+    assignDailyNumbers(db);
+    expect(displayOrderNumber(masa), '0001');
+
+    final trendyol = <String, dynamic>{
+      'source': 'Trendyol Go',
+      'orderNumber': 'PLATFORM-999',
+      'createdAt': '2026-11-15T11:01:00Z',
+      'status': 'Picking',
+    };
+    db['trendyolGoOrders'] = [trendyol];
+    assignDailyNumbers(db);
+    expect(displayOrderNumber(trendyol), '0002');
+    expect(trendyol['orderNumber'], 'PLATFORM-999');
+
+    final gelAl = datedOrder(1201, '2026-11-15T11:02:00Z');
+    (db['orders'] as List).add(gelAl);
+    assignDailyNumbers(db);
+    expect(displayOrderNumber(gelAl), '0003');
+    final orders = (db['orders'] as List).cast<Map>();
+    expect(orders.map(displayOrderNumber).toList(), ['0001', '0003']);
+
+    trendyol['status'] = 'Delivered';
+    assignDailyNumbers(db);
+    expect(displayOrderNumber(trendyol), '0002');
+    expect(displayOrderNumber(gelAl), '0003');
+
+    final nextDay = datedOrder(1202, '2026-11-15T21:00:00Z');
+    (db['orders'] as List).add(nextDay);
+    assignDailyNumbers(db);
+    expect(displayOrderNumber(nextDay), '0001');
+    expect(trendyol['numberDay'], '2026-11-15');
+    expect(nextDay['numberDay'], '2026-11-16');
+  });
+
   test('today order counts ignore last night, preserve yesterday in history', () {
     final orders=[
       datedOrder(1200,'2026-11-14T20:59:59Z'),

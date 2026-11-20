@@ -8,6 +8,7 @@ import 'operations.dart';
 import 'pos_logic.dart';
 import 'pos_store.dart';
 import 'receipt_layout.dart';
+import 'trendyol_go_readonly.dart';
 
 typedef PrintTransport = Future<void> Function(String text, String printer);
 
@@ -38,6 +39,12 @@ class ReceiptPrinter {
         changed = true;
       }
     }
+    for (final order in mutableTgoOrders(next)) {
+      if (order['kitchenPrintState'] == 'Gönderiliyor') {
+        order['kitchenPrintState'] = 'Kontrol gerekli';
+        changed = true;
+      }
+    }
     if (changed) store.replace(next, snap.revision);
     _timer = Timer.periodic(
       const Duration(milliseconds: 800),
@@ -53,6 +60,33 @@ class ReceiptPrinter {
       final settings = next['settings'] as Map? ?? {};
       final printer = '${settings['printerName'] ?? ''}'.trim();
       if (printer.isEmpty) return;
+      for (final order in mutableTgoOrders(next)) {
+        if (order['kitchenPrintState'] != 'Bekliyor') continue;
+        if (!tgoKitchenActive(order)) {
+          order['kitchenPrintState'] = 'Atlandı';
+          store.replace(next, snap.revision);
+          return;
+        }
+        order['kitchenPrintState'] = 'Gönderiliyor';
+        if (!store.replace(next, snap.revision).ok) return;
+        var outcome = 'Kuyruğa gönderildi';
+        try {
+          await transport(tgoKitchenTicket(order), printer);
+        } catch (_) {
+          outcome = 'Kontrol gerekli';
+        }
+        if (_disposed) return;
+        final current = store.read(), updated = copyJson(current.data);
+        final key = tgoOrderKey(order);
+        for (final target in mutableTgoOrders(updated)) {
+          if (tgoOrderKey(target) == key &&
+              target['kitchenPrintState'] == 'Gönderiliyor') {
+            target['kitchenPrintState'] = outcome;
+          }
+        }
+        store.replace(updated, current.revision);
+        return;
+      }
       final paymentOnly = settings['receiptPolicy'] == 'onPayment';
       if (!paymentOnly && settings['autoPrint'] != true) return;
       Map? job;
